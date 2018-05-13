@@ -2,9 +2,7 @@ package com.gotokeep.keep.composer.gles;
 
 import android.opengl.GLES20;
 
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -13,12 +11,23 @@ import java.util.TreeMap;
  * @since 2018/5/13 18:43
  */
 public final class ProgramObject {
-    private int programId;
+    public static final String ATTRIBUTE_POSITION = "aPosition";
+    public static final String ATTRIBUTE_TEX_COORDS = "aTexCoords";
+
+    private int programId = -1;
     private String vertexShader;
     private String fragmentShader;
 
-    private static final String DEFAULT_VERTEX_SHADER =
-            "";
+    private static final String DEFAULT_VERTEX_SHADER = "" +
+            "attribute vec4 aPosition;    \n" +
+            "attribute vec2 aTexCoords; \n" +
+            "varying vec2 vTexCoords; \n" +
+            "uniform mat4 uTransformMatrix;\n" +
+            "void main()                  \n" +
+            "{                            \n" +
+            "    gl_Position = aPosition;  \n" +
+            "    vTexCoords = (uTransformMatrix * vec4(aTexCoords, 0, 0)).xy; \n" +
+            "}                            \n";
 
     private Map<String, Integer> uniforms;
 
@@ -54,6 +63,11 @@ public final class ProgramObject {
     }
 
     public int getUniformLocation(String name) {
-        return uniforms.get(name);
+        return uniforms.containsKey(name) ? uniforms.get(name) : -1;
+    }
+
+    public void release() {
+        GLES20.glDeleteProgram(programId);
+        programId = -1;
     }
 }

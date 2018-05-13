@@ -1,6 +1,14 @@
 package com.gotokeep.keep.composer;
 
+import android.opengl.GLES20;
 import android.util.SparseArray;
+
+import com.gotokeep.keep.composer.gles.ProgramObject;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
 
 /**
  * @author xana/cuixianming
@@ -8,11 +16,24 @@ import android.util.SparseArray;
  * @since 2018/5/12 15:28
  */
 public abstract class RenderNode {
+
     protected SparseArray<RenderNode> inputNodes = new SparseArray<>();
     protected RenderTexture renderTexture;
+    protected ProgramObject programObject;
+
     private boolean prepared = false;
     protected long startTimeMs;
     protected long endTimeMs;
+
+    private static final float[] DEFAULT_VERTEX_DATA = {
+            -1f, -1f, 0,
+            1f, -1f, 0,
+            -1f, 1f, 0,
+            1f, 1f, 0};
+    private static final short[] DEFAULT_TEX_COORDS_DATA = {0, 0, 1, 0, 0, 1, 1, 1};
+
+    protected FloatBuffer vertexBuffer;
+    protected ShortBuffer texCoordBuffer;
 
     public void setInputNode(int inputIndex, RenderNode inputNode) {
         inputNodes.put(inputIndex, inputNode);
@@ -27,6 +48,25 @@ public abstract class RenderNode {
      */
     public void prepare() {
         renderTexture = createRenderTexture();
+        vertexBuffer = ByteBuffer.allocateDirect(DEFAULT_VERTEX_DATA.length * 4)
+                .order(ByteOrder.nativeOrder()).asFloatBuffer();
+        vertexBuffer.put(DEFAULT_VERTEX_DATA).position(0);
+
+        texCoordBuffer = ByteBuffer.allocateDirect(DEFAULT_TEX_COORDS_DATA.length * 2)
+                .order(ByteOrder.nativeOrder()).asShortBuffer();
+        texCoordBuffer.put(DEFAULT_TEX_COORDS_DATA).position(0);
+
+        programObject = createProgramObject();
+        programObject.use();
+
+        GLES20.glBindAttribLocation(programObject.getProgramId(), 0, ProgramObject.ATTRIBUTE_POSITION);
+        GLES20.glBindAttribLocation(programObject.getProgramId(), 1, ProgramObject.ATTRIBUTE_TEX_COORDS);
+
+        GLES20.glVertexAttribPointer(0, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer);
+        GLES20.glEnableVertexAttribArray(0);
+        GLES20.glVertexAttribPointer(1, 2, GLES20.GL_SHORT, false, 0, texCoordBuffer);
+        GLES20.glEnableVertexAttribArray(1);
+
         onPrepare();
         prepared = true;
     }
@@ -53,11 +93,17 @@ public abstract class RenderNode {
         return endTimeMs;
     }
 
+    public void getTransformMatrix(float matrix[]) {
+        renderTexture.getSurfaceTexture().getTransformMatrix(matrix);
+    }
+
     public abstract void render(long presentationTimeUs);
 
     public abstract void awaitRenderFrame();
 
     protected abstract RenderTexture createRenderTexture();
+
+    protected abstract ProgramObject createProgramObject();
 
     protected abstract void onPrepare();
 

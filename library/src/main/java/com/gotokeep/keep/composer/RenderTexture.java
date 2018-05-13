@@ -15,22 +15,25 @@ import java.lang.annotation.RetentionPolicy;
  * @since 2018/5/12 15:40
  */
 public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListener {
+    private static final String TAG = RenderTexture.class.getSimpleName();
+
     public static final int TEXTURE_NATIVE = GLES20.GL_TEXTURE_2D;
     public static final int TEXTURE_EXTERNAL = GLES11Ext.GL_TEXTURE_EXTERNAL_OES;
-    private static final String TAG = RenderTexture.class.getSimpleName();
 
     @IntDef({TEXTURE_NATIVE, TEXTURE_EXTERNAL})
     @Retention(RetentionPolicy.SOURCE)
-    public @interface TextureTarget {}
+    public @interface TextureTarget {
+    }
 
+    private int framebufferId = 0;
     private int textureTarget;
-
     private int textureId;
     private SurfaceTexture surfaceTexture;
     private boolean released = false;
 
     private final Object frameSyncObj = new Object();
     private boolean frameAvailable = false;
+
     public RenderTexture(@TextureTarget int textureTarget) {
         createTexture(textureTarget);
     }
@@ -73,6 +76,13 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
     }
 
     public void bind() {
+        bind(-1);
+    }
+
+    public void bind(int activeId) {
+        if (activeId >= 0) {
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE0 + activeId);
+        }
         GLES20.glBindTexture(textureTarget, textureId);
     }
 
@@ -104,6 +114,21 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
             frameAvailable = true;
             frameSyncObj.notifyAll();
         }
+    }
+
+    public boolean setRenderTarget() {
+        if (framebufferId <= 0) {
+            int ids[] = new int[1];
+            GLES20.glGenFramebuffers(1, ids, 0);
+            framebufferId = ids[0];
+        }
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, framebufferId);
+        GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0, textureTarget, textureId, 0);
+        return GLES20.glCheckFramebufferStatus(GLES20.GL_FRAMEBUFFER) == GLES20.GL_FRAMEBUFFER_COMPLETE;
+    }
+
+    public static void resetRenderTarget() {
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
     }
 
     public int getTextureTarget() {

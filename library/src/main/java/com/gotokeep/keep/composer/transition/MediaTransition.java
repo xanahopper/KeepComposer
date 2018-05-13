@@ -1,11 +1,12 @@
 package com.gotokeep.keep.composer.transition;
 
+import android.opengl.GLES20;
 import android.support.annotation.CallSuper;
+import android.util.Log;
 
 import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.RenderTexture;
 import com.gotokeep.keep.composer.gles.ProgramObject;
-import com.gotokeep.keep.composer.util.TimeUtil;
 
 /**
  * @author xana/cuixianming
@@ -16,13 +17,36 @@ public abstract class MediaTransition extends RenderNode {
     public static final int INDEX_START = 0;
     public static final int INDEX_END = 1;
 
+    static final String UNIFORM_START_TEXTURE = "uStartTexture";
+    static final String UNIFORM_END_TEXTURE = "uEndTexture";
+    static final String UNIFORM_START_TRANSFORM = "uStartTransform";
+    static final String uNIFORM_END_TRANSFORM = "uEndTransform";
+
+    static final String DEFAULT_VERTEX_SHADER = "" +
+            "attribute vec4 aPosition;    \n" +
+            "attribute vec2 aTexCoords; \n" +
+            "varying vec2 vStartTexCoords; \n" +
+            "varying vec2 vEndTexCoords; \n" +
+            "uniform mat4 uStartTransform\n" +
+            "uniform mat4 uEndTransform\n" +
+            "void main()                  \n" +
+            "{                            \n" +
+            "    gl_Position = aPosition;  \n" +
+            "    vStartTexCoords = (uStartTransform * vec4(aTexCoords, 0, 0)).xy; \n" +
+            "    uEndTransform = (uEndTransform * vec4(aTexCoords, 0, 0)).xy; \n" +
+            "}  ";
+    private static final String TAG = MediaTransition.class.getSimpleName();
+
     protected long durationMs;
-    private ProgramObject programObject;
     protected RenderNode startNode;
     protected RenderNode endNode;
 
     @Override
     public void render(long presentationTimeUs) {
+        if (!renderTexture.setRenderTarget()) {
+            Log.w(TAG, "render framebuffer to texture failed");
+            RenderTexture.resetRenderTarget();
+        }
         if (shouldRenderStartNode(presentationTimeUs)) {
             startNode.render(presentationTimeUs);
         }
@@ -30,6 +54,9 @@ public abstract class MediaTransition extends RenderNode {
             endNode.render(presentationTimeUs);
         }
         updateRenderUniform(programObject, presentationTimeUs);
+        startNode.getOutputTexture().bind(0);
+        endNode.getOutputTexture().bind(1);
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
     }
 
     @Override
@@ -53,17 +80,22 @@ public abstract class MediaTransition extends RenderNode {
         if (!endNode.isPrepared()) {
             endNode.prepare();
         }
-        programObject = createProgramObject();
+
         startTimeMs = startNode.getEndTimeMs() - durationMs / 2;
         endTimeMs = endNode.getStartTimeMs() + durationMs / 2;
+
+        GLES20.glUniform1i(programObject.getUniformLocation(UNIFORM_START_TEXTURE), 0);
+        GLES20.glUniform1i(programObject.getUniformLocation(UNIFORM_END_TEXTURE), 1);
     }
 
     @Override
     protected void onRelease() {
-
+        if (programObject != null) {
+            programObject.release();
+            programObject = null;
+        }
     }
 
-    protected abstract ProgramObject createProgramObject();
 
     protected abstract void updateRenderUniform(ProgramObject programObject, long presentationTimeUs);
 
