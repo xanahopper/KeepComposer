@@ -101,13 +101,13 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
         GLES20.glBindTexture(textureTarget, textureId);
     }
 
-    public void awaitFrameAvailable() {
-        awaitFrameAvailable(10);
+    public boolean awaitFrameAvailable() {
+        return awaitFrameAvailable(10);
     }
 
-    public void awaitFrameAvailable(int timeoutMs) {
+    public boolean awaitFrameAvailable(int timeoutMs) {
         if (surfaceTexture == null) {
-            return;
+            return true;
         }
         synchronized (frameSyncObj) {
             while (!frameAvailable) {
@@ -121,6 +121,7 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
             frameAvailable = false;
         }
         surfaceTexture.updateTexImage();
+        return true;
     }
 
     @Override

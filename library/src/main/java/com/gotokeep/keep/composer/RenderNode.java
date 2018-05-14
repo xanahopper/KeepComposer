@@ -1,6 +1,7 @@
 package com.gotokeep.keep.composer;
 
 import android.opengl.GLES20;
+import android.util.Log;
 import android.util.SparseArray;
 
 import com.gotokeep.keep.composer.gles.ProgramObject;
@@ -17,6 +18,7 @@ import java.nio.ShortBuffer;
  */
 public abstract class RenderNode {
 
+    private static final String TAG = RenderNode.class.getSimpleName();
     protected SparseArray<RenderNode> inputNodes = new SparseArray<>();
     protected RenderTexture renderTexture;
     protected ProgramObject programObject;
@@ -24,6 +26,7 @@ public abstract class RenderNode {
     private boolean prepared = false;
     protected long startTimeMs;
     protected long endTimeMs;
+    protected boolean frameAvailable = false;
 
     private static final float[] DEFAULT_VERTEX_DATA = {
             -1f, -1f, 0,
@@ -48,13 +51,15 @@ public abstract class RenderNode {
             inputNodes.valueAt(i).render(presentationTimeUs);
         }
         for (int i = 0; i < inputNodes.size(); i++) {
-            inputNodes.valueAt(i).awaitRenderFrame();
+            if (!inputNodes.valueAt(i).awaitRenderFrame()) {
+                Log.w(TAG, "one of input frame invalid");
+            }
         }
         if (programObject != null) {
             programObject.use();
+            bindRenderTextures();
+            updateRenderUniform(programObject, presentationTimeUs);
         }
-        bindRenderTextures();
-        updateRenderUniform(programObject, presentationTimeUs);
         renderTexture.setRenderTarget();
         onRender(programObject, presentationTimeUs);
     }
@@ -121,8 +126,9 @@ public abstract class RenderNode {
         renderTexture.getSurfaceTexture().getTransformMatrix(matrix);
     }
 
-    public void awaitRenderFrame() {
-        renderTexture.awaitFrameAvailable();
+    public boolean awaitRenderFrame() {
+        frameAvailable = renderTexture.awaitFrameAvailable();
+        return frameAvailable;
     }
 
     protected abstract RenderTexture createRenderTexture();
