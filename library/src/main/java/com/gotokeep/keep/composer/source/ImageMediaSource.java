@@ -7,6 +7,7 @@ import android.opengl.GLES20;
 import android.opengl.GLUtils;
 
 import com.gotokeep.keep.composer.RenderTexture;
+import com.gotokeep.keep.composer.gles.ProgramObject;
 
 import java.io.IOException;
 
@@ -24,18 +25,14 @@ public class ImageMediaSource extends MediaSource {
         this.presentationTimeUs = 0;
     }
 
-    /**
-     * static image already loaded in {@link #prepare()} so here do nothing.
-     *
-     * @param presentationTimeUs time
-     */
-    @Override
-    public void render(long presentationTimeUs) {
-    }
-
     @Override
     protected RenderTexture createRenderTexture() {
         return new RenderTexture(RenderTexture.TEXTURE_NATIVE);
+    }
+
+    @Override
+    protected ProgramObject createProgramObject() {
+        return new ProgramObject();
     }
 
     @Override
@@ -46,6 +43,21 @@ public class ImageMediaSource extends MediaSource {
     @Override
     protected void onRelease() {
         // renterTexture#release will release the loaded image and the texture resource. so here do nothing.
+    }
+
+    @Override
+    protected void onRender(ProgramObject programObject, long presentationTimeUs) {
+
+    }
+
+    @Override
+    protected void bindRenderTextures() {
+
+    }
+
+    @Override
+    protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs) {
+
     }
 
     private void prepareInternal(String filePath) {

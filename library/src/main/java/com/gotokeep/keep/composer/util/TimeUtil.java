@@ -28,4 +28,8 @@ public final class TimeUtil {
     public static long usToSec(long timeUs) {
         return Math.round((float) timeUs / BILLION_US);
     }
+
+    public static boolean inRange(long value, long low, long high) {
+        return value >= low && value <= high;
+    }
 }

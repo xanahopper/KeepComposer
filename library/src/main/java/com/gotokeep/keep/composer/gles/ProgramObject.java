@@ -13,6 +13,12 @@ import java.util.TreeMap;
 public final class ProgramObject {
     public static final String ATTRIBUTE_POSITION = "aPosition";
     public static final String ATTRIBUTE_TEX_COORDS = "aTexCoords";
+    public static final String UNIFORM_TRANSFORM_MATRIX = "uTransformMatrix";
+    public static final String UNIFORM_TEXTURE = "uTexture";
+    public static final String DEFAULT_UNIFORM_NAMES[] = {
+            UNIFORM_TRANSFORM_MATRIX,
+            UNIFORM_TEXTURE
+    };
 
     private int programId = -1;
     private String vertexShader;
@@ -29,7 +35,19 @@ public final class ProgramObject {
             "    vTexCoords = (uTransformMatrix * vec4(aTexCoords, 0, 0)).xy; \n" +
             "}                            \n";
 
+    private static final String DEFAULT_FRAGMENT_SHADER = "" +
+            "precision mediump float;\n" +
+            "uniform sampler2D uTexture;\n" +
+            "varying vec2 vTexCoords;\n" +
+            "void main() { \n" +
+            "    gl_FragColor = texture2D(uTexture, vTexCoords);\n" +
+            "}\n";
+
     private Map<String, Integer> uniforms;
+
+    public ProgramObject() {
+        this(DEFAULT_FRAGMENT_SHADER, DEFAULT_UNIFORM_NAMES);
+    }
 
     public ProgramObject(String fragmentShader, String uniformNames[]) {
         this(DEFAULT_VERTEX_SHADER, fragmentShader, uniformNames);
@@ -56,9 +74,11 @@ public final class ProgramObject {
 
     private void initUniformLocations(String[] uniformNames) {
         uniforms = new TreeMap<>();
-        for (int i = 0; i < uniformNames.length; i++) {
-            int loc = GLES20.glGetUniformLocation(programId, uniformNames[i]);
-            uniforms.put(uniformNames[i], loc);
+        if (uniformNames != null) {
+            for (int i = 0; i < uniformNames.length; i++) {
+                int loc = GLES20.glGetUniformLocation(programId, uniformNames[i]);
+                uniforms.put(uniformNames[i], loc);
+            }
         }
     }
 

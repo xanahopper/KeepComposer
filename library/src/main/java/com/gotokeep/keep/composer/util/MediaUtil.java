@@ -30,6 +30,14 @@ public class MediaUtil {
         }
     }
 
+    public static ByteBuffer getOutputBuffer(MediaCodec codec, int inputIndex) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            return codec.getOutputBuffer(inputIndex);
+        } else {
+            return codec.getOutputBuffers()[inputIndex];
+        }
+    }
+
     public static String getName(String filePath) {
         String name = Uri.parse(filePath).getLastPathSegment();
         return name != null ? name : UUID.randomUUID().toString().substring(0, 5);

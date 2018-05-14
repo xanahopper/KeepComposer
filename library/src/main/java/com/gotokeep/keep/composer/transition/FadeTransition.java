@@ -13,10 +13,9 @@ import com.gotokeep.keep.composer.util.TimeUtil;
 public class FadeTransition extends MediaTransition {
     private static final String UNIFORM_ALPHA = "uAlpha";
     private static final String FADE_SHADER = "" +
-            "#extension GL_OES_EGL_image_external : require\n" +
             "precision mediump float;\n" +
-            "uniform samplerExternalOES uStartTexture; \n" +
-            "uniform samplerExternalOES uEndTexture; \n" +
+            "uniform sampler2D uStartTexture; \n" +
+            "uniform sampler2D uEndTexture; \n" +
             "uniform float uAlpha;\n" +
             "varying vec2 vStartTexCoords; \n" +
             "varying vec2 vEndTexCoords; \n" +

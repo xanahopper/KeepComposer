@@ -3,6 +3,7 @@ package com.gotokeep.keep.composer.source;
 import android.media.MediaCodec;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
+import android.opengl.GLES20;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -11,6 +12,7 @@ import android.view.Surface;
 
 import com.gotokeep.keep.composer.RenderTexture;
 import com.gotokeep.keep.composer.exception.UnsupportedFormatException;
+import com.gotokeep.keep.composer.gles.ProgramObject;
 import com.gotokeep.keep.composer.util.MediaUtil;
 import com.gotokeep.keep.composer.util.TimeUtil;
 
@@ -25,8 +27,15 @@ import java.nio.ByteBuffer;
 public class VideoMediaSource extends MediaSource implements Handler.Callback {
     private static final String VIDEO_MIME_START = "video/";
     private static final int TIMEOUT_US = 1000;
-
     private static final int MSG_RENDER = 0;
+
+    private static final String EXTERNAL_FRAGMENT_SHADER = "" +
+            "precision mediump float;\n" +
+            "uniform samplerExternalOES uTexture;\n" +
+            "varying vec2 vTexCoords;\n" +
+            "void main() { \n" +
+            "    gl_FragColor = texture2D(uTexture, vTexCoords);\n" +
+            "}\n";
 
     private String filePath;
     private MediaExtractor extractor;
@@ -38,27 +47,25 @@ public class VideoMediaSource extends MediaSource implements Handler.Callback {
     private MediaFormat format;
     private MediaCodec decoder;
     private MediaCodec.BufferInfo decodeInfo = new MediaCodec.BufferInfo();
+    private RenderTexture decodeTexture;
     private Surface decodeSurface;
 
     private long sampleTimeUs = 0;
     private int sampleFlags = 0;
 
-    protected VideoMediaSource(String filePath) {
+    public VideoMediaSource(String filePath) {
         super(TYPE_VIDEO);
         this.filePath = filePath;
     }
 
     @Override
-    public void render(long presentationTimeUs) {
-        if (decodeHandler == null) {
-            throw new IllegalStateException("VideoMediaSource must prepare before render.");
-        }
-        decodeHandler.obtainMessage(MSG_RENDER, presentationTimeUs).sendToTarget();
+    protected RenderTexture createRenderTexture() {
+        return new RenderTexture(RenderTexture.TEXTURE_NATIVE);
     }
 
     @Override
-    protected RenderTexture createRenderTexture() {
-        return new RenderTexture(RenderTexture.TEXTURE_EXTERNAL);
+    protected ProgramObject createProgramObject() {
+        return new ProgramObject(EXTERNAL_FRAGMENT_SHADER, ProgramObject.DEFAULT_UNIFORM_NAMES);
     }
 
     @Override
@@ -107,6 +114,12 @@ public class VideoMediaSource extends MediaSource implements Handler.Callback {
         if (!encoded) {
             renderTexture.notifyNoFrame();
         }
+        decodeTexture.awaitFrameAvailable();
+        programObject.use();
+        decodeTexture.bind(0);
+        renderTexture.setRenderTarget();
+        updateProgramUniform(programObject, decodeTexture);
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
     }
 
     @Override
@@ -128,6 +141,31 @@ public class VideoMediaSource extends MediaSource implements Handler.Callback {
         }
         format = null;
         presentationTimeUs = 0;
+    }
+
+    @Override
+    protected void onRender(ProgramObject programObject, long presentationTimeUs) {
+        if (decodeHandler == null) {
+            throw new IllegalStateException("VideoMediaSource must prepare before render.");
+        }
+        decodeHandler.obtainMessage(MSG_RENDER, presentationTimeUs).sendToTarget();
+    }
+
+    @Override
+    protected void bindRenderTextures() {
+
+    }
+
+    @Override
+    protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs) {
+
+    }
+
+    private void updateProgramUniform(ProgramObject programObject, RenderTexture decodeTexture) {
+        float transform[] = new float[16];
+        decodeTexture.getSurfaceTexture().getTransformMatrix(transform);
+        GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX), 1, false, transform, 0);
+        GLES20.glUniform1i(programObject.getUniformLocation(ProgramObject.UNIFORM_TEXTURE), 0);
     }
 
     private void prepareExtractorAndInfo() throws IOException {
@@ -160,7 +198,8 @@ public class VideoMediaSource extends MediaSource implements Handler.Callback {
     }
 
     private void prepareDecoder() throws IOException {
-        decodeSurface = new Surface(renderTexture.getSurfaceTexture());
+        decodeTexture = new RenderTexture(RenderTexture.TEXTURE_EXTERNAL);
+        decodeSurface = new Surface(decodeTexture.getSurfaceTexture());
         decoder = MediaCodec.createDecoderByType(mime);
         decoder.configure(format, decodeSurface, null, 0);
         decoder.start();

@@ -43,10 +43,47 @@ public abstract class RenderNode {
         return renderTexture;
     }
 
+    public void render(long presentationTimeUs) {
+        for (int i = 0; i < inputNodes.size(); i++) {
+            inputNodes.valueAt(i).render(presentationTimeUs);
+        }
+        for (int i = 0; i < inputNodes.size(); i++) {
+            inputNodes.valueAt(i).awaitRenderFrame();
+        }
+        if (programObject != null) {
+            programObject.use();
+        }
+        bindRenderTextures();
+        updateRenderUniform(programObject, presentationTimeUs);
+        renderTexture.setRenderTarget();
+        onRender(programObject, presentationTimeUs);
+    }
+
     /**
      * after prepared, resource will be initialized in memory. And call {@link #release()} to release.
      */
     public void prepare() {
+        prepareInternal();
+
+        onPrepare();
+        prepared = true;
+    }
+
+    public void release() {
+        onRelease();
+
+        if (renderTexture != null) {
+            renderTexture.release();
+            renderTexture = null;
+        }
+        if (programObject != null) {
+            programObject.release();
+            programObject = null;
+        }
+        prepared = false;
+    }
+
+    private void prepareInternal() {
         renderTexture = createRenderTexture();
         vertexBuffer = ByteBuffer.allocateDirect(DEFAULT_VERTEX_DATA.length * 4)
                 .order(ByteOrder.nativeOrder()).asFloatBuffer();
@@ -66,19 +103,6 @@ public abstract class RenderNode {
         GLES20.glEnableVertexAttribArray(0);
         GLES20.glVertexAttribPointer(1, 2, GLES20.GL_SHORT, false, 0, texCoordBuffer);
         GLES20.glEnableVertexAttribArray(1);
-
-        onPrepare();
-        prepared = true;
-    }
-
-    public void release() {
-        onRelease();
-
-        if (renderTexture != null) {
-            renderTexture.release();
-            renderTexture = null;
-        }
-        prepared = false;
     }
 
     public boolean isPrepared() {
@@ -97,9 +121,9 @@ public abstract class RenderNode {
         renderTexture.getSurfaceTexture().getTransformMatrix(matrix);
     }
 
-    public abstract void render(long presentationTimeUs);
-
-    public abstract void awaitRenderFrame();
+    public void awaitRenderFrame() {
+        renderTexture.awaitFrameAvailable();
+    }
 
     protected abstract RenderTexture createRenderTexture();
 
@@ -108,4 +132,10 @@ public abstract class RenderNode {
     protected abstract void onPrepare();
 
     protected abstract void onRelease();
+
+    protected abstract void onRender(ProgramObject programObject, long presentationTimeUs);
+
+    protected abstract void bindRenderTextures();
+
+    protected abstract void updateRenderUniform(ProgramObject programObject, long presentationTimeUs);
 }

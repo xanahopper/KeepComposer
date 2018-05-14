@@ -26,13 +26,19 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
     }
 
     private int framebufferId = 0;
-    private int textureTarget;
-    private int textureId;
+    private int textureTarget = 0;
+    private int textureId = 0;
     private SurfaceTexture surfaceTexture;
     private boolean released = false;
 
     private final Object frameSyncObj = new Object();
     private boolean frameAvailable = false;
+
+    public RenderTexture() {
+        this.textureTarget = TEXTURE_EXTERNAL;
+        this.surfaceTexture = null;
+
+    }
 
     public RenderTexture(@TextureTarget int textureTarget) {
         createTexture(textureTarget);
@@ -55,11 +61,17 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
     }
 
     public void release() {
-        if (surfaceTexture == null || released) {
+        if (surfaceTexture == null || released || textureId == 0) {
             return;
         }
         surfaceTexture.release();
         surfaceTexture = null;
+
+        if (framebufferId > 0) {
+            int ids[] = {framebufferId};
+            GLES20.glDeleteFramebuffers(1, ids, 0);
+            framebufferId = 0;
+        }
 
         released = true;
     }
@@ -80,6 +92,9 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
     }
 
     public void bind(int activeId) {
+        if (textureId == 0) {
+            return;
+        }
         if (activeId >= 0) {
             GLES20.glActiveTexture(GLES20.GL_TEXTURE0 + activeId);
         }
@@ -91,6 +106,9 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
     }
 
     public void awaitFrameAvailable(int timeoutMs) {
+        if (surfaceTexture == null) {
+            return;
+        }
         synchronized (frameSyncObj) {
             while (!frameAvailable) {
                 try {
@@ -117,6 +135,10 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
     }
 
     public boolean setRenderTarget() {
+        if (textureId == 0) {
+            GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
+            return true;
+        }
         if (framebufferId <= 0) {
             int ids[] = new int[1];
             GLES20.glGenFramebuffers(1, ids, 0);

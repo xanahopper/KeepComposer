@@ -43,25 +43,15 @@ public abstract class MediaTransition extends RenderNode {
 
     @Override
     public void render(long presentationTimeUs) {
-        if (!renderTexture.setRenderTarget()) {
-            Log.w(TAG, "render framebuffer to texture failed");
-            RenderTexture.resetRenderTarget();
-        }
         if (shouldRenderStartNode(presentationTimeUs)) {
             startNode.render(presentationTimeUs);
         }
         if (shouldRenderEndNode(presentationTimeUs)) {
             endNode.render(presentationTimeUs);
         }
-        updateRenderUniform(programObject, presentationTimeUs);
-        startNode.getOutputTexture().bind(0);
-        endNode.getOutputTexture().bind(1);
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-    }
-
-    @Override
-    public void awaitRenderFrame() {
-        renderTexture.awaitFrameAvailable();
+        startNode.awaitRenderFrame();
+        endNode.awaitRenderFrame();
+        super.render(presentationTimeUs);
     }
 
     @Override
@@ -90,14 +80,24 @@ public abstract class MediaTransition extends RenderNode {
 
     @Override
     protected void onRelease() {
-        if (programObject != null) {
-            programObject.release();
-            programObject = null;
+        if (startNode.isPrepared()) {
+            startNode.release();
+        }
+        if (endNode.isPrepared()) {
+            endNode.release();
         }
     }
 
+    @Override
+    protected void onRender(ProgramObject programObject, long presentationTimeUs) {
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+    }
 
-    protected abstract void updateRenderUniform(ProgramObject programObject, long presentationTimeUs);
+    @Override
+    protected void bindRenderTextures() {
+        startNode.getOutputTexture().bind(0);
+        endNode.getOutputTexture().bind(1);
+    }
 
     protected abstract boolean shouldRenderStartNode(long presentationTimeUs);
 

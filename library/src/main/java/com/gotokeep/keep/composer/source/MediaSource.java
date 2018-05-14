@@ -10,7 +10,8 @@ import com.gotokeep.keep.composer.RenderSource;
 public abstract class MediaSource extends RenderSource {
     public static final int TYPE_VIDEO = 0;
     public static final int TYPE_IMAGE = 1;
-    public static final int TYPE_GENERATE = 2;
+    public static final int TYPE_OVERLAY = 2;
+    public static final int TYPE_GENERATE = 3;
 
     public static final int DURATION_INFINITE = -1;
 
@@ -25,11 +26,6 @@ public abstract class MediaSource extends RenderSource {
 
     protected MediaSource(int mediaType) {
         this.mediaType = mediaType;
-    }
-
-    @Override
-    public void awaitRenderFrame() {
-        renderTexture.awaitFrameAvailable();
     }
 
     public boolean isEnded() {
