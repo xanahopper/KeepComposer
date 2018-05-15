@@ -14,9 +14,13 @@ import java.util.TreeSet;
  */
 public final class Timeline {
     SortedSet<MediaItem> items = new TreeSet<>();
+    long endTimeMs;
 
     public void addMediaItem(MediaItem item) {
         items.add(item);
+        if (item.endTimeMs > endTimeMs) {
+            endTimeMs = item.endTimeMs;
+        }
     }
 
     public List<MediaItem> queryPresentationTimeItems(long presentationTimeUs) {
@@ -26,7 +30,10 @@ public final class Timeline {
                 list.add(item);
             }
         }
-
         return list;
+    }
+
+    public long getEndTimeMs() {
+        return endTimeMs;
     }
 }

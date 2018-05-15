@@ -8,7 +8,7 @@ package com.gotokeep.keep.composer.timeline;
 class ImageItem extends MediaItem {
     protected String filePath;
 
-    public ImageItem() {
-        super(TYPE_SOURCE);
+    public ImageItem(int layer) {
+        super(TYPE_SOURCE, layer);
     }
 }

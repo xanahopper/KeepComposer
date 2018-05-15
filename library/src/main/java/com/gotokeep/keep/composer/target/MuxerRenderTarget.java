@@ -3,11 +3,11 @@ package com.gotokeep.keep.composer.target;
 import android.media.MediaCodec;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
+import android.view.Surface;
 
 import com.gotokeep.keep.composer.ExportConfiguration;
 import com.gotokeep.keep.composer.RenderNode;
-import com.gotokeep.keep.composer.RenderTexture;
-import com.gotokeep.keep.composer.gles.ProgramObject;
+import com.gotokeep.keep.composer.RenderTarget;
 
 import java.io.IOException;
 
@@ -16,7 +16,7 @@ import java.io.IOException;
  * @version 1.0
  * @since 2018-05-14 10:41
  */
-public class MuxerRenderTarget extends RenderNode {
+public class MuxerRenderTarget extends RenderTarget {
     private static final String RENDER_MIME = "video/avc";
 
     private MediaCodec encoder;
@@ -24,6 +24,7 @@ public class MuxerRenderTarget extends RenderNode {
     private MediaCodec.BufferInfo encodeInfo;
     private int muxerTrackIndex = -1;
     private MediaMuxer muxer;
+    private Surface encodeInputSurface;
 
     private ExportConfiguration exportConfiguration;
     private String exportPath;
@@ -33,43 +34,34 @@ public class MuxerRenderTarget extends RenderNode {
 
         try {
             this.encoder = MediaCodec.createEncoderByType(RENDER_MIME);
+            this.encodeInputSurface = encoder.createInputSurface();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     @Override
-    protected RenderTexture createRenderTexture() {
-        return new RenderTexture();
+    public Surface getInputSurface() {
+        return encodeInputSurface;
     }
 
     @Override
-    protected ProgramObject createProgramObject() {
-        return new ProgramObject();
-    }
-
-    @Override
-    protected void onPrepare() {
+    public void updateFrame(RenderNode renderNode, long presentationTimeUs) {
 
     }
 
     @Override
-    protected void onRelease() {
+    public void prepare() {
 
     }
 
     @Override
-    protected void onRender(ProgramObject programObject, long presentationTimeUs) {
+    public void complete() {
 
     }
 
     @Override
-    protected void bindRenderTextures() {
-
-    }
-
-    @Override
-    protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs) {
+    public void release() {
 
     }
 }

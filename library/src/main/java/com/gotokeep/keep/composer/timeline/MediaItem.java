@@ -19,9 +19,11 @@ public class MediaItem implements Comparable<MediaItem> {
     long endTimeMs;
     float playSpeed;
     int type;
+    int layer;
 
-    public MediaItem(int type) {
+    public MediaItem(int type, int layer) {
         this.type = type;
+        this.layer = layer;
     }
 
     @Override
@@ -45,5 +47,9 @@ public class MediaItem implements Comparable<MediaItem> {
             };
         }
         return comparator;
+    }
+
+    public int getLayer() {
+        return layer;
     }
 }

@@ -11,8 +11,8 @@ class TransitionItem extends MediaItem {
     protected MediaItem endItem;
     protected String name;
 
-    public TransitionItem(MediaItem startItem, MediaItem endItem) {
-        super(TYPE_COMBINE);
+    public TransitionItem(MediaItem startItem, MediaItem endItem, int layer) {
+        super(TYPE_COMBINE, layer);
         this.startItem = startItem;
         this.endItem = endItem;
     }

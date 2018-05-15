@@ -1,10 +1,10 @@
 package com.gotokeep.keep.composer.filter;
 
-import android.opengl.GLES20;
-
 import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.RenderTexture;
 import com.gotokeep.keep.composer.gles.ProgramObject;
+
+import java.util.Map;
 
 /**
  * @author xana/cuixianming
@@ -12,13 +12,15 @@ import com.gotokeep.keep.composer.gles.ProgramObject;
  * @since 2018/5/13 17:02
  */
 public abstract class MediaFilter extends RenderNode {
+
+    public static final int KEY_MAIN = 0;
+
     @Override
-    public void render(long presentationTimeUs) {
-        programObject.use();
-        updateProgramUniform(programObject);
-        inputNodes.valueAt(0).getOutputTexture().bind(0);
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+    public RenderNode getMainInputNode(long presentationTimeUs) {
+        return null;
     }
+
+    public abstract void setFilterParameters(Map<String, Object> params);
 
     @Override
     protected RenderTexture createRenderTexture() {
@@ -48,6 +50,4 @@ public abstract class MediaFilter extends RenderNode {
     protected abstract String[] getUniformNames();
 
     protected abstract void prepareProgramInternal(ProgramObject programObject);
-
-    protected abstract void updateProgramUniform(ProgramObject programObject);
 }

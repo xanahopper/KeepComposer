@@ -9,6 +9,6 @@ class AudioItem extends MediaItem {
     protected String filePath;
 
     public AudioItem() {
-        super(TYPE_SOURCE);
+        super(TYPE_SOURCE, 0);
     }
 }

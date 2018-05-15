@@ -2,7 +2,6 @@ package com.gotokeep.keep.composer.transition;
 
 import android.opengl.GLES20;
 import android.support.annotation.CallSuper;
-import android.util.Log;
 
 import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.RenderTexture;
@@ -37,21 +36,29 @@ public abstract class MediaTransition extends RenderNode {
             "}  ";
     private static final String TAG = MediaTransition.class.getSimpleName();
 
-    protected long durationMs;
-    protected RenderNode startNode;
-    protected RenderNode endNode;
+    long durationMs;
+    RenderNode startNode;
+    RenderNode endNode;
 
     @Override
-    public void render(long presentationTimeUs) {
-        if (shouldRenderStartNode(presentationTimeUs)) {
-            startNode.render(presentationTimeUs);
+    public RenderNode getMainInputNode(long presentationTimeUs) {
+        for (int i = 0; i < inputNodes.size(); i++) {
+            RenderNode node = inputNodes.valueAt(i);
+            if (shouldRenderNode(node, presentationTimeUs)) {
+                return node;
+            }
         }
-        if (shouldRenderEndNode(presentationTimeUs)) {
-            endNode.render(presentationTimeUs);
+        return null;
+    }
+
+    @Override
+    public void setInputNode(int inputIndex, RenderNode inputNode) {
+        super.setInputNode(inputIndex, inputNode);
+        if (inputIndex == INDEX_START) {
+            inputNode.setEndTimeMs(inputNode.getEndTimeMs() + durationMs / 2);
+        } else if (inputIndex == INDEX_END) {
+            inputNode.setStartTimeMs(Math.max(inputNode.getEndTimeMs() + durationMs / 2, 0));
         }
-        startNode.awaitRenderFrame();
-        endNode.awaitRenderFrame();
-        super.render(presentationTimeUs);
     }
 
     @Override
@@ -62,6 +69,9 @@ public abstract class MediaTransition extends RenderNode {
     @CallSuper
     @Override
     protected void onPrepare() {
+        if (inputNodes.size() < 2) {
+            throw new RuntimeException("MediaTransition must has at least two input");
+        }
         startNode = inputNodes.get(INDEX_START);
         endNode = inputNodes.get(INDEX_END);
         if (!startNode.isPrepared()) {
@@ -89,17 +99,21 @@ public abstract class MediaTransition extends RenderNode {
     }
 
     @Override
-    protected void onRender(ProgramObject programObject, long presentationTimeUs) {
+    protected long doRender(ProgramObject programObject, long presentationTimeUs) {
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+        return presentationTimeUs;
     }
 
     @Override
-    protected void bindRenderTextures() {
-        startNode.getOutputTexture().bind(0);
-        endNode.getOutputTexture().bind(1);
+    protected void bindRenderTextures(boolean[] shouldRender) {
+        if (shouldRender.length < 2) {
+            throw new RuntimeException("MediaTransition has incorrect shouldRender length.");
+        }
+        if (shouldRender[INDEX_START]) {
+            startNode.getOutputTexture().bind(0);
+        }
+        if (shouldRender[INDEX_END]) {
+            endNode.getOutputTexture().bind(1);
+        }
     }
-
-    protected abstract boolean shouldRenderStartNode(long presentationTimeUs);
-
-    protected abstract boolean shouldRenderEndNode(long presentationTimeUs);
 }

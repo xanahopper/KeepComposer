@@ -28,6 +28,8 @@ public interface MediaComposer {
 
     void seekTo(long timeMs);
 
+    void setVideoSize(int width, int height);
+
     void setPlayEventListener(PlayEventListener listener);
 
     void setExportEventListener(ExportEventListener listener);
@@ -58,5 +60,16 @@ public interface MediaComposer {
         void onExportComplete(MediaComposer composer);
 
         void onExportError(MediaComposer composer, Exception exception);
+    }
+
+
+    final class PositionInfo {
+        long currentTimeUs;
+        long totalTimeUs;
+
+        public PositionInfo(long currentTimeUs, long totalTimeUs) {
+            this.currentTimeUs = currentTimeUs;
+            this.totalTimeUs = totalTimeUs;
+        }
     }
 }

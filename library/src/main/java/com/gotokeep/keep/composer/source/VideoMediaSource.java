@@ -24,10 +24,9 @@ import java.nio.ByteBuffer;
  * @version 1.0
  * @since 2018/5/13 14:08
  */
-public class VideoMediaSource extends MediaSource implements Handler.Callback {
+public class VideoMediaSource extends MediaSource{
     private static final String VIDEO_MIME_START = "video/";
     private static final int TIMEOUT_US = 1000;
-    private static final int MSG_RENDER = 0;
 
     private static final String EXTERNAL_FRAGMENT_SHADER = "" +
             "precision mediump float;\n" +
@@ -42,8 +41,6 @@ public class VideoMediaSource extends MediaSource implements Handler.Callback {
     private int trackIndex = -1;
     private String mime = "";
 
-    private HandlerThread decodeThread;
-    private Handler decodeHandler;
     private MediaFormat format;
     private MediaCodec decoder;
     private MediaCodec.BufferInfo decodeInfo = new MediaCodec.BufferInfo();
@@ -77,13 +74,29 @@ public class VideoMediaSource extends MediaSource implements Handler.Callback {
         try {
             prepareExtractorAndInfo();
             prepareDecoder();
-            prepareThread();
         } catch (IOException e) {
             throw new RuntimeException("VideoMediaSource prepare failed.", e);
         }
     }
 
-    private void renderInternal(long presentationTimeUs) {
+    @Override
+    public void onRelease() {
+
+        if (extractor != null) {
+            extractor.release();
+            extractor = null;
+        }
+        if (decoder != null) {
+            decoder.stop();
+            decoder.release();
+            decoder = null;
+        }
+        format = null;
+        presentationTimeUs = 0;
+    }
+
+    @Override
+    protected long doRender(ProgramObject programObject, long presentationTimeUs) {
         long actualTimeUs = (long) ((presentationTimeUs - TimeUtil.msToUs(startTimeMs)) * playSpeed);
         if (actualTimeUs > TimeUtil.msToUs(durationMs)) {
             ended = true;
@@ -120,39 +133,11 @@ public class VideoMediaSource extends MediaSource implements Handler.Callback {
         renderTexture.setRenderTarget();
         updateProgramUniform(programObject, decodeTexture);
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+        return this.presentationTimeUs;
     }
 
     @Override
-    public void onRelease() {
-        if (decodeThread != null) {
-            decodeThread.quitSafely();
-            decodeThread = null;
-        }
-        decodeHandler = null;
-
-        if (extractor != null) {
-            extractor.release();
-            extractor = null;
-        }
-        if (decoder != null) {
-            decoder.stop();
-            decoder.release();
-            decoder = null;
-        }
-        format = null;
-        presentationTimeUs = 0;
-    }
-
-    @Override
-    protected void onRender(ProgramObject programObject, long presentationTimeUs) {
-        if (decodeHandler == null) {
-            throw new IllegalStateException("VideoMediaSource must prepare before render.");
-        }
-        decodeHandler.obtainMessage(MSG_RENDER, presentationTimeUs).sendToTarget();
-    }
-
-    @Override
-    protected void bindRenderTextures() {
+    protected void bindRenderTextures(boolean[] shouldRender) {
 
     }
 
@@ -203,22 +188,5 @@ public class VideoMediaSource extends MediaSource implements Handler.Callback {
         decoder = MediaCodec.createDecoderByType(mime);
         decoder.configure(format, decodeSurface, null, 0);
         decoder.start();
-    }
-
-    private void prepareThread() {
-        String name = MediaUtil.getName(filePath);
-        decodeThread = new HandlerThread("VideoMediaSource:" + name);
-        decodeThread.start();
-        decodeHandler = new Handler(decodeThread.getLooper(), this);
-    }
-
-    @Override
-    public boolean handleMessage(Message msg) {
-        switch (msg.what) {
-            case MSG_RENDER:
-                renderInternal((Long) msg.obj);
-                return true;
-        }
-        return false;
     }
 }

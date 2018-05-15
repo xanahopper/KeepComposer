@@ -2,6 +2,7 @@ package com.gotokeep.keep.composer.transition;
 
 import android.opengl.GLES20;
 
+import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.gles.ProgramObject;
 import com.gotokeep.keep.composer.util.TimeUtil;
 
@@ -55,14 +56,10 @@ public class FadeTransition extends MediaTransition {
     }
 
     @Override
-    protected boolean shouldRenderStartNode(long presentationTimeUs) {
-        return presentationTimeUs >= TimeUtil.msToUs(startTimeMs) &&
-                presentationTimeUs <= TimeUtil.msToUs(endTimeMs);
-    }
-
-    @Override
-    protected boolean shouldRenderEndNode(long presentationTimeUs) {
-        return presentationTimeUs >= TimeUtil.msToUs(startTimeMs) &&
-                presentationTimeUs <= TimeUtil.msToUs(endTimeMs);
+    protected boolean shouldRenderNode(RenderNode renderNode, long presentationTimeUs) {
+        long timeUs = TimeUtil.msToUs(renderNode == startNode ? renderNode.getEndTimeMs()
+                : renderNode.getStartTimeMs());
+        long offsetUs = TimeUtil.msToUs(durationMs / 2);
+        return TimeUtil.inRange(presentationTimeUs, timeUs - offsetUs, timeUs + offsetUs);
     }
 }

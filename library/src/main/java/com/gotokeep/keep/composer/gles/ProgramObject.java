@@ -1,5 +1,6 @@
 package com.gotokeep.keep.composer.gles;
 
+import android.graphics.Matrix;
 import android.opengl.GLES20;
 
 import java.util.Map;
@@ -45,6 +46,19 @@ public final class ProgramObject {
 
     private Map<String, Integer> uniforms;
 
+    private volatile static ProgramObject defaultProgram = null;
+
+    public static ProgramObject getDefaultProgram() {
+        if (defaultProgram == null) {
+            synchronized (ProgramObject.class) {
+                if (defaultProgram == null) {
+                    defaultProgram = new ProgramObject();
+                }
+            }
+        }
+        return defaultProgram;
+    }
+
     public ProgramObject() {
         this(DEFAULT_FRAGMENT_SHADER, DEFAULT_UNIFORM_NAMES);
     }
@@ -58,6 +72,7 @@ public final class ProgramObject {
         this.fragmentShader = fragmentShader;
         programId = createProgram(vertexShader, fragmentShader);
         initUniformLocations(uniformNames);
+        initDefaultValue();
     }
 
     public void use() {
@@ -75,10 +90,21 @@ public final class ProgramObject {
     private void initUniformLocations(String[] uniformNames) {
         uniforms = new TreeMap<>();
         if (uniformNames != null) {
-            for (int i = 0; i < uniformNames.length; i++) {
-                int loc = GLES20.glGetUniformLocation(programId, uniformNames[i]);
-                uniforms.put(uniformNames[i], loc);
+            for (String uniformName : uniformNames) {
+                int loc = GLES20.glGetUniformLocation(programId, uniformName);
+                uniforms.put(uniformName, loc);
             }
+        }
+    }
+
+    private void initDefaultValue() {
+        int loc = getUniformLocation(UNIFORM_TRANSFORM_MATRIX);
+        if (loc > 0) {
+            float st[] = new float[16];
+            Matrix matrix = new Matrix();
+            matrix.reset();
+            matrix.getValues(st);
+            GLES20.glUniformMatrix4fv(loc, 1, false, st, 0);
         }
     }
 

@@ -2,9 +2,10 @@ package com.gotokeep.keep.composer.target;
 
 import android.graphics.SurfaceTexture;
 import android.opengl.GLES20;
+import android.view.Surface;
 
 import com.gotokeep.keep.composer.RenderNode;
-import com.gotokeep.keep.composer.RenderTexture;
+import com.gotokeep.keep.composer.RenderTarget;
 import com.gotokeep.keep.composer.gles.ProgramObject;
 
 /**
@@ -12,50 +13,58 @@ import com.gotokeep.keep.composer.gles.ProgramObject;
  * @version 1.0
  * @since 2018-05-14 09:47
  */
-public class PreviewRenderTarget extends RenderNode {
+public class PreviewRenderTarget extends RenderTarget implements SurfaceTexture.OnFrameAvailableListener {
+    private ProgramObject programObject;
+    private Surface inputSurface;
 
-    public PreviewRenderTarget() {
+    protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs, RenderNode renderNode) {
+        float transform[] = new float[16];
+        renderNode.getTransformMatrix(transform);
+        GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
+                1, false, transform, 0);
     }
 
     @Override
-    protected RenderTexture createRenderTexture() {
-        return new RenderTexture();
+    public Surface getInputSurface() {
+        return inputSurface;
     }
 
     @Override
-    protected ProgramObject createProgramObject() {
-        return new ProgramObject();
-    }
+    public void updateFrame(RenderNode renderNode, long presentationTimeUs) {
+        programObject.use();
 
-    @Override
-    protected void onPrepare() {
-        if (inputNodes.size() < 1) {
-            throw new RuntimeException("Not enough input.");
-        }
+        renderNode.getOutputTexture().bind(0);
         GLES20.glUniform1i(programObject.getUniformLocation(ProgramObject.UNIFORM_TEXTURE), 0);
-    }
-
-    @Override
-    protected void onRelease() {
-    }
-
-    @Override
-    protected void onRender(ProgramObject programObject, long presentationTimeUs) {
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
     }
 
     @Override
-    protected void bindRenderTextures() {
-        RenderNode node = inputNodes.valueAt(0);
-        node.getOutputTexture().bind(0);
+    public void prepare() {
+        programObject = new ProgramObject();
     }
 
     @Override
-    protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs) {
-        RenderNode node = inputNodes.valueAt(0);
-        float transform[] = new float[16];
-        node.getTransformMatrix(transform);
-        GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
-                1, false, transform, 0);
+    public void complete() {
+
+    }
+
+    @Override
+    public void release() {
+        if (programObject != null) {
+            programObject.release();
+            programObject = null;
+        }
+        if (inputSurface != null) {
+            inputSurface.release();
+            inputSurface = null;
+        }
+    }
+
+    @Override
+    public void onFrameAvailable(SurfaceTexture surfaceTexture) {
+        if (inputSurface != null) {
+            inputSurface.release();
+        }
+        inputSurface = new Surface(surfaceTexture);
     }
 }
