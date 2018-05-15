@@ -21,7 +21,7 @@ public class SimplestActivity extends BaseActivity implements Handler.Callback {
         super.onCreate(savedInstanceState);
 
         handler = new Handler(getMainLooper(), this);
-        composer = MediaComposerFactory.createMediaComposer(handler);
+        composer = MediaComposerFactory.createMediaComposer(null, handler);
 
         timeline = new Timeline();
         timeline.addMediaItem(new VideoItem());

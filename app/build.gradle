@@ -3,7 +3,7 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 27
     defaultConfig {
-        applicationId "com.gotokeep.keep.composer"
+        applicationId "com.gotokeep.keep.composer.demo"
         minSdkVersion 18
         targetSdkVersion 27
         versionCode 1
@@ -16,7 +16,13 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
+//android.enableD8 = false
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')

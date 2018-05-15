@@ -17,6 +17,7 @@ public class OverlayItem extends MediaItem {
     private float scale;
     protected String type;
     protected MediaItem baseItem;
+    protected String name;
 
     public OverlayItem(MediaItem baseItem, int layer) {
         super(TYPE_OVERLAY, layer);

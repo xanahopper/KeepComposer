@@ -10,9 +10,9 @@ public interface ComposerNode {
 
     boolean isPrepared();
 
+    void release();
+
     void render(long presentationTimeUs);
 
     boolean awaitFrameAvailable();
-
-
 }

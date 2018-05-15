@@ -7,9 +7,9 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.TextureView;
 
-import com.gotokeep.keep.composition.demo.R;
-import com.gotokeep.keep.composition.demo.scale.MatrixManager;
-import com.gotokeep.keep.composition.demo.scale.ScaleType;
+import com.gotokeep.keep.composer.R;
+import com.gotokeep.keep.composer.scale.MatrixManager;
+import com.gotokeep.keep.composer.scale.ScaleType;
 
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
@@ -142,8 +142,10 @@ public class ScalableTextureView extends TextureView implements MatrixManager.Ma
 
             EGLConfig[] configs = new EGLConfig[1];
             gl10.eglChooseConfig(display, GL_CLEAR_CONFIG_ATTRIBUTES, configs, configs.length, new int[1]);
-            EGLContext context = gl10.eglCreateContext(display, configs[0], EGL10.EGL_NO_CONTEXT, GL_CLEAR_CONTEXT_ATTRIBUTES);
-            EGLSurface eglSurface = gl10.eglCreateWindowSurface(display, configs[0], getSurfaceTexture(), new int[]{EGL10.EGL_NONE});
+            EGLContext context = gl10.eglCreateContext(display, configs[0], EGL10.EGL_NO_CONTEXT,
+                    GL_CLEAR_CONTEXT_ATTRIBUTES);
+            EGLSurface eglSurface = gl10.eglCreateWindowSurface(display, configs[0], getSurfaceTexture(), new
+                    int[]{EGL10.EGL_NONE});
 
             gl10.eglMakeCurrent(display, eglSurface, eglSurface, context);
             gl10.eglSwapBuffers(display, eglSurface);

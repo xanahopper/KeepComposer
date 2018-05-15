@@ -5,6 +5,7 @@ import com.gotokeep.keep.composer.filter.MediaFilter;
 import com.gotokeep.keep.composer.filter.MediaFilterFactory;
 import com.gotokeep.keep.composer.overlay.LayerOverlay;
 import com.gotokeep.keep.composer.overlay.MediaOverlay;
+import com.gotokeep.keep.composer.overlay.OverlayProvider;
 import com.gotokeep.keep.composer.overlay.SubtitleOverlay;
 import com.gotokeep.keep.composer.overlay.WatermarkOverlay;
 import com.gotokeep.keep.composer.source.ImageMediaSource;
@@ -28,8 +29,10 @@ public class RenderFactory {
     private final Map<Class<? extends MediaItem>,
             RenderCreator<? extends MediaItem, ? extends RenderNode>> renderCreatorMap = new HashMap<>();
     private Map<MediaItem, RenderNode> renderNodeCache = new HashMap<>();
+    private OverlayProvider overlayProvider;
 
-    public RenderFactory() {
+    public RenderFactory(OverlayProvider overlayProvider) {
+        this.overlayProvider = overlayProvider;
         registerRenderType(VideoItem.class, item -> new VideoMediaSource(item.filePath));
         registerRenderType(ImageItem.class, item -> new ImageMediaSource(item.filePath));
         registerRenderType(TransitionItem.class, item -> {
@@ -46,7 +49,7 @@ public class RenderFactory {
             RenderNode baseNode = createRenderNode(item.baseItem);
             MediaOverlay overlay = null;
             if (OverlayItem.TYPE_LAYER.equals(item.type)) {
-                overlay = new LayerOverlay(baseNode);
+                overlay = new LayerOverlay(baseNode, overlayProvider.getLayerImagePath(item.name));
             } else if (OverlayItem.TYPE_WATERMARK.equals(item.type)) {
                 overlay = new WatermarkOverlay(baseNode);
             } else if (OverlayItem.TYPE_SUBTITLE.equals(item.type)) {
