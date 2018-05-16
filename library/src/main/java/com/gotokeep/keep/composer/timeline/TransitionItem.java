@@ -15,6 +15,7 @@ public class TransitionItem extends MediaItem {
         super(TYPE_COMBINE, layer);
         this.startItem = startItem;
         this.endItem = endItem;
+        startTimeMs = endItem.startTimeMs;
     }
 
     public long getDurationMs() {
@@ -23,5 +24,6 @@ public class TransitionItem extends MediaItem {
 
     public void setDurationMs(long durationMs) {
         this.durationMs = durationMs;
+        this.endTimeMs = startTimeMs + durationMs;
     }
 }

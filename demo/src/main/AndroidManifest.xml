@@ -29,6 +29,16 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".sample.SimpleTransitionActivity"
+            android:icon="@drawable/ic_all_inclusive"
+            android:label="MediaComposer Simple Transition">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>
