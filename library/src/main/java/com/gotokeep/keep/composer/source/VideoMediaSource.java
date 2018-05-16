@@ -5,9 +5,7 @@ import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.opengl.GLES20;
 import android.os.Build;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Message;
+import android.util.Log;
 import android.view.Surface;
 
 import com.gotokeep.keep.composer.RenderTexture;
@@ -29,6 +27,7 @@ public class VideoMediaSource extends MediaSource{
     private static final int TIMEOUT_US = 1000;
 
     private static final String EXTERNAL_FRAGMENT_SHADER = "" +
+            "#extension GL_OES_EGL_image_external : require\n" +
             "precision mediump float;\n" +
             "uniform samplerExternalOES uTexture;\n" +
             "varying vec2 vTexCoords;\n" +
@@ -96,13 +95,15 @@ public class VideoMediaSource extends MediaSource{
     }
 
     @Override
-    protected long doRender(ProgramObject programObject, long presentationTimeUs) {
-        long actualTimeUs = (long) ((presentationTimeUs - TimeUtil.msToUs(startTimeMs)) * playSpeed);
+    public long render(long positionUs, long elapsedRealtimeUs) {
+        long actualTimeUs = (long) ((positionUs - TimeUtil.msToUs(startTimeMs)) * playSpeed);
         if (actualTimeUs > TimeUtil.msToUs(durationMs)) {
+            Log.d("Composer", "doRender: === END ===");
             ended = true;
         }
         boolean encoded = false;
-        while (!encoded && !ended && this.presentationTimeUs < actualTimeUs) {
+        Log.d("Composer", "doRender: actualTimeUs  = " + actualTimeUs + ", presentationTimeUs = " + presentationTimeUs);
+        while (!encoded && !ended && this.presentationTimeUs <= actualTimeUs) {
             int inputIndex = decoder.dequeueInputBuffer(TIMEOUT_US);
             if (inputIndex >= 0) {
                 ByteBuffer buffer = MediaUtil.getInputBuffer(decoder, inputIndex);
@@ -115,43 +116,47 @@ public class VideoMediaSource extends MediaSource{
                     ended = true;
                 }
             } else {
-                throw new RuntimeException("Cannot dequeue an decoder input buffer.");
+                Log.w("Composer", "doRender: cannot dequeue input buffer from decoder");
             }
             int outputIndex = decoder.dequeueOutputBuffer(decodeInfo, TIMEOUT_US);
             if (outputIndex > 0) {
                 encoded = true;
-                decoder.releaseOutputBuffer(outputIndex, sampleTimeUs >= actualTimeUs);
+                decoder.releaseOutputBuffer(outputIndex, true);
                 this.presentationTimeUs = decodeInfo.presentationTimeUs;
             }
         }
         if (!encoded) {
             renderTexture.notifyNoFrame();
+        } else {
+            Log.d("Composer", "VideoMediaSource#doRender: rendered a frame");
+            decodeTexture.getSurfaceTexture().updateTexImage();
+            super.render(positionUs, elapsedRealtimeUs);
         }
-        decodeTexture.awaitFrameAvailable();
-        programObject.use();
-        decodeTexture.bind(0);
-        renderTexture.setRenderTarget();
-        updateProgramUniform(programObject, decodeTexture);
+        return this.presentationTimeUs;
+    }
+
+    @Override
+    protected long doRender(ProgramObject programObject, long positionUs) {
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
         return this.presentationTimeUs;
     }
 
     @Override
     protected void bindRenderTextures(boolean[] shouldRender) {
-
+        decodeTexture.bind(0);
     }
 
     @Override
     protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs) {
-
-    }
-
-    private void updateProgramUniform(ProgramObject programObject, RenderTexture decodeTexture) {
         float transform[] = new float[16];
         decodeTexture.getSurfaceTexture().getTransformMatrix(transform);
         GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX), 1, false, transform, 0);
         GLES20.glUniform1i(programObject.getUniformLocation(ProgramObject.UNIFORM_TEXTURE), 0);
     }
+
+//    private void updateProgramUniform(ProgramObject programObject, RenderTexture decodeTexture) {
+//
+//    }
 
     private void prepareExtractorAndInfo() throws IOException {
         extractor = new MediaExtractor();
@@ -172,7 +177,7 @@ public class VideoMediaSource extends MediaSource{
         extractor.selectTrack(trackIndex);
         width = format.containsKey(MediaFormat.KEY_WIDTH) ? format.getInteger(MediaFormat.KEY_WIDTH) : 0;
         height = format.containsKey(MediaFormat.KEY_HEIGHT) ? format.getInteger(MediaFormat.KEY_HEIGHT) : 0;
-        durationMs = format.containsKey(MediaFormat.KEY_DURATION) ? format.getInteger(MediaFormat.KEY_DURATION) :
+        durationMs = format.containsKey(MediaFormat.KEY_DURATION) ? TimeUtil.usToMs(format.getLong(MediaFormat.KEY_DURATION)):
                 DURATION_INFINITE;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             rotation = format.containsKey(MediaFormat.KEY_ROTATION) ? format.getInteger(MediaFormat.KEY_ROTATION) : 0;

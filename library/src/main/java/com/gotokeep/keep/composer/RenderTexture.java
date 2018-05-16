@@ -23,17 +23,17 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
     @IntDef({TEXTURE_NATIVE, TEXTURE_EXTERNAL})
     @Retention(RetentionPolicy.SOURCE)
     public @interface TextureTarget {
-    }
 
+    }
     private int framebufferId = 0;
+
     private int textureTarget = 0;
     private int textureId = 0;
     private SurfaceTexture surfaceTexture;
     private boolean released = false;
-
     private final Object frameSyncObj = new Object();
-    private boolean frameAvailable = false;
 
+    private boolean frameAvailable = false;
     public RenderTexture() {
         this.textureTarget = TEXTURE_EXTERNAL;
         this.surfaceTexture = null;
@@ -42,6 +42,10 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
 
     public RenderTexture(@TextureTarget int textureTarget) {
         createTexture(textureTarget);
+    }
+
+    public void clear() {
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
     }
 
     private void createTexture(int textureTarget) {
@@ -127,15 +131,16 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
     @Override
     public void onFrameAvailable(SurfaceTexture surfaceTexture) {
         synchronized (frameSyncObj) {
-            if (frameAvailable) {
-                throw new RuntimeException("frameAvailable already set. frame dropped.");
-            }
+//            if (frameAvailable) {
+//                Log.w(TAG, "onFrameAvailable: ", new RuntimeException("frameAvailable already set. frame dropped."));;
+//            }
+            Log.d(TAG, "onFrameAvailable");
             frameAvailable = true;
             frameSyncObj.notifyAll();
         }
     }
 
-    public boolean setRenderTarget() {
+    public boolean setRenderTarget(int canvasWidth, int canvasHeight) {
         if (textureId == 0) {
             GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
             return true;
@@ -144,9 +149,15 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
             int ids[] = new int[1];
             GLES20.glGenFramebuffers(1, ids, 0);
             framebufferId = ids[0];
+            GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, framebufferId);
+            GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0, textureTarget, textureId, 0);
+            GLES20.glTexImage2D(textureTarget, 0, GLES20.GL_RGBA, canvasWidth, canvasHeight, 0,
+                    GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, null);
+        } else {
+            GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, framebufferId);
+//            GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0, textureTarget, textureId, 0);
         }
-        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, framebufferId);
-        GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0, textureTarget, textureId, 0);
+        GLES20.glViewport(0, 0, canvasWidth, canvasHeight);
         return GLES20.glCheckFramebufferStatus(GLES20.GL_FRAMEBUFFER) == GLES20.GL_FRAMEBUFFER_COMPLETE;
     }
 

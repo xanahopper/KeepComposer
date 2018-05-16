@@ -33,7 +33,7 @@ public final class ProgramObject {
             "void main()                  \n" +
             "{                            \n" +
             "    gl_Position = aPosition;  \n" +
-            "    vTexCoords = (uTransformMatrix * vec4(aTexCoords, 0, 0)).xy; \n" +
+            "    vTexCoords = (uTransformMatrix * vec4(aTexCoords, 0.0, 1.0)).st; \n" +
             "}                            \n";
 
     private static final String DEFAULT_FRAGMENT_SHADER = "" +
@@ -99,13 +99,11 @@ public final class ProgramObject {
 
     private void initDefaultValue() {
         int loc = getUniformLocation(UNIFORM_TRANSFORM_MATRIX);
-        if (loc > 0) {
-            float st[] = new float[16];
-            Matrix matrix = new Matrix();
-            matrix.reset();
-            matrix.getValues(st);
-            GLES20.glUniformMatrix4fv(loc, 1, false, st, 0);
-        }
+        float st[] = new float[16];
+        Matrix matrix = new Matrix();
+        matrix.reset();
+        matrix.getValues(st);
+        GLES20.glUniformMatrix4fv(loc, 1, false, st, 0);
     }
 
     public int getUniformLocation(String name) {

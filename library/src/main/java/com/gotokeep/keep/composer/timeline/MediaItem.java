@@ -33,16 +33,13 @@ public class MediaItem implements Comparable<MediaItem> {
 
     public static Comparator<? super MediaItem> getTypeComparator() {
         if (comparator == null) {
-            comparator = new Comparator<MediaItem>() {
-                @Override
-                public int compare(MediaItem t1, MediaItem t2) {
-                    if (t1.type < t2.type) {
-                        return -1;
-                    } else if (t1.type > t2.type) {
-                        return 1;
-                    } else {
-                        return 0;
-                    }
+            comparator = (Comparator<MediaItem>) (t1, t2) -> {
+                if (t1.type < t2.type) {
+                    return -1;
+                } else if (t1.type > t2.type) {
+                    return 1;
+                } else {
+                    return 0;
                 }
             };
         }
@@ -51,5 +48,29 @@ public class MediaItem implements Comparable<MediaItem> {
 
     public int getLayer() {
         return layer;
+    }
+
+    public long getStartTimeMs() {
+        return startTimeMs;
+    }
+
+    public long getEndTimeMs() {
+        return endTimeMs;
+    }
+
+    public void setStartTimeMs(long startTimeMs) {
+        this.startTimeMs = startTimeMs;
+    }
+
+    public void setEndTimeMs(long endTimeMs) {
+        this.endTimeMs = endTimeMs;
+    }
+
+    public float getPlaySpeed() {
+        return playSpeed;
+    }
+
+    public void setPlaySpeed(float playSpeed) {
+        this.playSpeed = playSpeed;
     }
 }

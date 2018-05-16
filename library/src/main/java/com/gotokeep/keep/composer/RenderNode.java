@@ -49,12 +49,35 @@ public abstract class RenderNode {
         return renderTexture;
     }
 
-    public long render(long presentationTimeUs) {
+    public long render(long positionUs, long elapsedRealtimeUs) {
+        boolean[] shouldRender = renderInputs(positionUs, elapsedRealtimeUs);
+        setSelfRenderTarget(positionUs, shouldRender);
+        return doRender(programObject, positionUs);
+    }
+
+    public void setViewport(int width, int height) {
+        canvasWidth = width;
+        canvasHeight = height;
+    }
+
+    private void setSelfRenderTarget(long positionUs, boolean[] shouldRender) {
+        renderTexture.setRenderTarget(canvasWidth, canvasHeight);
+        renderTexture.clear();
+        if (programObject != null) {
+            programObject.use();
+            activeAttribData();
+            bindRenderTextures(shouldRender);
+            updateRenderUniform(programObject, positionUs);
+        }
+//        GLES20.glViewport(0, 0, canvasWidth, canvasHeight);
+    }
+
+    private boolean[] renderInputs(long positionUs, long elapsedRealtimeUs) {
         boolean shouldRender[] = new boolean[inputNodes.size()];
         for (int i = 0; i < inputNodes.size(); i++) {
-            shouldRender[i] = shouldRenderNode(inputNodes.valueAt(i), presentationTimeUs);
+            shouldRender[i] = shouldRenderNode(inputNodes.valueAt(i), positionUs);
             if (shouldRender[i]) {
-                inputNodes.valueAt(i).render(presentationTimeUs);
+                inputNodes.valueAt(i).render(positionUs, elapsedRealtimeUs);
             }
         }
         for (int i = 0; i < inputNodes.size(); i++) {
@@ -62,14 +85,7 @@ public abstract class RenderNode {
                 Log.w(TAG, "one of input frame invalid");
             }
         }
-        if (programObject != null) {
-            programObject.use();
-            bindRenderTextures(shouldRender);
-            activeAttribData();
-            updateRenderUniform(programObject, presentationTimeUs);
-        }
-        renderTexture.setRenderTarget();
-        return doRender(programObject, presentationTimeUs);
+        return shouldRender;
     }
 
     /**
@@ -115,7 +131,7 @@ public abstract class RenderNode {
         activeAttribData();
     }
 
-    private void activeAttribData() {
+    protected void activeAttribData() {
         GLES20.glVertexAttribPointer(0, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer);
         GLES20.glEnableVertexAttribArray(0);
         GLES20.glVertexAttribPointer(1, 2, GLES20.GL_SHORT, false, 0, texCoordBuffer);
@@ -180,10 +196,10 @@ public abstract class RenderNode {
     /**
      * Subclass should override this method to render the frame.
      * @param programObject program object will use
-     * @param presentationTimeUs current time in microsecond
+     * @param positionUs current time in microsecond
      * @return time in microsecond of the frame that just rendered
      */
-    protected abstract long doRender(ProgramObject programObject, long presentationTimeUs);
+    protected abstract long doRender(ProgramObject programObject, long positionUs);
 
     protected abstract void bindRenderTextures(boolean[] shouldRender);
 

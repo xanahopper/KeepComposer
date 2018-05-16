@@ -3,6 +3,7 @@ package com.gotokeep.keep.composer;
 import android.graphics.SurfaceTexture;
 import android.opengl.EGLSurface;
 import android.opengl.GLES20;
+import android.util.Log;
 import android.view.Surface;
 
 import com.gotokeep.keep.composer.gles.EglCore;
@@ -29,6 +30,7 @@ public final class ComposerEngine {
     }
 
     public void setup(Surface outputSurface) {
+        Log.d("Composer", "setup@" + Thread.currentThread().getName());
         eglCore = new EglCore(null, EglCore.FLAG_RECORDABLE);
         eglSurface = eglCore.createWindowSurface(outputSurface);
         eglCore.makeCurrent(eglSurface);
@@ -47,5 +49,9 @@ public final class ComposerEngine {
         this.width = width;
         this.height = height;
         GLES20.glViewport(0, 0, width, height);
+    }
+
+    public void swapBuffers() {
+        eglCore.swapBuffers(eglSurface);
     }
 }

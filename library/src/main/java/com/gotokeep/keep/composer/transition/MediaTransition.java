@@ -99,20 +99,20 @@ public abstract class MediaTransition extends RenderNode {
     }
 
     @Override
-    protected long doRender(ProgramObject programObject, long presentationTimeUs) {
+    protected long doRender(ProgramObject programObject, long positionUs) {
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-        return presentationTimeUs;
+        return positionUs;
     }
 
     @Override
     protected void bindRenderTextures(boolean[] shouldRender) {
-        if (shouldRender.length < 2) {
-            throw new RuntimeException("MediaTransition has incorrect shouldRender length.");
-        }
-        if (shouldRender[INDEX_START]) {
+//        if (shouldRender.length < 2) {
+//            throw new RuntimeException("MediaTransition has incorrect shouldRender length.");
+//        }
+        if (shouldRender.length > INDEX_START &&shouldRender[INDEX_START]) {
             startNode.getOutputTexture().bind(0);
         }
-        if (shouldRender[INDEX_END]) {
+        if (shouldRender.length > INDEX_END && shouldRender[INDEX_END]) {
             endNode.getOutputTexture().bind(1);
         }
     }

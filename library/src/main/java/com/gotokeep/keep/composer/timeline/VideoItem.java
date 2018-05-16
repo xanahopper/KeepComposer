@@ -8,7 +8,8 @@ package com.gotokeep.keep.composer.timeline;
 public class VideoItem extends MediaItem {
     protected String filePath;
 
-    public VideoItem() {
+    public VideoItem(String filePath) {
         super(TYPE_SOURCE, 0);
+        this.filePath = filePath;
     }
 }

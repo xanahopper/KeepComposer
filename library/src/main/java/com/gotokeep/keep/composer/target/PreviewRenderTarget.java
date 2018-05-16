@@ -2,6 +2,7 @@ package com.gotokeep.keep.composer.target;
 
 import android.graphics.SurfaceTexture;
 import android.opengl.GLES20;
+import android.util.Log;
 import android.view.Surface;
 
 import com.gotokeep.keep.composer.RenderNode;
@@ -31,9 +32,15 @@ public class PreviewRenderTarget extends RenderTarget implements SurfaceTexture.
 
     @Override
     public void updateFrame(RenderNode renderNode, long presentationTimeUs) {
+        Log.d("Composer", "PreviewRenderTarget#updateFrame: " + presentationTimeUs);
         programObject.use();
 
         renderNode.getOutputTexture().bind(0);
+        float st[] = new float[16];
+        renderNode.getTransformMatrix(st);
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
+        GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
+                1, false, st, 0);
         GLES20.glUniform1i(programObject.getUniformLocation(ProgramObject.UNIFORM_TEXTURE), 0);
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
     }

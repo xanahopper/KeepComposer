@@ -49,7 +49,7 @@ public class LayerOverlay extends MediaOverlay {
     }
 
     @Override
-    protected long doRender(ProgramObject programObject, long presentationTimeUs) {
+    protected long doRender(ProgramObject programObject, long positionUs) {
         // draw source
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
         // draw layer

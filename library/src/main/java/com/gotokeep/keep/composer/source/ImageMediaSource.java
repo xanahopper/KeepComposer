@@ -6,7 +6,6 @@ import android.media.ExifInterface;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
 
-import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.RenderTexture;
 import com.gotokeep.keep.composer.gles.ProgramObject;
 
@@ -47,8 +46,8 @@ public class ImageMediaSource extends MediaSource {
     }
 
     @Override
-    protected long doRender(ProgramObject programObject, long presentationTimeUs) {
-        return presentationTimeUs;
+    protected long doRender(ProgramObject programObject, long positionUs) {
+        return positionUs;
     }
 
     @Override

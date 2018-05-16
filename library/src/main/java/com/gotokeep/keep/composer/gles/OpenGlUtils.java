@@ -19,8 +19,9 @@ public class OpenGlUtils {
 	public static final int NO_TEXTURE = -1;
 	public static final int NOT_INIT = -1;	
 	public static final int ON_DRAWN = 1;
-	
-	public static int loadTexture(final Bitmap img, final int usedTexId) {
+    private static final String TAG = OpenGlUtils.class.getSimpleName();
+
+    public static int loadTexture(final Bitmap img, final int usedTexId) {
 		return loadTexture(img, usedTexId, false);
     }
 	
@@ -181,6 +182,10 @@ public class OpenGlUtils {
 	private static int loadShader(final String strSource, final int iType) {
         int[] compiled = new int[1];
         int iShader = GLES20.glCreateShader(iType);
+        if (iShader == 0) {
+            Log.e(TAG, "loadShader: " + GLES20.glGetError());
+			return 0;
+		}
         GLES20.glShaderSource(iShader, strSource);
         GLES20.glCompileShader(iShader);
         GLES20.glGetShaderiv(iShader, GLES20.GL_COMPILE_STATUS, compiled, 0);

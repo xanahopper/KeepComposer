@@ -29,7 +29,7 @@ public class SubtitleOverlay extends MediaOverlay {
     }
 
     @Override
-    protected long doRender(ProgramObject programObject, long presentationTimeUs) {
+    protected long doRender(ProgramObject programObject, long positionUs) {
         return 0;
     }
 

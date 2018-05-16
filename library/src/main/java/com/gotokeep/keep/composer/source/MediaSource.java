@@ -20,7 +20,7 @@ public abstract class MediaSource extends RenderSource {
     int rotation;
     long durationMs;
     long presentationTimeUs;
-    float playSpeed;
+    float playSpeed = 1f;
     boolean ended = false;
 
     protected MediaSource(int mediaType) {

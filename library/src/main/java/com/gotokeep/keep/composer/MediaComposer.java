@@ -34,6 +34,10 @@ public interface MediaComposer {
 
     void setExportEventListener(ExportEventListener listener);
 
+    int getVideoWidth();
+
+    int getVideoHeight();
+
     interface PlayEventListener {
         void onPreparing(MediaComposer composer, RenderNode preparingNode);
 

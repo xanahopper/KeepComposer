@@ -5,6 +5,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.TextureView;
 
 import com.gotokeep.keep.composer.target.MuxerRenderTarget;
@@ -16,10 +17,8 @@ import com.gotokeep.keep.composer.util.MediaClock;
 import com.gotokeep.keep.composer.util.TimeUtil;
 
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.NavigableSet;
 import java.util.TreeMap;
 
 /**
@@ -41,6 +40,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     private static final int MSG_SET_EXPORT_LISTENER = 10;
     private static final int MSG_DO_SOME_WORK = 11;
     private static final int MSG_SET_VIDEO_SIZE = 12;
+    private static final int MSG_PREPARE_ENGINE = 13;
 
     private static final int EVENT_PLAY_PREPARE = 0;
     private static final int EVENT_PLAY_PLAY = 1;
@@ -55,6 +55,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     private static final int EVENT_EXPORT_PROGRESS = 2;
     private static final int EVENT_EXPORT_COMPLETE = 3;
     private static final int EVENT_EXPORT_ERROR = 4;
+    private static final String TAG = MediaComposer.class.getSimpleName();
 
     private HandlerThread internalThread;
     private Handler handler;
@@ -73,8 +74,11 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     private long currentTimeUs;
     private int videoWidth;
     private int videoHeight;
+    private int canvasWidth;
+    private int canvasHeight;
     private boolean export = false;
     private boolean playing = false;
+    private long elapsedRealtimeUs;
 
     public MediaComposerImpl(RenderFactory renderFactory, Handler eventHandler) {
         engine = new ComposerEngine();
@@ -144,6 +148,16 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     }
 
     @Override
+    public int getVideoWidth() {
+        return videoWidth;
+    }
+
+    @Override
+    public int getVideoHeight() {
+        return videoHeight;
+    }
+
+    @Override
     public boolean handleMessage(Message msg) {
         switch (msg.what) {
             case MSG_SET_TIMELINE:
@@ -182,6 +196,9 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
             case MSG_SET_VIDEO_SIZE:
                 setVideoSizeInternal(msg.arg1, msg.arg2);
                 return true;
+            case MSG_PREPARE_ENGINE:
+                prepareEngine((SurfaceTexture) msg.obj, msg.arg1, msg.arg2);
+                return true;
         }
         return false;
     }
@@ -198,6 +215,8 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         if (previewView.isAvailable()) {
             renderTarget = new PreviewRenderTarget();
             engine.setup(previewView.getSurfaceTexture());
+            canvasWidth = previewView.getWidth();
+            canvasHeight = previewView.getHeight();
         }
     }
 
@@ -210,6 +229,10 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     }
 
     private void prepareInternal() {
+        Log.d(TAG, "prepareInternal");
+        if (renderTarget == null) {
+            return;
+        }
         renderTarget.prepare();
         renderRoot = generateRenderTree(currentTimeUs);
         if (eventHandler != null) {
@@ -218,9 +241,10 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     }
 
     private void playInternal() {
+        Log.d(TAG, "playInternal");
         playing = true;
         mediaClock.start();
-        scheduleNextWork(currentTimeUs);
+        handler.sendEmptyMessage(MSG_DO_SOME_WORK);
         if (eventHandler != null) {
             eventHandler.sendEmptyMessage(export ? EVENT_EXPORT_START : EVENT_PLAY_PLAY);
         }
@@ -244,7 +268,6 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
 
     private void seekInternal(long timeMs) {
         renderRoot = generateRenderTree(TimeUtil.msToUs(timeMs));
-        scheduleNextWork(timeMs);
         if (eventHandler != null && !export) {
             eventHandler.obtainMessage(EVENT_PLAY_SEEKING, timeMs).sendToTarget();
         }
@@ -266,46 +289,59 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     }
 
     private void doRenderWork() {
-        mediaClock.setPositionUs(currentTimeUs);
+        long operationStartMs = SystemClock.elapsedRealtime();
+        currentTimeUs = mediaClock.getPositionUs();
+        Log.v(TAG, "doRenderWork@" + Thread.currentThread().getName() + ", positionUs = " + currentTimeUs);
         if (renderRoot == null) {
+            Log.d(TAG, "doRenderWork: RenderRoot is empty");
             if (eventHandler != null) {
                 eventHandler.sendEmptyMessage(export ? EVENT_EXPORT_COMPLETE : EVENT_PLAY_STOP);
             }
             return;
         }
         // do render tree
-        currentTimeUs = renderRoot.render(currentTimeUs);
-        // render result to RenderTarget
-        renderTarget.updateFrame(renderRoot, currentTimeUs);
-        if (eventHandler != null) {
-            eventHandler.obtainMessage(export ? EVENT_EXPORT_PROGRESS : EVENT_PLAY_POSITION_CHANGE,
-                    new PositionInfo(currentTimeUs, timeline.getEndTimeMs())).sendToTarget();
+        elapsedRealtimeUs = TimeUtil.msToUs(SystemClock.elapsedRealtime());
+
+        renderRoot.setViewport(canvasWidth, canvasHeight);
+
+        long renderTimeUs = renderRoot.render(currentTimeUs, elapsedRealtimeUs);
+
+        if (renderTimeUs > currentTimeUs) {
+            // render result to RenderTarget
+            currentTimeUs = renderTimeUs;
+            renderTarget.updateFrame(renderRoot, currentTimeUs);
+            engine.swapBuffers();
+            if (eventHandler != null) {
+                eventHandler.obtainMessage(export ? EVENT_EXPORT_PROGRESS : EVENT_PLAY_POSITION_CHANGE,
+                        new PositionInfo(currentTimeUs, timeline.getEndTimeMs())).sendToTarget();
+            }
         }
-        // maintain render tree
-        renderRoot = maintainRenderTree(renderRoot, currentTimeUs);
+        renderRoot = maintainRenderTree(renderRoot, renderTimeUs);
         if (renderRoot == null) {
             renderRoot = generateRenderTree(currentTimeUs);
         }
         if (renderRoot != null) {
-            scheduleNextWork(TimeUtil.usToMs(currentTimeUs));
+            scheduleNextWork(operationStartMs, 10);
         } else {
             handler.removeMessages(MSG_DO_SOME_WORK);
         }
     }
 
-    private void scheduleNextWork(long presentationTimeMs) {
+    private void scheduleNextWork(long operationTimeMs, long intervalTimeMs) {
         handler.removeMessages(MSG_DO_SOME_WORK);
-        long nextWorkStartTimeDelayMs = presentationTimeMs - mediaClock.getPositionUs();
-        if (nextWorkStartTimeDelayMs <= 0) {
+        long nextOperationStartTime = operationTimeMs + intervalTimeMs;
+        long nextOperationDelayMs = nextOperationStartTime - SystemClock.elapsedRealtime();
+        Log.d(TAG, "scheduleNextWork: " + nextOperationStartTime + ", " + nextOperationDelayMs);
+        if (nextOperationDelayMs <= 0) {
             handler.sendEmptyMessage(MSG_DO_SOME_WORK);
         } else {
-            handler.sendEmptyMessageDelayed(MSG_DO_SOME_WORK, nextWorkStartTimeDelayMs);
+            handler.sendEmptyMessageDelayed(MSG_DO_SOME_WORK, nextOperationDelayMs);
         }
     }
 
     private RenderNode generateRenderTree(long presentationTimeUs) {
         List<MediaItem> items = timeline.queryPresentationTimeItems(presentationTimeUs);
-        Collections.sort(items, MediaItem.getTypeComparator());
+//        Collections.sort(items, MediaItem.getTypeComparator());
         RenderNode root = renderRoot;
         MediaItem topItem = items.size() > 0 ? items.get(0) : null;
         for (MediaItem item : items) {
@@ -316,7 +352,14 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
             } else {
                 renderNode = renderNodeMap.get(item);
             }
-            if (topItem == null || topItem.getLayer() < item.getLayer()) {
+            if (renderNode != null) {
+                if (!renderNode.isPrepared()) {
+                    renderNode.prepare();
+                }
+                Log.d(TAG, "generateRenderTree: " + canvasWidth);
+                renderNode.setViewport(canvasWidth, canvasHeight);
+            }
+            if (topItem == null || topItem.getLayer() <= item.getLayer()) {
                 topItem = item;
                 root = renderNode;
             }
@@ -347,15 +390,26 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         renderTarget = new PreviewRenderTarget();
+        canvasWidth = width;
+        canvasHeight = height;
         if (engine != null) {
-            engine.release();
-            engine.setup(surface);
-            engine.setViewport(width, height);
+            handler.obtainMessage(MSG_PREPARE_ENGINE, width, height, surface).sendToTarget();
+        }
+    }
+
+    private void prepareEngine(SurfaceTexture surface, int width, int height) {
+        engine.release();
+        engine.setup(surface);
+        engine.setViewport(width, height);
+        if (export) {
+            renderTarget.prepare();
         }
     }
 
     @Override
     public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+        canvasWidth = width;
+        canvasHeight = height;
         if (engine != null) {
             engine.setViewport(width, height);
         }
@@ -363,6 +417,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
 
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+        stop();
         releaseRenderTarget();
         if (engine != null) {
             engine.release();
@@ -372,12 +427,12 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
 
     @Override
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-        releaseRenderTarget();
-        renderTarget = new PreviewRenderTarget();
-        if (engine != null) {
-            engine.release();
-            engine.setup(surface);
-        }
+//        releaseRenderTarget();
+//        renderTarget = new PreviewRenderTarget();
+//        if (engine != null) {
+//            engine.release();
+//            engine.setup(surface);
+//        }
     }
 
     private void releaseRenderTarget() {
