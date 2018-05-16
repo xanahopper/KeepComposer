@@ -52,16 +52,6 @@ public abstract class MediaTransition extends RenderNode {
     }
 
     @Override
-    public void setInputNode(int inputIndex, RenderNode inputNode) {
-        super.setInputNode(inputIndex, inputNode);
-        if (inputIndex == INDEX_START) {
-            inputNode.setEndTimeMs(inputNode.getEndTimeMs() + durationMs / 2);
-        } else if (inputIndex == INDEX_END) {
-            inputNode.setStartTimeMs(Math.max(inputNode.getEndTimeMs() + durationMs / 2, 0));
-        }
-    }
-
-    @Override
     protected RenderTexture createRenderTexture() {
         return new RenderTexture(RenderTexture.TEXTURE_NATIVE);
     }
