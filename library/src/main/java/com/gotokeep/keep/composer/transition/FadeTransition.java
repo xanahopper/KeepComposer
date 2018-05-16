@@ -42,17 +42,21 @@ public class FadeTransition extends MediaTransition {
 
     @Override
     protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs) {
+
+        startNode = getStartNode();
+        endNode = getEndNode();
+
         float alpha = (float) (TimeUtil.usToMs(presentationTimeUs) - startTimeMs) / durationMs;
         GLES20.glUniform1f(programObject.getUniformLocation(UNIFORM_ALPHA), alpha);
 
-
-        float transform[] = new float[16];
-        startNode.getTransformMatrix(transform);
-        GLES20.glUniformMatrix4fv(programObject.getUniformLocation(UNIFORM_START_TRANSFORM), 1, false,
-                transform, 0);
-        endNode.getTransformMatrix(transform);
-        GLES20.glUniformMatrix4fv(programObject.getUniformLocation(uNIFORM_END_TRANSFORM), 1, false,
-                transform, 0);
+        if (startNode != null) {
+            GLES20.glUniformMatrix4fv(programObject.getUniformLocation(UNIFORM_START_TRANSFORM), 1, false,
+                    startNode.getTransformMatrix(), 0);
+        }
+        if (endNode != null) {
+            GLES20.glUniformMatrix4fv(programObject.getUniformLocation(uNIFORM_END_TRANSFORM), 1, false,
+                    endNode, 0);
+        }
     }
 
     @Override

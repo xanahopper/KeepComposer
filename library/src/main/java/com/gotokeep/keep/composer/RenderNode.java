@@ -27,6 +27,7 @@ public abstract class RenderNode {
     private boolean prepared = false;
     protected long startTimeMs;
     protected long endTimeMs;
+    protected long presentationTimeUs;
     protected int canvasWidth;
     protected int canvasHeight;
     protected boolean frameAvailable = false;
@@ -159,8 +160,14 @@ public abstract class RenderNode {
         return endTimeMs;
     }
 
-    public void getTransformMatrix(float matrix[]) {
-        renderTexture.getSurfaceTexture().getTransformMatrix(matrix);
+    public long getPresentationTimeUs() {
+        return presentationTimeUs;
+    }
+
+    public float[] getTransformMatrix() {
+        float st[] = new float[16];
+        renderTexture.getSurfaceTexture().getTransformMatrix(st);
+        return st;
     }
 
     public void setCanvasSize(int width, int height) {

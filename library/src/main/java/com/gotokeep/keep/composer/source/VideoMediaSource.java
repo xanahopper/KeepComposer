@@ -22,7 +22,7 @@ import java.nio.ByteBuffer;
  * @version 1.0
  * @since 2018/5/13 14:08
  */
-public class VideoMediaSource extends MediaSource{
+public class VideoMediaSource extends MediaSource {
     private static final String VIDEO_MIME_START = "video/";
     private static final int TIMEOUT_US = 1000;
 
@@ -127,18 +127,18 @@ public class VideoMediaSource extends MediaSource{
         }
         if (!encoded) {
             renderTexture.notifyNoFrame();
+            return this.presentationTimeUs;
         } else {
             Log.d("Composer", "VideoMediaSource#doRender: rendered a frame");
             decodeTexture.getSurfaceTexture().updateTexImage();
-            super.render(positionUs, elapsedRealtimeUs);
+            return super.render(positionUs, elapsedRealtimeUs);
         }
-        return this.presentationTimeUs;
     }
 
     @Override
     protected long doRender(ProgramObject programObject, long positionUs) {
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-        return this.presentationTimeUs;
+        return this.presentationTimeUs + TimeUtil.msToUs(startTimeMs);
     }
 
     @Override

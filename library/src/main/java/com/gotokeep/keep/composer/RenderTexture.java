@@ -105,6 +105,13 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
         GLES20.glBindTexture(textureTarget, textureId);
     }
 
+    public static void unbind(int activeId) {
+        if (activeId >= 0) {
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE0 + activeId);
+        }
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
+    }
+
     public boolean awaitFrameAvailable() {
         return awaitFrameAvailable(10);
     }

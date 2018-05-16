@@ -291,7 +291,6 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     private void doRenderWork() {
         long operationStartMs = SystemClock.elapsedRealtime();
         currentTimeUs = mediaClock.getPositionUs();
-        Log.v(TAG, "doRenderWork@" + Thread.currentThread().getName() + ", positionUs = " + currentTimeUs);
         if (renderRoot == null) {
             Log.d(TAG, "doRenderWork: RenderRoot is empty");
             if (eventHandler != null) {
@@ -331,7 +330,6 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         handler.removeMessages(MSG_DO_SOME_WORK);
         long nextOperationStartTime = operationTimeMs + intervalTimeMs;
         long nextOperationDelayMs = nextOperationStartTime - SystemClock.elapsedRealtime();
-        Log.d(TAG, "scheduleNextWork: " + nextOperationStartTime + ", " + nextOperationDelayMs);
         if (nextOperationDelayMs <= 0) {
             handler.sendEmptyMessage(MSG_DO_SOME_WORK);
         } else {
@@ -356,7 +354,6 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
                 if (!renderNode.isPrepared()) {
                     renderNode.prepare();
                 }
-                Log.d(TAG, "generateRenderTree: " + canvasWidth);
                 renderNode.setViewport(canvasWidth, canvasHeight);
             }
             if (topItem == null || topItem.getLayer() <= item.getLayer()) {

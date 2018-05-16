@@ -19,7 +19,6 @@ public abstract class MediaSource extends RenderSource {
     int height;
     int rotation;
     long durationMs;
-    long presentationTimeUs;
     float playSpeed = 1f;
     boolean ended = false;
 
@@ -57,9 +56,5 @@ public abstract class MediaSource extends RenderSource {
 
     public long getDurationMs() {
         return durationMs;
-    }
-
-    public long getPresentationTimeUs() {
-        return presentationTimeUs;
     }
 }
