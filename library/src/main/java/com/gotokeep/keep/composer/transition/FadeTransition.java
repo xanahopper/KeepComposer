@@ -1,9 +1,11 @@
 package com.gotokeep.keep.composer.transition;
 
 import android.opengl.GLES20;
+import android.util.Log;
 
 import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.gles.ProgramObject;
+import com.gotokeep.keep.composer.util.MediaUtil;
 import com.gotokeep.keep.composer.util.TimeUtil;
 
 /**
@@ -46,7 +48,10 @@ public class FadeTransition extends MediaTransition {
         startNode = getStartNode();
         endNode = getEndNode();
 
-        float alpha = (float) (TimeUtil.usToMs(presentationTimeUs) - startTimeMs) / durationMs;
+        long positionUs = TimeUtil.usToMs(presentationTimeUs);
+        float alpha = (float) (positionUs - startTimeMs) / durationMs;
+        Log.d("FadeTransition", String.format("updateRenderUniform: time = %d, startTime = %d alpha = %.1f", positionUs, startTimeMs, alpha));
+        alpha = MediaUtil.clamp(alpha, 0.0f, 1.0f);
         GLES20.glUniform1f(programObject.getUniformLocation(UNIFORM_ALPHA), alpha);
 
         if (startNode != null) {
@@ -55,15 +60,15 @@ public class FadeTransition extends MediaTransition {
         }
         if (endNode != null) {
             GLES20.glUniformMatrix4fv(programObject.getUniformLocation(uNIFORM_END_TRANSFORM), 1, false,
-                    endNode, 0);
+                    endNode.getTransformMatrix(), 0);
         }
     }
 
-    @Override
-    protected boolean shouldRenderNode(RenderNode renderNode, long presentationTimeUs) {
-        long timeUs = TimeUtil.msToUs(renderNode == startNode ? renderNode.getEndTimeMs()
-                : renderNode.getStartTimeMs());
-        long offsetUs = TimeUtil.msToUs(durationMs / 2);
-        return TimeUtil.inRange(presentationTimeUs, timeUs - offsetUs, timeUs + offsetUs);
-    }
+//    @Override
+//    protected boolean shouldRenderNode(RenderNode renderNode, long presentationTimeUs) {
+//        long timeUs = TimeUtil.msToUs(renderNode == startNode ? renderNode.getEndTimeMs()
+//                : renderNode.getStartTimeMs());
+//        long offsetUs = TimeUtil.msToUs(durationMs / 2);
+//        return TimeUtil.inRange(presentationTimeUs, timeUs - offsetUs, timeUs + offsetUs);
+//    }
 }

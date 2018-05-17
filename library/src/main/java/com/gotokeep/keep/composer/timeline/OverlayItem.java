@@ -5,7 +5,7 @@ package com.gotokeep.keep.composer.timeline;
  * @version 1.0
  * @since 2018-05-14 12:07
  */
-public class OverlayItem extends MediaItem {
+public abstract class OverlayItem extends MediaItem {
     public static final String TYPE_SUBTITLE = "subtitle";
     public static final String TYPE_WATERMARK = "watermark";
     public static final String TYPE_LAYER = "layer";

@@ -42,4 +42,14 @@ public class MediaUtil {
         String name = Uri.parse(filePath).getLastPathSegment();
         return name != null ? name : UUID.randomUUID().toString().substring(0, 5);
     }
+
+    public static float clamp(float value, float low, float high) {
+        if (value < low) {
+            return low;
+        } else if (value > high) {
+            return high;
+        } else {
+            return value;
+        }
+    }
 }

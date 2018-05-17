@@ -1,5 +1,7 @@
 package com.gotokeep.keep.composer.util;
 
+import android.annotation.SuppressLint;
+
 /**
  * @author xana/cuixianming
  * @version 1.0
@@ -31,5 +33,10 @@ public final class TimeUtil {
 
     public static boolean inRange(long value, long low, long high) {
         return value >= low && value <= high;
+    }
+
+    @SuppressLint("DefaultLocale")
+    public static String usToString(long timeUs) {
+        return String.format("%02d:%03d", timeUs / 1000000, (timeUs % 1000000) / 1000);
     }
 }

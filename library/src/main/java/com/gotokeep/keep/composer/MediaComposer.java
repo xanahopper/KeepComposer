@@ -38,6 +38,8 @@ public interface MediaComposer {
 
     int getVideoHeight();
 
+    void release();
+
     interface PlayEventListener {
         void onPreparing(MediaComposer composer, RenderNode preparingNode);
 
@@ -68,8 +70,8 @@ public interface MediaComposer {
 
 
     final class PositionInfo {
-        long currentTimeUs;
-        long totalTimeUs;
+        public long currentTimeUs;
+        public long totalTimeUs;
 
         public PositionInfo(long currentTimeUs, long totalTimeUs) {
             this.currentTimeUs = currentTimeUs;

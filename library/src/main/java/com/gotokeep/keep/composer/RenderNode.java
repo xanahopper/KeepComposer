@@ -82,8 +82,9 @@ public abstract class RenderNode {
             }
         }
         for (int i = 0; i < inputNodes.size(); i++) {
-            if (shouldRender[i] && !inputNodes.valueAt(i).awaitRenderFrame()) {
-                Log.w(TAG, "one of input frame invalid");
+            if (shouldRender[i]) {
+                inputNodes.valueAt(i).updateRenderFrame();
+//                Log.w(TAG, "one of input frame invalid");
             }
         }
         return shouldRender;
@@ -165,9 +166,7 @@ public abstract class RenderNode {
     }
 
     public float[] getTransformMatrix() {
-        float st[] = new float[16];
-        renderTexture.getSurfaceTexture().getTransformMatrix(st);
-        return st;
+        return renderTexture.getTransitionMatrix();
     }
 
     public void setCanvasSize(int width, int height) {
@@ -218,5 +217,11 @@ public abstract class RenderNode {
 
     public void setEndTimeMs(long endTimeMs) {
         this.endTimeMs = endTimeMs;
+    }
+
+    public void updateRenderFrame() {
+        if (renderTexture != null && renderTexture.getSurfaceTexture() != null) {
+            renderTexture.getSurfaceTexture().updateTexImage();
+        }
     }
 }

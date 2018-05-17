@@ -32,6 +32,7 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
     private SurfaceTexture surfaceTexture;
     private boolean released = false;
     private final Object frameSyncObj = new Object();
+    private float transitionMatrix[] = new float[16];
 
     private boolean frameAvailable = false;
     public RenderTexture() {
@@ -82,6 +83,13 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
 
     public boolean isReleased() {
         return released;
+    }
+
+    public float[] getTransitionMatrix() {
+        if (surfaceTexture != null) {
+            surfaceTexture.getTransformMatrix(transitionMatrix);
+        }
+        return transitionMatrix;
     }
 
     public void notifyNoFrame() {
@@ -158,6 +166,7 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
             framebufferId = ids[0];
             GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, framebufferId);
             GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0, textureTarget, textureId, 0);
+            GLES20.glBindTexture(textureTarget, textureId);
             GLES20.glTexImage2D(textureTarget, 0, GLES20.GL_RGBA, canvasWidth, canvasHeight, 0,
                     GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, null);
         } else {

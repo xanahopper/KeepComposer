@@ -4,6 +4,7 @@ import com.gotokeep.keep.composer.util.TimeUtil;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -13,7 +14,7 @@ import java.util.TreeSet;
  * @since 2018-05-14 12:12
  */
 public final class Timeline {
-    SortedSet<MediaItem> items = new TreeSet<>();
+    List<MediaItem> items = new LinkedList<>();
     long endTimeMs;
 
     public void addMediaItem(MediaItem item) {
@@ -23,10 +24,14 @@ public final class Timeline {
         }
     }
 
-    public List<MediaItem> queryPresentationTimeItems(long presentationTimeUs) {
-        List<MediaItem> list = new LinkedList<>();
-        for (MediaItem item : items) {
-            if (TimeUtil.inRange(TimeUtil.usToMs(presentationTimeUs), item.startTimeMs, item.endTimeMs)) {
+    public LinkedList<MediaItem> queryPresentationTimeItems(long presentationTimeUs) {
+        LinkedList<MediaItem> list = new LinkedList<>();
+        ListIterator<MediaItem> iterator = items.listIterator();
+        int layer = 0;
+        while (iterator.hasNext()) {
+            MediaItem item = iterator.next();
+            if (item.inRange(TimeUtil.usToMs(presentationTimeUs))) {
+                item.layer = layer++;
                 list.add(item);
             }
         }

@@ -1,5 +1,7 @@
 package com.gotokeep.keep.composer.timeline;
 
+import com.gotokeep.keep.composer.util.TimeUtil;
+
 import java.util.Comparator;
 
 /**
@@ -7,7 +9,7 @@ import java.util.Comparator;
  * @version 1.0
  * @since 2018-05-14 11:54
  */
-public class MediaItem implements Comparable<MediaItem> {
+public abstract class MediaItem implements Comparable<MediaItem> {
     public static final int TYPE_SOURCE = 0;
     public static final int TYPE_DRAW = 1;
     public static final int TYPE_OVERLAY = 2;
@@ -44,6 +46,10 @@ public class MediaItem implements Comparable<MediaItem> {
             };
         }
         return comparator;
+    }
+
+    public boolean inRange(long positionMs) {
+        return TimeUtil.inRange(positionMs, startTimeMs, endTimeMs);
     }
 
     public int getLayer() {

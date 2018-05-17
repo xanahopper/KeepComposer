@@ -36,7 +36,7 @@ public class RenderFactory {
         registerRenderType(VideoItem.class, item -> new VideoMediaSource(item.filePath));
         registerRenderType(ImageItem.class, item -> new ImageMediaSource(item.filePath));
         registerRenderType(TransitionItem.class, item -> {
-            MediaTransition transition = MediaTransitionFactory.getTransition(item.name);
+            MediaTransition transition = MediaTransitionFactory.getTransition(item.name, item.durationMs);
             if (transition != null) {
                 RenderNode startNode = createRenderNode(item.startItem);
                 RenderNode endNode = createRenderNode(item.endItem);
@@ -81,7 +81,8 @@ public class RenderFactory {
     public RenderNode createRenderNode(MediaItem mediaItem) {
         RenderNode node = null;
         if (!renderNodeCache.containsKey(mediaItem)) {
-            RenderCreator<MediaItem, RenderNode> creator = (RenderCreator<MediaItem, RenderNode>) renderCreatorMap.get(mediaItem.getClass());
+            Class<? extends MediaItem> clazz = mediaItem.getClass();
+            RenderCreator<MediaItem, RenderNode> creator = (RenderCreator<MediaItem, RenderNode>) renderCreatorMap.get(clazz);
             if (creator != null) {
                 node = creator.createRenderNode(mediaItem);
                 if (node != null) {

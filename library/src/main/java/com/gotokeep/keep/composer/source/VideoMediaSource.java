@@ -3,6 +3,7 @@ package com.gotokeep.keep.composer.source;
 import android.media.MediaCodec;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
+import android.net.Uri;
 import android.opengl.GLES20;
 import android.os.Build;
 import android.util.Log;
@@ -39,6 +40,7 @@ public class VideoMediaSource extends MediaSource {
     private MediaExtractor extractor;
     private int trackIndex = -1;
     private String mime = "";
+    private String name;
 
     private MediaFormat format;
     private MediaCodec decoder;
@@ -52,6 +54,7 @@ public class VideoMediaSource extends MediaSource {
     public VideoMediaSource(String filePath) {
         super(TYPE_VIDEO);
         this.filePath = filePath;
+        name = Uri.parse(filePath).getLastPathSegment();
     }
 
     @Override
@@ -102,7 +105,7 @@ public class VideoMediaSource extends MediaSource {
             ended = true;
         }
         boolean encoded = false;
-        Log.d("Composer", "doRender: actualTimeUs  = " + actualTimeUs + ", presentationTimeUs = " + presentationTimeUs);
+        Log.v("VideoMediaSource", "doRender[" + name +"]: actualTimeUs  = " + actualTimeUs + ", presentationTimeUs = " + presentationTimeUs);
         while (!encoded && !ended && this.presentationTimeUs <= actualTimeUs) {
             int inputIndex = decoder.dequeueInputBuffer(TIMEOUT_US);
             if (inputIndex >= 0) {
@@ -116,7 +119,7 @@ public class VideoMediaSource extends MediaSource {
                     ended = true;
                 }
             } else {
-                Log.w("Composer", "doRender: cannot dequeue input buffer from decoder");
+                Log.v("VideoMediaSource", "doRender: cannot dequeue input buffer from decoder");
             }
             int outputIndex = decoder.dequeueOutputBuffer(decodeInfo, TIMEOUT_US);
             if (outputIndex > 0) {
@@ -129,7 +132,7 @@ public class VideoMediaSource extends MediaSource {
             renderTexture.notifyNoFrame();
             return this.presentationTimeUs;
         } else {
-            Log.d("Composer", "VideoMediaSource#doRender: rendered a frame");
+            Log.d("VideoMediaSource", "doRender[" + name + "]: rendered a frame " + this.presentationTimeUs);
             decodeTexture.getSurfaceTexture().updateTexImage();
             return super.render(positionUs, elapsedRealtimeUs);
         }
@@ -148,15 +151,10 @@ public class VideoMediaSource extends MediaSource {
 
     @Override
     protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs) {
-        float transform[] = new float[16];
-        decodeTexture.getSurfaceTexture().getTransformMatrix(transform);
-        GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX), 1, false, transform, 0);
+        GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
+                1, false, decodeTexture.getTransitionMatrix(), 0);
         GLES20.glUniform1i(programObject.getUniformLocation(ProgramObject.UNIFORM_TEXTURE), 0);
     }
-
-//    private void updateProgramUniform(ProgramObject programObject, RenderTexture decodeTexture) {
-//
-//    }
 
     private void prepareExtractorAndInfo() throws IOException {
         extractor = new MediaExtractor();

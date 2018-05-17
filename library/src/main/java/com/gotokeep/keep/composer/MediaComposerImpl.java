@@ -17,6 +17,8 @@ import com.gotokeep.keep.composer.util.MediaClock;
 import com.gotokeep.keep.composer.util.TimeUtil;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -82,7 +84,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
 
     public MediaComposerImpl(RenderFactory renderFactory, Handler eventHandler) {
         engine = new ComposerEngine();
-        renderNodeMap = new TreeMap<>();
+        renderNodeMap = new HashMap<>();
         mediaClock = new MediaClock();
 
         this.renderFactory = renderFactory;
@@ -155,6 +157,11 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     @Override
     public int getVideoHeight() {
         return videoHeight;
+    }
+
+    @Override
+    public void release() {
+        engine.release();
     }
 
     @Override
@@ -298,6 +305,10 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
             }
             return;
         }
+        if (currentTimeUs > TimeUtil.msToUs(timeline.getEndTimeMs())) {
+            stop();
+            return;
+        }
         // do render tree
         elapsedRealtimeUs = TimeUtil.msToUs(SystemClock.elapsedRealtime());
 
@@ -308,6 +319,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         if (renderTimeUs > currentTimeUs) {
             // render result to RenderTarget
             currentTimeUs = renderTimeUs;
+            renderRoot.updateRenderFrame();
             renderTarget.updateFrame(renderRoot, currentTimeUs);
             engine.swapBuffers();
             if (eventHandler != null) {
@@ -315,10 +327,10 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
                         new PositionInfo(currentTimeUs, timeline.getEndTimeMs())).sendToTarget();
             }
         }
-        renderRoot = maintainRenderTree(renderRoot, renderTimeUs);
-        if (renderRoot == null) {
+//        renderRoot = maintainRenderTree(renderRoot, renderTimeUs);
+//        if (renderRoot == null) {
             renderRoot = generateRenderTree(currentTimeUs);
-        }
+//        }
         if (renderRoot != null) {
             scheduleNextWork(operationStartMs, 10);
         } else {
@@ -338,10 +350,11 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     }
 
     private RenderNode generateRenderTree(long presentationTimeUs) {
-        List<MediaItem> items = timeline.queryPresentationTimeItems(presentationTimeUs);
+        LinkedList<MediaItem> items = timeline.queryPresentationTimeItems(presentationTimeUs);
 //        Collections.sort(items, MediaItem.getTypeComparator());
         RenderNode root = renderRoot;
-        MediaItem topItem = items.size() > 0 ? items.get(0) : null;
+//        MediaItem topItem = items.isEmpty() ? null : items.getLast();
+        int layer = -1;
         for (MediaItem item : items) {
             RenderNode renderNode;
             if (!renderNodeMap.containsKey(item)) {
@@ -356,8 +369,8 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
                 }
                 renderNode.setViewport(canvasWidth, canvasHeight);
             }
-            if (topItem == null || topItem.getLayer() <= item.getLayer()) {
-                topItem = item;
+            if (layer <= item.getLayer()) {
+                layer = item.getLayer();
                 root = renderNode;
             }
         }

@@ -19,10 +19,8 @@ public class PreviewRenderTarget extends RenderTarget implements SurfaceTexture.
     private Surface inputSurface;
 
     protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs, RenderNode renderNode) {
-        float transform[] = new float[16];
-        renderNode.getTransformMatrix(transform);
         GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
-                1, false, transform, 0);
+                1, false, renderNode.getTransformMatrix(), 0);
     }
 
     @Override
@@ -35,12 +33,10 @@ public class PreviewRenderTarget extends RenderTarget implements SurfaceTexture.
         Log.d("Composer", "PreviewRenderTarget#updateFrame: " + presentationTimeUs);
         programObject.use();
 
-        renderNode.getOutputTexture().bind(0);
-        float st[] = new float[16];
-        renderNode.getTransformMatrix(st);
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
+        renderNode.getOutputTexture().bind(0);
         GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
-                1, false, st, 0);
+                1, false, renderNode.getTransformMatrix(), 0);
         GLES20.glUniform1i(programObject.getUniformLocation(ProgramObject.UNIFORM_TEXTURE), 0);
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
     }

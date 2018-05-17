@@ -11,11 +11,11 @@ public class TransitionItem extends MediaItem {
     protected MediaItem endItem;
     protected String name;
 
-    public TransitionItem(MediaItem startItem, MediaItem endItem, int layer) {
+    public TransitionItem(MediaItem startItem, MediaItem endItem, long durationMs, int layer) {
         super(TYPE_COMBINE, layer);
         this.startItem = startItem;
         this.endItem = endItem;
-        startTimeMs = endItem.startTimeMs;
+        setDurationMs(durationMs);
     }
 
     public long getDurationMs() {
@@ -24,6 +24,17 @@ public class TransitionItem extends MediaItem {
 
     public void setDurationMs(long durationMs) {
         this.durationMs = durationMs;
-        this.endTimeMs = startTimeMs + durationMs;
+        if (startItem.endTimeMs == endItem.startTimeMs) {
+            this.startTimeMs = startItem.endTimeMs - durationMs / 2;
+            this.endTimeMs = endItem.startTimeMs + durationMs / 2;
+            startItem.endTimeMs = endTimeMs;
+            endItem.startTimeMs = startTimeMs;
+        } else if (startItem.endTimeMs > endItem.startTimeMs && startItem.endTimeMs - endItem.startTimeMs == durationMs) {
+            this.startTimeMs = endItem.startTimeMs;
+            this.endTimeMs = startItem.endTimeMs;
+        } else {
+            startTimeMs = 0;
+            endTimeMs = 0;
+        }
     }
 }
