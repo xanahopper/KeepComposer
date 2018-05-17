@@ -30,14 +30,16 @@ public abstract class RenderNode {
     protected long presentationTimeUs;
     protected int canvasWidth;
     protected int canvasHeight;
+    protected int originWidth;
+    protected int originHeight;
     protected boolean frameAvailable = false;
 
-    private static final float[] DEFAULT_VERTEX_DATA = {
+    protected static final float[] DEFAULT_VERTEX_DATA = {
             -1f, -1f, 0,
             1f, -1f, 0,
             -1f, 1f, 0,
             1f, 1f, 0};
-    private static final short[] DEFAULT_TEX_COORDS_DATA = {0, 0, 1, 0, 0, 1, 1, 1};
+    static final short[] DEFAULT_TEX_COORDS_DATA = {0, 0, 1, 0, 0, 1, 1, 1};
 
     protected FloatBuffer vertexBuffer;
     protected ShortBuffer texCoordBuffer;
@@ -61,6 +63,11 @@ public abstract class RenderNode {
     public void setViewport(int width, int height) {
         canvasWidth = width;
         canvasHeight = height;
+    }
+
+    public void setOriginSize(int width, int height) {
+        originWidth = width;
+        originHeight = height;
     }
 
     private void setSelfRenderTarget(long positionUs, boolean[] shouldRender) {

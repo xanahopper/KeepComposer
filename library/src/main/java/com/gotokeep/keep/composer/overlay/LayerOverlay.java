@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
+import android.util.Log;
 
 import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.RenderTexture;
@@ -20,8 +21,6 @@ public class LayerOverlay extends MediaOverlay {
 
     private final String layerImagePath;
     private RenderTexture layerTexture;
-    private ProgramObject layerProgramObject;
-    private RenderNode mainNode;
 
     public LayerOverlay(RenderNode mainInputNode, String layerImagePath) {
         super(mainInputNode);
@@ -29,12 +28,8 @@ public class LayerOverlay extends MediaOverlay {
     }
 
     @Override
-    protected ProgramObject createProgramObject() {
-        return ProgramObject.getDefaultProgram();
-    }
-
-    @Override
     protected void onPrepare() {
+        super.onPrepare();
         if (layerTexture == null) {
             layerTexture = new RenderTexture(RenderTexture.TEXTURE_NATIVE);
             Bitmap layerBitmap = MediaUtil.flipBitmap(BitmapFactory.decodeFile(layerImagePath), true);
@@ -46,10 +41,6 @@ public class LayerOverlay extends MediaOverlay {
             GLUtils.texImage2D(layerTexture.getTextureTarget(), 0, format, layerBitmap, 0);
             layerBitmap.recycle();
         }
-        if (layerProgramObject == null) {
-            layerProgramObject = getOverlayProgramObject();
-        }
-        mainNode = inputNodes.valueAt(0);
     }
 
     @Override
@@ -61,36 +52,19 @@ public class LayerOverlay extends MediaOverlay {
     }
 
     @Override
-    protected long doRender(ProgramObject programObject, long positionUs) {
-        // draw source
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+    protected void renderOverlay(ProgramObject overlayProgramObject) {
         // draw layer
-        layerProgramObject.use();
+//        GLES20.glEnable(GLES20.GL_BLEND);
+        overlayProgramObject.use();
         activeAttribData();
-        updateLayerMatrix();
         layerTexture.bind(0);
+        updateLayerMatrix();
         GLES20.glUniformMatrix4fv(overlayProgramObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
                 1, false, ProgramObject.DEFAULT_MATRIX, 0);
         GLES20.glUniform1i(overlayProgramObject.getUniformLocation(ProgramObject.UNIFORM_TEXTURE), 0);
+
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-        return mainNode.getPresentationTimeUs();
-    }
 
-    @Override
-    protected void bindRenderTextures(boolean[] shouldRender) {
-        for (int i = 0; i < inputNodes.size(); i++) {
-            if (shouldRender.length > i && shouldRender[i]) {
-                inputNodes.valueAt(i).getOutputTexture().bind(i);
-            }
-        }
-    }
-
-    @Override
-    protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs) {
-        if (mainNode != null) {
-            GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
-                    1, false, mainNode.getTransformMatrix(), 0);
-        }
-        GLES20.glUniform1i(programObject.getUniformLocation(ProgramObject.UNIFORM_TEXTURE), 0);
+        Log.d("MediaOverlay", "render layer");
     }
 }

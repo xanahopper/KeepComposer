@@ -14,13 +14,8 @@ public class WatermarkOverlay extends MediaOverlay {
     }
 
     @Override
-    protected ProgramObject createProgramObject() {
-        return null;
-    }
-
-    @Override
     protected void onPrepare() {
-
+        super.onPrepare();
     }
 
     @Override
@@ -29,17 +24,7 @@ public class WatermarkOverlay extends MediaOverlay {
     }
 
     @Override
-    protected long doRender(ProgramObject programObject, long positionUs) {
-        return 0;
-    }
-
-    @Override
-    protected void bindRenderTextures(boolean[] shouldRender) {
-
-    }
-
-    @Override
-    protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs) {
+    protected void renderOverlay(ProgramObject overlayProgramObject) {
 
     }
 }

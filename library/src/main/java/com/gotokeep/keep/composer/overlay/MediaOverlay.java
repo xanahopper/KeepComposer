@@ -1,7 +1,9 @@
 package com.gotokeep.keep.composer.overlay;
 
-import android.graphics.Matrix;
 import android.opengl.GLES20;
+import android.opengl.Matrix;
+import android.support.annotation.CallSuper;
+import android.util.Log;
 
 import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.RenderTexture;
@@ -14,7 +16,7 @@ import com.gotokeep.keep.composer.timeline.OverlayItem;
  * @since 2018-05-14 16:53
  */
 public abstract class MediaOverlay extends RenderNode {
-    private static final int KEY_MAIN = 0;
+    protected static final int KEY_MAIN = 0;
 
     public static final int POSITION_LEFT = 0x00;
     public static final int POSITION_RIGHT = 0x01;
@@ -56,22 +58,17 @@ public abstract class MediaOverlay extends RenderNode {
 
     protected int width;
     protected int height;
-    protected Matrix layerMatrix = new Matrix();
-    protected static ProgramObject overlayProgramObject;
+    protected float overlayTransform[];
+    protected ProgramObject overlayProgramObject;
+    protected RenderNode mainNode;
 
-    protected ProgramObject getOverlayProgramObject() {
-        if (overlayProgramObject == null) {
-            synchronized (ProgramObject.class) {
-                if (overlayProgramObject == null) {
-                    overlayProgramObject = new ProgramObject(OVERLAY_VERTEX_SHADER, ProgramObject.DEFAULT_FRAGMENT_SHADER, OVERLAY_UNIFORM_NAMES);
-                }
-            }
-        }
-        return overlayProgramObject;
+    private static ProgramObject createOverlayProgramObject() {
+        return new ProgramObject(OVERLAY_VERTEX_SHADER, ProgramObject.DEFAULT_FRAGMENT_SHADER, OVERLAY_UNIFORM_NAMES);
     }
 
     MediaOverlay(RenderNode mainInputNode) {
         setInputNode(KEY_MAIN, mainInputNode);
+        mainNode = mainInputNode;
     }
 
     public void initWithMediaItem(OverlayItem item) {
@@ -86,31 +83,83 @@ public abstract class MediaOverlay extends RenderNode {
         return new RenderTexture(RenderTexture.TEXTURE_NATIVE);
     }
 
+    @Override
+    protected ProgramObject createProgramObject() {
+        return ProgramObject.getDefaultProgram();
+    }
+
+    @CallSuper
+    @Override
+    protected void onPrepare() {
+        overlayTransform = new float[16];
+        overlayProgramObject = createOverlayProgramObject();
+        overlayProgramObject.use();
+        GLES20.glBindAttribLocation(programObject.getProgramId(), 0, ProgramObject.ATTRIBUTE_POSITION);
+        GLES20.glBindAttribLocation(programObject.getProgramId(), 1, ProgramObject.ATTRIBUTE_TEX_COORDS);
+
+        activeAttribData();
+    }
+
+    @Override
+    protected void bindRenderTextures(boolean[] shouldRender) {
+        mainNode.getOutputTexture().bind(0);
+    }
+
+    @Override
+    protected long doRender(ProgramObject programObject, long positionUs) {
+        // draw source
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+        renderOverlay(overlayProgramObject);
+        return mainNode.getPresentationTimeUs();
+    }
+
+    @Override
+    protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs) {
+        if (mainNode != null) {
+            GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
+                    1, false, mainNode.getTransformMatrix(), 0);
+        }
+        GLES20.glUniform1i(programObject.getUniformLocation(ProgramObject.UNIFORM_TEXTURE), 0);
+    }
+
     protected void updateLayerMatrix() {
-        int left = 0;
-        int top = 0;
+        float sx = (float) width / originWidth * scale;
+        float sy = (float) height / originHeight * scale;
+        float left;
+        float top;
         if ((position & POSITION_RIGHT) != 0) {
-            left = canvasWidth - width;
+            left = 1f - sx;
         } else if ((position & POSITION_CENTER_HORIZONTAL) != 0) {
-            left = (canvasWidth - width) / 2;
+            left = 0;
+        } else {
+            left = sx - 1f;
         }
         if ((position & POSITION_BOTTOM) != 0) {
-            top = canvasHeight - height;
+            top = sy - 1f;
         } else if ((position & POSITION_CENTER_VERTICAL) != 0) {
-            top = (canvasHeight - height) / 2;
+            top = 0;
+        } else {
+            top = 1f - sy;
         }
-        left += offsetX;
-        top += offsetY;
+        left += (float) offsetX / originWidth;
+        top -= (float) offsetY / originHeight;
 
-        layerMatrix.reset();
-        layerMatrix.setScale(scale, scale);
-        layerMatrix.postTranslate(left, top);
-        layerMatrix.postRotate(rotation);
+        Matrix.setIdentityM(overlayTransform, 0);
+        Matrix.translateM(overlayTransform, 0, left, top, 0f);
+        Matrix.scaleM(overlayTransform, 0, sx, sy, 1.0f);
+        Matrix.rotateM(overlayTransform, 0, rotation, 0f, 0f, 1f);
 
-        float st[] = new float[16];
-        layerMatrix.getValues(st);
         GLES20.glUniformMatrix4fv(overlayProgramObject.getUniformLocation(UNIFORM_OVERLAY_TRANSFORM),
-                1, false, st, 0);
+                1, false, overlayTransform, 0);
+//        float mappedPoints[] = new float[3];
+        StringBuffer sb = new StringBuffer("\n[");
+        for (int i = 0; i < overlayTransform.length / 4; i++) {
+            sb.append(String.format("[%.1f, %.1f, %.1f, %.1f]\n", overlayTransform[i], overlayTransform[i + 3],
+                    overlayTransform[i + 8], overlayTransform[i + 12]));
+        }
+        sb.append("]");
+//        Log.d("MediaOverlay", "updateLayerMatrix: \n" + layerMatrix.toString());
+        Log.d("MediaOverlay", sb.toString());
     }
 
     public int getOffsetX() {
@@ -144,4 +193,6 @@ public abstract class MediaOverlay extends RenderNode {
     public void setScale(float scale) {
         this.scale = scale;
     }
+
+    protected abstract void renderOverlay(ProgramObject overlayProgramObject);
 }

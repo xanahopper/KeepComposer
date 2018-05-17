@@ -78,9 +78,10 @@ public class SimpleOverlayActivity extends SampleActivity implements Handler.Cal
         LayerItem layerItem1 = new LayerItem(item1, 1, "");
         layerItem1.setStartTimeMs(TimeUtil.secToMs(0));
         layerItem1.setEndTimeMs(TimeUtil.secToMs(5));
-//        layerItem1.setRotation(30f);
+        layerItem1.setRotation(30f);
         layerItem1.setOffsetX(20);
         layerItem1.setOffsetY(30);
+        layerItem1.setScale(0.5f);
 
         timeline.addMediaItem(item1);
         timeline.addMediaItem(layerItem1);
