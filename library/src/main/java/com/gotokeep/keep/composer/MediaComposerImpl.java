@@ -370,7 +370,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
                 }
                 renderNode.setViewport(canvasWidth, canvasHeight);
             }
-            if (layer <= item.getLayer()) {
+            if (layer <= item.getLayer() && renderNode != null) {
                 layer = item.getLayer();
                 root = renderNode;
             }

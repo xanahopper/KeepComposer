@@ -1,5 +1,7 @@
 package com.gotokeep.keep.composer.util;
 
+import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.media.MediaCodec;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
@@ -41,6 +43,18 @@ public class MediaUtil {
     public static String getName(String filePath) {
         String name = Uri.parse(filePath).getLastPathSegment();
         return name != null ? name : UUID.randomUUID().toString().substring(0, 5);
+    }
+
+    public static Bitmap flipBitmap(Bitmap origin, boolean recycle) {
+        Matrix matrix = new Matrix();
+        int width = origin.getWidth();
+        int height = origin.getHeight();
+        matrix.postScale(1, -1, width / 2, height / 2);
+        Bitmap finalImage = Bitmap.createBitmap(origin, 0, 0, width, height, matrix, true);
+        if (origin != finalImage && recycle) {
+            origin.recycle();
+        }
+        return finalImage;
     }
 
     public static float clamp(float value, float low, float high) {

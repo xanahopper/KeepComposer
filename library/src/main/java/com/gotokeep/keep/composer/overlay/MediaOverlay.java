@@ -29,6 +29,25 @@ public abstract class MediaOverlay extends RenderNode {
 
     public static final int POSITION_CENTER = POSITION_CENTER_HORIZONTAL & POSITION_CENTER_VERTICAL;
 
+    public static final String UNIFORM_OVERLAY_TRANSFORM = "uOverlayTransform";
+    public static final String OVERLAY_UNIFORM_NAMES[] = {
+            ProgramObject.UNIFORM_TRANSFORM_MATRIX,
+            ProgramObject.UNIFORM_TEXTURE,
+            UNIFORM_OVERLAY_TRANSFORM
+    };
+
+    private static final String OVERLAY_VERTEX_SHADER = "" +
+            "attribute vec4 aPosition;    \n" +
+            "attribute vec2 aTexCoords; \n" +
+            "varying vec2 vTexCoords; \n" +
+            "uniform mat4 uOverlayTransform;\n" +
+            "uniform mat4 uTransformMatrix;\n" +
+            "void main()                  \n" +
+            "{                            \n" +
+            "    gl_Position = uOverlayTransform * aPosition;  \n" +
+            "    vTexCoords = (uTransformMatrix * vec4(aTexCoords, 0.0, 1.0)).st; \n" +
+            "}                            \n";
+
     private int offsetX;
     private int offsetY;
     private float rotation;
@@ -38,6 +57,18 @@ public abstract class MediaOverlay extends RenderNode {
     protected int width;
     protected int height;
     protected Matrix layerMatrix = new Matrix();
+    protected static ProgramObject overlayProgramObject;
+
+    protected ProgramObject getOverlayProgramObject() {
+        if (overlayProgramObject == null) {
+            synchronized (ProgramObject.class) {
+                if (overlayProgramObject == null) {
+                    overlayProgramObject = new ProgramObject(OVERLAY_VERTEX_SHADER, ProgramObject.DEFAULT_FRAGMENT_SHADER, OVERLAY_UNIFORM_NAMES);
+                }
+            }
+        }
+        return overlayProgramObject;
+    }
 
     MediaOverlay(RenderNode mainInputNode) {
         setInputNode(KEY_MAIN, mainInputNode);
@@ -72,15 +103,14 @@ public abstract class MediaOverlay extends RenderNode {
         top += offsetY;
 
         layerMatrix.reset();
-        layerMatrix.setTranslate(left, top);
+        layerMatrix.setScale(scale, scale);
+        layerMatrix.postTranslate(left, top);
         layerMatrix.postRotate(rotation);
-        layerMatrix.postScale(scale, scale);
 
         float st[] = new float[16];
         layerMatrix.getValues(st);
-        GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
+        GLES20.glUniformMatrix4fv(overlayProgramObject.getUniformLocation(UNIFORM_OVERLAY_TRANSFORM),
                 1, false, st, 0);
-
     }
 
     public int getOffsetX() {

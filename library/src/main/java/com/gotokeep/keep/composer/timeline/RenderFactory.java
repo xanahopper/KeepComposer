@@ -1,5 +1,7 @@
 package com.gotokeep.keep.composer.timeline;
 
+import android.util.Log;
+
 import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.filter.MediaFilter;
 import com.gotokeep.keep.composer.filter.MediaFilterFactory;
@@ -22,6 +24,8 @@ import java.util.Map;
  * @since 2018-05-14 16:44
  */
 public class RenderFactory {
+    private static final String TAG = RenderFactory.class.getSimpleName();
+
     public interface RenderCreator<T extends MediaItem, R extends RenderNode> {
         R createRenderNode(T mediaItem);
     }
@@ -44,6 +48,13 @@ public class RenderFactory {
                 transition.setInputNode(MediaTransition.INDEX_END, endNode);
             }
             return transition;
+        });
+        registerRenderType(LayerItem.class, item -> {
+            RenderNode baseNode = createRenderNode(item.baseItem);
+            MediaOverlay overlay = null;
+            overlay = new LayerOverlay(baseNode, overlayProvider.getLayerImagePath(item.name));
+            overlay.initWithMediaItem(item);
+            return overlay;
         });
         registerRenderType(OverlayItem.class, item -> {
             RenderNode baseNode = createRenderNode(item.baseItem);
@@ -89,6 +100,9 @@ public class RenderFactory {
                     node.setStartTimeMs(mediaItem.startTimeMs);
                     node.setEndTimeMs(mediaItem.endTimeMs);
                 }
+            }
+            if (node == null) {
+                Log.w(TAG, "createRenderNode: a null node put in cache.");
             }
             renderNodeCache.put(mediaItem, node);
         } else {

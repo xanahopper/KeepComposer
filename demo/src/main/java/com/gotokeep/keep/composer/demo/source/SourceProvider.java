@@ -15,7 +15,7 @@ public class SourceProvider {
     };
     public static final String[] IMAGE_SRC = new String[] {
             "/sdcard/Pictures/CoolMarket/fde57442657cf3c37c737a6f0d832da7.jpg",
-            "/sdcard/DCIM/KeepStory/Demo/KeeP1206315615.png"
+            "/sdcard/ADM/qrcode.php.png"
     };
 
     public static final String[] OUTPUT_PATH = new String[] {

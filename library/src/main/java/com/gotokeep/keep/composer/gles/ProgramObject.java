@@ -36,7 +36,7 @@ public final class ProgramObject {
             "    vTexCoords = (uTransformMatrix * vec4(aTexCoords, 0.0, 1.0)).st; \n" +
             "}                            \n";
 
-    private static final String DEFAULT_FRAGMENT_SHADER = "" +
+    public static final String DEFAULT_FRAGMENT_SHADER = "" +
             "precision mediump float;\n" +
             "uniform sampler2D uTexture;\n" +
             "varying vec2 vTexCoords;\n" +
@@ -44,22 +44,16 @@ public final class ProgramObject {
             "    gl_FragColor = texture2D(uTexture, vTexCoords);\n" +
             "}\n";
 
-    private static final String IMAGE_VERTEX_SHADER = "" +
-            "attribute vec4 aPosition;    \n" +
-            "attribute vec2 aTexCoords; \n" +
-            "varying vec2 vTexCoords; \n" +
-            "uniform mat4 uTransformMatrix;\n" +
-            "void main()                  \n" +
-            "{                            \n" +
-            "    gl_Position = aPosition;  \n" +
-            "    vec2 tex = (uTransformMatrix * vec4(aTexCoords, 0.0, 1.0)).st; \n" +
-            "    vTexCoords = vec2(tex.x, 1.0f - tex.y);\n" +
-            "}                            \n";
+    public static final float[] DEFAULT_MATRIX = {
+            1f, 0f, 0f, 0f,
+            0f, 1f, 0f, 0f,
+            0f, 0f, 1f, 0f,
+            0f, 0f, 0f, 1f
+    };
 
     private Map<String, Integer> uniforms;
 
     private volatile static ProgramObject defaultProgram = null;
-    private volatile static ProgramObject imageProgram = null;
 
     public static ProgramObject getDefaultProgram() {
         if (defaultProgram == null) {
@@ -70,17 +64,6 @@ public final class ProgramObject {
             }
         }
         return defaultProgram;
-    }
-
-    public static ProgramObject getImageProgram() {
-        if (imageProgram == null) {
-            synchronized (ProgramObject.class) {
-                if (imageProgram == null) {
-                    imageProgram = new ProgramObject(IMAGE_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER, DEFAULT_UNIFORM_NAMES);
-                }
-            }
-        }
-        return imageProgram;
     }
 
     public ProgramObject() {
@@ -96,7 +79,7 @@ public final class ProgramObject {
         this.fragmentShader = fragmentShader;
         programId = createProgram(vertexShader, fragmentShader);
         initUniformLocations(uniformNames);
-        initDefaultValue();
+        initDefaultTransform();
     }
 
     public void use() {
@@ -121,7 +104,7 @@ public final class ProgramObject {
         }
     }
 
-    private void initDefaultValue() {
+    private void initDefaultTransform() {
         int loc = getUniformLocation(UNIFORM_TRANSFORM_MATRIX);
         float st[] = new float[16];
         Matrix matrix = new Matrix();

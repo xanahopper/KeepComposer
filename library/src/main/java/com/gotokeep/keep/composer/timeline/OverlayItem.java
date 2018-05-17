@@ -14,7 +14,7 @@ public abstract class OverlayItem extends MediaItem {
     private int offsetY;
     private String position;
     private float rotation;
-    private float scale;
+    private float scale = 1.0f;
     protected String type;
     protected MediaItem baseItem;
     protected String name;
