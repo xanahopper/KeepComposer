@@ -52,7 +52,9 @@ public abstract class RenderNode {
 
     public long render(long positionUs, long elapsedRealtimeUs) {
         boolean[] shouldRender = renderInputs(positionUs, elapsedRealtimeUs);
-        setSelfRenderTarget(positionUs, shouldRender);
+        if (needRenderSelf()) {
+            setSelfRenderTarget(positionUs, shouldRender);
+        }
         return doRender(programObject, positionUs);
     }
 
@@ -125,12 +127,14 @@ public abstract class RenderNode {
         texCoordBuffer.put(DEFAULT_TEX_COORDS_DATA).position(0);
 
         programObject = createProgramObject();
-        programObject.use();
+        if (programObject != null) {
+            programObject.use();
 
-        GLES20.glBindAttribLocation(programObject.getProgramId(), 0, ProgramObject.ATTRIBUTE_POSITION);
-        GLES20.glBindAttribLocation(programObject.getProgramId(), 1, ProgramObject.ATTRIBUTE_TEX_COORDS);
+            GLES20.glBindAttribLocation(programObject.getProgramId(), 0, ProgramObject.ATTRIBUTE_POSITION);
+            GLES20.glBindAttribLocation(programObject.getProgramId(), 1, ProgramObject.ATTRIBUTE_TEX_COORDS);
 
-        activeAttribData();
+            activeAttribData();
+        }
     }
 
     protected void activeAttribData() {
@@ -199,6 +203,10 @@ public abstract class RenderNode {
 
     protected abstract void onRelease();
 
+    protected boolean needRenderSelf() {
+        return true;
+    }
+
     /**
      * Subclass should override this method to render the frame.
      * @param programObject program object will use
@@ -220,8 +228,8 @@ public abstract class RenderNode {
     }
 
     public void updateRenderFrame() {
-        if (renderTexture != null && renderTexture.getSurfaceTexture() != null) {
-            renderTexture.getSurfaceTexture().updateTexImage();
+        if (renderTexture != null && renderTexture.isFrameAvailable()) {
+            renderTexture.updateTexImage();
         }
     }
 }

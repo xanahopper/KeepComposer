@@ -1,5 +1,6 @@
 package com.gotokeep.keep.composer.timeline;
 
+import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.util.TimeUtil;
 
 import java.util.LinkedList;
@@ -40,5 +41,15 @@ public final class Timeline {
 
     public long getEndTimeMs() {
         return endTimeMs;
+    }
+
+    public void prepare(RenderFactory renderFactory) {
+        for (MediaItem item : items) {
+            RenderNode node = renderFactory.createRenderNode(item);
+            if (node != null && !node.isPrepared()) {
+                node.prepare();
+            }
+        }
+
     }
 }

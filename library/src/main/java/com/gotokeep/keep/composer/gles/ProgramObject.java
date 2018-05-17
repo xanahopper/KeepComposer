@@ -44,9 +44,22 @@ public final class ProgramObject {
             "    gl_FragColor = texture2D(uTexture, vTexCoords);\n" +
             "}\n";
 
+    private static final String IMAGE_VERTEX_SHADER = "" +
+            "attribute vec4 aPosition;    \n" +
+            "attribute vec2 aTexCoords; \n" +
+            "varying vec2 vTexCoords; \n" +
+            "uniform mat4 uTransformMatrix;\n" +
+            "void main()                  \n" +
+            "{                            \n" +
+            "    gl_Position = aPosition;  \n" +
+            "    vec2 tex = (uTransformMatrix * vec4(aTexCoords, 0.0, 1.0)).st; \n" +
+            "    vTexCoords = vec2(tex.x, 1.0f - tex.y);\n" +
+            "}                            \n";
+
     private Map<String, Integer> uniforms;
 
     private volatile static ProgramObject defaultProgram = null;
+    private volatile static ProgramObject imageProgram = null;
 
     public static ProgramObject getDefaultProgram() {
         if (defaultProgram == null) {
@@ -57,6 +70,17 @@ public final class ProgramObject {
             }
         }
         return defaultProgram;
+    }
+
+    public static ProgramObject getImageProgram() {
+        if (imageProgram == null) {
+            synchronized (ProgramObject.class) {
+                if (imageProgram == null) {
+                    imageProgram = new ProgramObject(IMAGE_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER, DEFAULT_UNIFORM_NAMES);
+                }
+            }
+        }
+        return imageProgram;
     }
 
     public ProgramObject() {

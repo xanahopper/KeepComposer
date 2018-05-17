@@ -20,6 +20,17 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
     public static final int TEXTURE_NATIVE = GLES20.GL_TEXTURE_2D;
     public static final int TEXTURE_EXTERNAL = GLES11Ext.GL_TEXTURE_EXTERNAL_OES;
 
+    public boolean isFrameAvailable() {
+        return frameAvailable;
+    }
+
+    public void updateTexImage() {
+        surfaceTexture.updateTexImage();
+        synchronized (frameSyncObj) {
+            frameAvailable = false;
+        }
+    }
+
     @IntDef({TEXTURE_NATIVE, TEXTURE_EXTERNAL})
     @Retention(RetentionPolicy.SOURCE)
     public @interface TextureTarget {

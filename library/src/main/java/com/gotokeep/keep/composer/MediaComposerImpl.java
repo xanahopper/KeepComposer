@@ -241,6 +241,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
             return;
         }
         renderTarget.prepare();
+        timeline.prepare(renderFactory);
         renderRoot = generateRenderTree(currentTimeUs);
         if (eventHandler != null) {
             eventHandler.sendEmptyMessage(export ? EVENT_EXPORT_PREPARE : EVENT_PLAY_PREPARE);
