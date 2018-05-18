@@ -1,4 +1,4 @@
-package com.gotokeep.keep.composer;
+package com.gotokeep.keep.director;
 
 import org.junit.Test;
 

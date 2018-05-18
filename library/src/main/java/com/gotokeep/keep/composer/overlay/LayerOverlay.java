@@ -22,8 +22,7 @@ public class LayerOverlay extends MediaOverlay {
     private final String layerImagePath;
     private RenderTexture layerTexture;
 
-    public LayerOverlay(RenderNode mainInputNode, String layerImagePath) {
-        super(mainInputNode);
+    public LayerOverlay(String layerImagePath) {
         this.layerImagePath = layerImagePath;
     }
 

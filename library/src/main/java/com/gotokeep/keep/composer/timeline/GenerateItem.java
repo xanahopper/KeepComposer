@@ -7,6 +7,6 @@ package com.gotokeep.keep.composer.timeline;
  */
 public class GenerateItem extends MediaItem {
     public GenerateItem(int layer) {
-        super(TYPE_SOURCE, layer);
+        super(TYPE_SOURCE, layer, null);
     }
 }

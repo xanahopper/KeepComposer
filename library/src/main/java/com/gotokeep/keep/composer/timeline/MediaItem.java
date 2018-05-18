@@ -1,8 +1,12 @@
 package com.gotokeep.keep.composer.timeline;
 
+import android.util.SparseArray;
+
 import com.gotokeep.keep.composer.util.TimeUtil;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
 /**
  * @author xana/cuixianming
@@ -20,12 +24,14 @@ public abstract class MediaItem implements Comparable<MediaItem> {
     long startTimeMs;
     long endTimeMs;
     float playSpeed = 1f;
+    SparseArray<MediaItem> baseItem = new SparseArray<>();
     int type;
     int layer;
 
-    public MediaItem(int type, int layer) {
+    public MediaItem(int type, int layer, MediaItem baseItem) {
         this.type = type;
         this.layer = layer;
+        this.baseItem.put(0, baseItem);
     }
 
     @Override
@@ -35,21 +41,21 @@ public abstract class MediaItem implements Comparable<MediaItem> {
 
     public static Comparator<? super MediaItem> getTypeComparator() {
         if (comparator == null) {
-            comparator = (Comparator<MediaItem>) (t1, t2) -> {
-                if (t1.type < t2.type) {
-                    return -1;
-                } else if (t1.type > t2.type) {
-                    return 1;
-                } else {
-                    return 0;
-                }
-            };
+            comparator = (Comparator<MediaItem>) (t1, t2) -> Integer.compare(t1.layer, t2.layer);
         }
         return comparator;
     }
 
     public boolean inRange(long positionMs) {
         return TimeUtil.inRange(positionMs, startTimeMs, endTimeMs);
+    }
+
+    public SparseArray<MediaItem> getBaseItem() {
+        return baseItem;
+    }
+
+    public void setBaseItem(int index, MediaItem baseItem) {
+        this.baseItem.put(index, baseItem);
     }
 
     public int getLayer() {
@@ -72,11 +78,25 @@ public abstract class MediaItem implements Comparable<MediaItem> {
         this.endTimeMs = endTimeMs;
     }
 
+    public void setTimeRangeMs(long startTimeMs, long endTimeMs) {
+        this.startTimeMs = startTimeMs;
+        this.endTimeMs = endTimeMs;
+    }
+
+    public long getDurationMs() {
+        return Math.max(endTimeMs - startTimeMs, 0);
+    }
+
     public float getPlaySpeed() {
         return playSpeed;
     }
 
     public void setPlaySpeed(float playSpeed) {
         this.playSpeed = playSpeed;
+    }
+
+    public boolean isRangeOverlap(MediaItem mediaItem) {
+        return (startTimeMs < mediaItem.endTimeMs && endTimeMs > mediaItem.startTimeMs) ||
+                (endTimeMs > mediaItem.startTimeMs && startTimeMs < mediaItem.endTimeMs);
     }
 }

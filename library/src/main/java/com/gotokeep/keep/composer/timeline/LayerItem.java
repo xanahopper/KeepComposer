@@ -7,8 +7,8 @@ package com.gotokeep.keep.composer.timeline;
  */
 public class LayerItem extends OverlayItem {
 
-    public LayerItem(MediaItem baseItem, int layer, String name) {
-        super(baseItem, layer);
+    public LayerItem(int layer, String name) {
+        super(layer);
         this.name = name;
     }
 }

@@ -15,8 +15,7 @@ import java.util.Map;
 public class KeepExternalFilter extends MediaFilter {
     protected ExternalFilter externalFilter;
 
-    public KeepExternalFilter(RenderNode inputNode, ExternalFilter externalFilter) {
-        super(inputNode);
+    public KeepExternalFilter(ExternalFilter externalFilter) {
         this.externalFilter = externalFilter;
     }
 

@@ -1,13 +1,12 @@
 package com.gotokeep.keep.composer.timeline;
 
-import com.gotokeep.keep.composer.RenderNode;
-import com.gotokeep.keep.composer.util.TimeUtil;
+import android.util.SparseArray;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 /**
  * @author xana/cuixianming
@@ -15,28 +14,24 @@ import java.util.TreeSet;
  * @since 2018-05-14 12:12
  */
 public final class Timeline {
-    List<MediaItem> items = new LinkedList<>();
-    long endTimeMs;
+    private final List<Track> tracks = new ArrayList<>();
+    private long endTimeMs;
 
-    public void addMediaItem(MediaItem item) {
-        items.add(item);
-        if (item.endTimeMs > endTimeMs) {
-            endTimeMs = item.endTimeMs;
+    public void addMediaTrack(Track track) {
+        tracks.add(track);
+        if (track.getEndTimeMs() > endTimeMs) {
+            endTimeMs = track.getEndTimeMs();
         }
     }
 
-    public LinkedList<MediaItem> queryPresentationTimeItems(long presentationTimeUs) {
-        LinkedList<MediaItem> list = new LinkedList<>();
-        ListIterator<MediaItem> iterator = items.listIterator();
-        int layer = 0;
+    public SparseArray<List<MediaItem>> queryPresentationTimeItems(long presentationTimeUs) {
+        SparseArray<List<MediaItem>> mediaItems = new SparseArray<>();
+        ListIterator<Track> iterator = tracks.listIterator();
         while (iterator.hasNext()) {
-            MediaItem item = iterator.next();
-            if (item.inRange(TimeUtil.usToMs(presentationTimeUs))) {
-                item.layer = layer++;
-                list.add(item);
-            }
+            Track track = iterator.next();
+            mediaItems.put(track.getLayer(), track.queryPresentationTimeItems(presentationTimeUs));
         }
-        return list;
+        return mediaItems;
     }
 
     public long getEndTimeMs() {
@@ -44,12 +39,14 @@ public final class Timeline {
     }
 
     public void prepare(RenderFactory renderFactory) {
-        for (MediaItem item : items) {
-            RenderNode node = renderFactory.createRenderNode(item);
-            if (node != null && !node.isPrepared()) {
-                node.prepare();
+        for (Track track : tracks) {
+            if (track != null) {
+                track.prepare(renderFactory);
             }
         }
+    }
 
+    public List<Track> getTracks() {
+        return tracks;
     }
 }

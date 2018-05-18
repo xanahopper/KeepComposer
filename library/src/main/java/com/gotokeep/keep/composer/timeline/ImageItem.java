@@ -9,7 +9,7 @@ public class ImageItem extends MediaItem {
     protected String filePath;
 
     public ImageItem(String filePath) {
-        super(TYPE_SOURCE, 0);
+        super(TYPE_SOURCE, 0, null);
         this.filePath = filePath;
     }
 

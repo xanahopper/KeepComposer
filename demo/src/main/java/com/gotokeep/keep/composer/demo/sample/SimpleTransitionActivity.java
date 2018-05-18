@@ -13,7 +13,9 @@ import com.gotokeep.keep.composer.demo.SampleActivity;
 import com.gotokeep.keep.composer.demo.source.SourceProvider;
 import com.gotokeep.keep.composer.overlay.OverlayProvider;
 import com.gotokeep.keep.composer.timeline.ImageItem;
+import com.gotokeep.keep.composer.timeline.LayerItem;
 import com.gotokeep.keep.composer.timeline.Timeline;
+import com.gotokeep.keep.composer.timeline.Track;
 import com.gotokeep.keep.composer.timeline.TransitionItem;
 import com.gotokeep.keep.composer.timeline.VideoItem;
 import com.gotokeep.keep.composer.util.TimeUtil;
@@ -59,7 +61,7 @@ public class SimpleTransitionActivity extends SampleActivity implements Handler.
 
     @Override
     public String getLayerImagePath(String name) {
-        return null;
+        return SourceProvider.IMAGE_SRC[1];
     }
 
     @Override
@@ -80,13 +82,23 @@ public class SimpleTransitionActivity extends SampleActivity implements Handler.
         ImageItem item3 = new ImageItem(SourceProvider.IMAGE_SRC[0]);
         item3.setStartTimeMs(TimeUtil.secToMs(0));
         item3.setEndTimeMs(TimeUtil.secToMs(3));
+        Track videoTrack = new Track(true, 0);
+        videoTrack.addMediaItem(item3);
+        videoTrack.addMediaItem(item2);
+        videoTrack.addMediaItem(item1);
+        Track transitionTrack = new Track(true, 1);
         TransitionItem transitionItem1 = new TransitionItem(item3, item2, 2000, 1);
         TransitionItem transitionItem2 = new TransitionItem(item2, item1, 2000, 1);
-        timeline.addMediaItem(item3);
-        timeline.addMediaItem(item2);
-        timeline.addMediaItem(item1);
-        timeline.addMediaItem(transitionItem1);
-        timeline.addMediaItem(transitionItem2);
+        transitionTrack.addMediaItem(transitionItem1);
+        transitionTrack.addMediaItem(transitionItem2);
+        Track overlayTrack = new Track(true, 2);
+        LayerItem layerItem = new LayerItem(2, "");
+        layerItem.setTimeRangeMs(TimeUtil.secToMs(1), TimeUtil.secToMs(8));
+        layerItem.setScale(0.5f);
+        overlayTrack.addMediaItem(layerItem);
+        timeline.addMediaTrack(videoTrack);
+        timeline.addMediaTrack(transitionTrack);
+        timeline.addMediaTrack(overlayTrack);
 
         composer.setTimeline(timeline);
         composer.prepare();

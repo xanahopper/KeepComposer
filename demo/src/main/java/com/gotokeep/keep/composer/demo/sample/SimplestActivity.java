@@ -11,11 +11,9 @@ import com.gotokeep.keep.composer.MediaComposerFactory;
 import com.gotokeep.keep.composer.demo.SampleActivity;
 import com.gotokeep.keep.composer.demo.source.SourceProvider;
 import com.gotokeep.keep.composer.overlay.OverlayProvider;
-import com.gotokeep.keep.composer.timeline.MediaItem;
 import com.gotokeep.keep.composer.timeline.Timeline;
-import com.gotokeep.keep.composer.timeline.TransitionItem;
+import com.gotokeep.keep.composer.timeline.Track;
 import com.gotokeep.keep.composer.timeline.VideoItem;
-import com.gotokeep.keep.composer.transition.FadeTransition;
 import com.gotokeep.keep.composer.util.TimeUtil;
 
 /**
@@ -63,7 +61,9 @@ public class SimplestActivity extends SampleActivity implements Handler.Callback
 //        endItem.setEndTimeMs(TimeUtil.secToMs(20));
 //        TransitionItem transitionItem = new TransitionItem(startItem, endItem, 1);
 //        transitionItem.setDurationMs(600);
-        timeline.addMediaItem(startItem);
+        Track videoTrack = new Track(true, 0);
+        videoTrack.addMediaItem(startItem);
+        timeline.addMediaTrack(videoTrack);
 
         composer.setTimeline(timeline);
         composer.prepare();

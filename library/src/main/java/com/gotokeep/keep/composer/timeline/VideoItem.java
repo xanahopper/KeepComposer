@@ -9,7 +9,7 @@ public class VideoItem extends MediaItem {
     protected String filePath;
 
     public VideoItem(String filePath) {
-        super(TYPE_SOURCE, 0);
+        super(TYPE_SOURCE, 0, null);
         this.filePath = filePath;
     }
 }

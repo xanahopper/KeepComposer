@@ -45,30 +45,27 @@ public class RenderFactory {
         registerRenderType(ImageItem.class, item -> new ImageMediaSource(item.filePath));
         registerRenderType(TransitionItem.class, item -> {
             MediaTransition transition = MediaTransitionFactory.getTransition(item.name, item.durationMs);
-            if (transition != null) {
-                RenderNode startNode = createRenderNode(item.startItem);
-                RenderNode endNode = createRenderNode(item.endItem);
-                transition.setInputNode(MediaTransition.INDEX_START, startNode);
-                transition.setInputNode(MediaTransition.INDEX_END, endNode);
-            }
+//            if (transition != null) {
+//                RenderNode startNode = createRenderNode(item.startItem);
+//                RenderNode endNode = createRenderNode(item.endItem);
+//                transition.setInputNode(MediaTransition.INDEX_START, startNode);
+//                transition.setInputNode(MediaTransition.INDEX_END, endNode);
+//            }
             return transition;
         });
         registerRenderType(LayerItem.class, item -> {
-            RenderNode baseNode = createRenderNode(item.baseItem);
-            MediaOverlay overlay = null;
-            overlay = new LayerOverlay(baseNode, overlayProvider.getLayerImagePath(item.name));
+            MediaOverlay overlay = new LayerOverlay(overlayProvider.getLayerImagePath(item.name));
             overlay.initWithMediaItem(item);
             return overlay;
         });
         registerRenderType(OverlayItem.class, item -> {
-            RenderNode baseNode = createRenderNode(item.baseItem);
             MediaOverlay overlay = null;
             if (OverlayItem.TYPE_LAYER.equals(item.type)) {
-                overlay = new LayerOverlay(baseNode, overlayProvider.getLayerImagePath(item.name));
+                overlay = new LayerOverlay(overlayProvider.getLayerImagePath(item.name));
             } else if (OverlayItem.TYPE_WATERMARK.equals(item.type)) {
-                overlay = new WatermarkOverlay(baseNode);
+                overlay = new WatermarkOverlay();
             } else if (OverlayItem.TYPE_SUBTITLE.equals(item.type)) {
-                overlay = new SubtitleOverlay(baseNode);
+                overlay = new SubtitleOverlay();
             }
             if (overlay != null) {
                 overlay.initWithMediaItem(item);
@@ -78,8 +75,6 @@ public class RenderFactory {
         registerRenderType(FilterItem.class, item -> {
             MediaFilter filter = MediaFilterFactory.getFilter(item.name);
             if (filter != null) {
-                RenderNode baseNode = createRenderNode(item.baseItem);
-                filter.setInputNode(MediaFilter.KEY_MAIN, baseNode);
                 filter.setFilterParameters(item.params);
             }
             return filter;

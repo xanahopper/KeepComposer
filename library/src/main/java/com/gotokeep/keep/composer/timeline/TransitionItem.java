@@ -12,7 +12,7 @@ public class TransitionItem extends MediaItem {
     protected String name;
 
     public TransitionItem(MediaItem startItem, MediaItem endItem, long durationMs, int layer) {
-        super(TYPE_COMBINE, layer);
+        super(TYPE_COMBINE, layer, null);
         this.startItem = startItem;
         this.endItem = endItem;
         setDurationMs(durationMs);

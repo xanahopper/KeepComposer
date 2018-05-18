@@ -6,7 +6,7 @@ package com.gotokeep.keep.composer.timeline;
  * @since 2018-05-17 10:36
  */
 public class WatermarkItem extends OverlayItem {
-    public WatermarkItem(MediaItem baseItem, int layer) {
-        super(baseItem, layer);
+    public WatermarkItem(int layer) {
+        super(layer);
     }
 }

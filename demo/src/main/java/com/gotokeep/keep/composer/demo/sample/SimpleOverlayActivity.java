@@ -12,10 +12,9 @@ import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.demo.SampleActivity;
 import com.gotokeep.keep.composer.demo.source.SourceProvider;
 import com.gotokeep.keep.composer.overlay.OverlayProvider;
-import com.gotokeep.keep.composer.timeline.ImageItem;
 import com.gotokeep.keep.composer.timeline.LayerItem;
 import com.gotokeep.keep.composer.timeline.Timeline;
-import com.gotokeep.keep.composer.timeline.TransitionItem;
+import com.gotokeep.keep.composer.timeline.Track;
 import com.gotokeep.keep.composer.timeline.VideoItem;
 import com.gotokeep.keep.composer.util.TimeUtil;
 
@@ -75,7 +74,7 @@ public class SimpleOverlayActivity extends SampleActivity implements Handler.Cal
         item1.setStartTimeMs(TimeUtil.secToMs(0));
         item1.setEndTimeMs(TimeUtil.secToMs(9));
 
-        LayerItem layerItem1 = new LayerItem(item1, 1, "");
+        LayerItem layerItem1 = new LayerItem(1, "");
         layerItem1.setStartTimeMs(TimeUtil.secToMs(0));
         layerItem1.setEndTimeMs(TimeUtil.secToMs(5));
         layerItem1.setRotation(30f);
@@ -83,8 +82,12 @@ public class SimpleOverlayActivity extends SampleActivity implements Handler.Cal
         layerItem1.setOffsetY(30);
         layerItem1.setScale(0.5f);
 
-        timeline.addMediaItem(item1);
-        timeline.addMediaItem(layerItem1);
+        Track videoTrack = new Track(true, 0);
+        videoTrack.addMediaItem(item1);
+        Track overlayTrack = new Track(true, 1);
+        overlayTrack.addMediaItem(layerItem1);
+        timeline.addMediaTrack(videoTrack);
+        timeline.addMediaTrack(overlayTrack);
 
         composer.setTimeline(timeline);
         composer.prepare();

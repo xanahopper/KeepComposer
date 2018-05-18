@@ -18,8 +18,8 @@ import java.nio.ShortBuffer;
  * @since 2018/5/12 15:28
  */
 public abstract class RenderNode {
-
     private static final String TAG = RenderNode.class.getSimpleName();
+    public static final int KEY_MAIN = 0;
     protected SparseArray<RenderNode> inputNodes = new SparseArray<>();
     protected RenderTexture renderTexture;
     protected ProgramObject programObject;
@@ -46,6 +46,18 @@ public abstract class RenderNode {
 
     public void setInputNode(int inputIndex, RenderNode inputNode) {
         inputNodes.put(inputIndex, inputNode);
+    }
+
+    public RenderNode getMainInputNode(long presentationTimeUs) {
+        return inputNodes.size() > 0 ? inputNodes.valueAt(KEY_MAIN) : null;
+    }
+
+    public void setMainInputNode(RenderNode node) {
+        if (node != null) {
+            inputNodes.put(KEY_MAIN, node);
+        } else {
+            inputNodes.delete(KEY_MAIN);
+        }
     }
 
     public RenderTexture getOutputTexture() {
@@ -187,10 +199,6 @@ public abstract class RenderNode {
     public boolean awaitRenderFrame() {
         frameAvailable = renderTexture.awaitFrameAvailable();
         return frameAvailable;
-    }
-
-    public RenderNode getMainInputNode(long presentationTimeUs) {
-        return inputNodes.size() > 0 ? inputNodes.valueAt(0) : null;
     }
 
     public boolean isInRange(long timeMs) {

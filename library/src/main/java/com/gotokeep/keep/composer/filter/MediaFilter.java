@@ -13,20 +13,6 @@ import java.util.Map;
  */
 public abstract class MediaFilter extends RenderNode {
 
-    public static final int KEY_MAIN = 0;
-
-    protected RenderNode mainNode;
-
-    public MediaFilter(RenderNode inputNode) {
-        setInputNode(KEY_MAIN, inputNode);
-        mainNode = inputNode;
-    }
-
-    @Override
-    public RenderNode getMainInputNode(long presentationTimeUs) {
-        return mainNode;
-    }
-
     public abstract void setFilterParameters(Map<String, Object> params);
 
     @Override

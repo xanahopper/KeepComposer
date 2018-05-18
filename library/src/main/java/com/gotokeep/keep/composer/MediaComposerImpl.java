@@ -6,6 +6,7 @@ import android.os.HandlerThread;
 import android.os.Message;
 import android.os.SystemClock;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.TextureView;
 
 import com.gotokeep.keep.composer.target.MuxerRenderTarget;
@@ -16,6 +17,7 @@ import com.gotokeep.keep.composer.timeline.Timeline;
 import com.gotokeep.keep.composer.util.MediaClock;
 import com.gotokeep.keep.composer.util.TimeUtil;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -314,7 +316,6 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         elapsedRealtimeUs = TimeUtil.msToUs(SystemClock.elapsedRealtime());
 
         renderRoot.setViewport(canvasWidth, canvasHeight);
-
         long renderTimeUs = renderRoot.render(currentTimeUs, elapsedRealtimeUs);
 
         if (renderTimeUs > currentTimeUs) {
@@ -328,10 +329,8 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
                         new PositionInfo(currentTimeUs, timeline.getEndTimeMs())).sendToTarget();
             }
         }
-//        renderRoot = maintainRenderTree(renderRoot, renderTimeUs);
-//        if (renderRoot == null) {
-            renderRoot = generateRenderTree(currentTimeUs);
-//        }
+
+        renderRoot = generateRenderTree(currentTimeUs);
         if (renderRoot != null) {
             scheduleNextWork(operationStartMs, 10);
         } else {
@@ -351,29 +350,38 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     }
 
     private RenderNode generateRenderTree(long presentationTimeUs) {
-        LinkedList<MediaItem> items = timeline.queryPresentationTimeItems(presentationTimeUs);
-//        Collections.sort(items, MediaItem.getTypeComparator());
+        SparseArray<List<MediaItem>> itemLayers = timeline.queryPresentationTimeItems(presentationTimeUs);
         RenderNode root = renderRoot;
-//        MediaItem topItem = items.isEmpty() ? null : items.getLast();
-        int layer = -1;
-        for (MediaItem item : items) {
-            RenderNode renderNode;
-            if (!renderNodeMap.containsKey(item)) {
-                renderNode = renderFactory.createRenderNode(item);
-                renderNodeMap.put(item, renderNode);
-            } else {
-                renderNode = renderNodeMap.get(item);
-            }
-            if (renderNode != null) {
-                if (!renderNode.isPrepared()) {
-                    renderNode.prepare();
+        Map<MediaItem, RenderNode> nodeCache = new HashMap<>();
+        for (int i = 0; i < itemLayers.size(); i++) {
+            int layer = itemLayers.keyAt(i);
+            List<MediaItem> items = itemLayers.get(layer);
+            for (MediaItem item : items) {
+                RenderNode renderNode;
+                if (!renderNodeMap.containsKey(item)) {
+                    renderNode = renderFactory.createRenderNode(item);
+                    renderNodeMap.put(item, renderNode);
+                } else {
+                    renderNode = renderNodeMap.get(item);
                 }
-                renderNode.setViewport(canvasWidth, canvasHeight);
-                renderNode.setOriginSize(videoWidth, videoHeight);
-            }
-            if (layer <= item.getLayer() && renderNode != null) {
-                layer = item.getLayer();
-                root = renderNode;
+                if (renderNode != null) {
+                    renderNode.inputNodes.clear();
+                    for (int j = 0; j < item.getBaseItem().size(); j++) {
+                        MediaItem dependItem = item.getBaseItem().valueAt(j);
+                        if (nodeCache.containsKey(dependItem)) {
+                            renderNode.setInputNode(j, nodeCache.get(dependItem));
+                        }
+                    }
+                    if (!renderNode.isPrepared()) {
+                        renderNode.prepare();
+                    }
+                    renderNode.setViewport(canvasWidth, canvasHeight);
+                    renderNode.setOriginSize(videoWidth, videoHeight);
+                    nodeCache.put(item, renderNode);
+                }
+                if (renderNode != null) {
+                    root = renderNode;
+                }
             }
         }
         return root;

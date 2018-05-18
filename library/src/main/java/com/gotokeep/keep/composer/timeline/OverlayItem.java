@@ -19,9 +19,8 @@ public abstract class OverlayItem extends MediaItem {
     protected MediaItem baseItem;
     protected String name;
 
-    public OverlayItem(MediaItem baseItem, int layer) {
-        super(TYPE_OVERLAY, layer);
-        this.baseItem = baseItem;
+    public OverlayItem(int layer) {
+        super(TYPE_OVERLAY, layer, null);
     }
 
     public int getOffsetX() {
@@ -70,5 +69,21 @@ public abstract class OverlayItem extends MediaItem {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public MediaItem getBaseItem() {
+        return baseItem;
+    }
+
+    public void setBaseItem(MediaItem baseItem) {
+        this.baseItem = baseItem;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

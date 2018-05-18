@@ -60,15 +60,9 @@ public abstract class MediaOverlay extends RenderNode {
     protected int height;
     protected float overlayTransform[];
     protected ProgramObject overlayProgramObject;
-    protected RenderNode mainNode;
 
     private static ProgramObject createOverlayProgramObject() {
         return new ProgramObject(OVERLAY_VERTEX_SHADER, ProgramObject.DEFAULT_FRAGMENT_SHADER, OVERLAY_UNIFORM_NAMES);
-    }
-
-    MediaOverlay(RenderNode mainInputNode) {
-        setInputNode(KEY_MAIN, mainInputNode);
-        mainNode = mainInputNode;
     }
 
     public void initWithMediaItem(OverlayItem item) {
@@ -102,7 +96,9 @@ public abstract class MediaOverlay extends RenderNode {
 
     @Override
     protected void bindRenderTextures() {
-        mainNode.getOutputTexture().bind(0);
+        if (inputNodes.size() > 0) {
+            inputNodes.valueAt(0).getOutputTexture().bind(0);
+        }
     }
 
     @Override
@@ -110,14 +106,15 @@ public abstract class MediaOverlay extends RenderNode {
         // draw source
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
         renderOverlay(overlayProgramObject);
-        return mainNode.getPresentationTimeUs();
+        return inputNodes.size() > 0 ? inputNodes.valueAt(0).getPresentationTimeUs() : 0;
     }
 
     @Override
     protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs) {
-        if (mainNode != null) {
+        if (inputNodes.size() > 0) {
+            RenderNode node = inputNodes.valueAt(0);
             GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
-                    1, false, mainNode.getTransformMatrix(), 0);
+                    1, false, node.getTransformMatrix(), 0);
         }
         GLES20.glUniform1i(programObject.getUniformLocation(ProgramObject.UNIFORM_TEXTURE), 0);
     }
@@ -151,15 +148,6 @@ public abstract class MediaOverlay extends RenderNode {
 
         GLES20.glUniformMatrix4fv(overlayProgramObject.getUniformLocation(UNIFORM_OVERLAY_TRANSFORM),
                 1, false, overlayTransform, 0);
-//        float mappedPoints[] = new float[3];
-        StringBuffer sb = new StringBuffer("\n[");
-        for (int i = 0; i < overlayTransform.length / 4; i++) {
-            sb.append(String.format("[%.1f, %.1f, %.1f, %.1f]\n", overlayTransform[i], overlayTransform[i + 3],
-                    overlayTransform[i + 8], overlayTransform[i + 12]));
-        }
-        sb.append("]");
-//        Log.d("MediaOverlay", "updateLayerMatrix: \n" + layerMatrix.toString());
-        Log.d("MediaOverlay", sb.toString());
     }
 
     public int getOffsetX() {

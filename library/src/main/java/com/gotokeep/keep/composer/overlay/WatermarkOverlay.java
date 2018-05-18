@@ -1,6 +1,5 @@
 package com.gotokeep.keep.composer.overlay;
 
-import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.gles.ProgramObject;
 
 /**
@@ -9,9 +8,6 @@ import com.gotokeep.keep.composer.gles.ProgramObject;
  * @since 2018-05-15 15:54
  */
 public class WatermarkOverlay extends MediaOverlay {
-    public WatermarkOverlay(RenderNode mainInputNode) {
-        super(mainInputNode);
-    }
 
     @Override
     protected void onPrepare() {

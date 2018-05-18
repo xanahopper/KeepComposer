@@ -9,9 +9,6 @@ import com.gotokeep.keep.composer.gles.ProgramObject;
  * @since 2018-05-15 16:03
  */
 public class SubtitleOverlay extends MediaOverlay {
-    public SubtitleOverlay(RenderNode mainInputNode) {
-        super(mainInputNode);
-    }
 
     @Override
     protected void onPrepare() {

@@ -5,10 +5,11 @@ package com.gotokeep.keep.composer.timeline;
  * @version 1.0
  * @since 2018-05-14 12:11
  */
-class AudioItem extends MediaItem {
+public class AudioItem extends MediaItem {
     protected String filePath;
 
-    public AudioItem() {
-        super(TYPE_SOURCE, 0);
+    public AudioItem(String filePath) {
+        super(TYPE_SOURCE, 0, null);
+        this.filePath = filePath;
     }
 }

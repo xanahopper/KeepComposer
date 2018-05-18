@@ -46,6 +46,9 @@ public class MediaUtil {
     }
 
     public static Bitmap flipBitmap(Bitmap origin, boolean recycle) {
+        if (origin == null) {
+            return null;
+        }
         Matrix matrix = new Matrix();
         int width = origin.getWidth();
         int height = origin.getHeight();
