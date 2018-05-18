@@ -101,7 +101,7 @@ public abstract class MediaOverlay extends RenderNode {
     }
 
     @Override
-    protected void bindRenderTextures(boolean[] shouldRender) {
+    protected void bindRenderTextures() {
         mainNode.getOutputTexture().bind(0);
     }
 

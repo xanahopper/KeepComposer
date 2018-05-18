@@ -99,8 +99,8 @@ public class VideoMediaSource extends MediaSource {
 
     @Override
     public long render(long positionUs, long elapsedRealtimeUs) {
-        long actualTimeUs = (long) ((positionUs - TimeUtil.msToUs(startTimeMs)) * playSpeed);
-        if (actualTimeUs > TimeUtil.msToUs(durationMs)) {
+        long actualTimeUs = (long) ((positionUs - TimeUtil.msToUs(startTimeMs)));
+        if (actualTimeUs > getRealTime(TimeUtil.msToUs(durationMs))) {
             Log.d("Composer", "doRender: === END ===");
             ended = true;
         }
@@ -119,18 +119,18 @@ public class VideoMediaSource extends MediaSource {
                     ended = true;
                 }
             } else {
-                Log.v("VideoMediaSource", "doRender: cannot dequeue input buffer from decoder");
+                Log.w("VideoMediaSource", "doRender: cannot dequeue input buffer from decoder");
             }
             int outputIndex = decoder.dequeueOutputBuffer(decodeInfo, TIMEOUT_US);
             if (outputIndex > 0) {
                 encoded = true;
-                decoder.releaseOutputBuffer(outputIndex, true);
-                this.presentationTimeUs = decodeInfo.presentationTimeUs;
+                this.presentationTimeUs = getRealTime(decodeInfo.presentationTimeUs);
+                decoder.releaseOutputBuffer(outputIndex, presentationTimeUs >= actualTimeUs);
             }
         }
         if (!encoded) {
             renderTexture.notifyNoFrame();
-            return this.presentationTimeUs;
+            return presentationTimeUs;
         } else {
             Log.d("VideoMediaSource", "doRender[" + name + "]: rendered a frame " + this.presentationTimeUs);
             decodeTexture.getSurfaceTexture().updateTexImage();
@@ -141,11 +141,11 @@ public class VideoMediaSource extends MediaSource {
     @Override
     protected long doRender(ProgramObject programObject, long positionUs) {
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-        return this.presentationTimeUs + TimeUtil.msToUs(startTimeMs);
+        return presentationTimeUs + TimeUtil.msToUs(startTimeMs);
     }
 
     @Override
-    protected void bindRenderTextures(boolean[] shouldRender) {
+    protected void bindRenderTextures() {
         decodeTexture.bind(0);
     }
 
@@ -191,5 +191,9 @@ public class VideoMediaSource extends MediaSource {
         decoder = MediaCodec.createDecoderByType(mime);
         decoder.configure(format, decodeSurface, null, 0);
         decoder.start();
+    }
+
+    private long getRealTime(long time) {
+        return (long) (time / playSpeed);
     }
 }

@@ -53,9 +53,9 @@ public abstract class RenderNode {
     }
 
     public long render(long positionUs, long elapsedRealtimeUs) {
-        boolean[] shouldRender = renderInputs(positionUs, elapsedRealtimeUs);
+        boolean allRendered = renderInputs(positionUs, elapsedRealtimeUs);
         if (needRenderSelf()) {
-            setSelfRenderTarget(positionUs, shouldRender);
+            setSelfRenderTarget(positionUs);
         }
         return doRender(programObject, positionUs);
     }
@@ -70,20 +70,20 @@ public abstract class RenderNode {
         originHeight = height;
     }
 
-    private void setSelfRenderTarget(long positionUs, boolean[] shouldRender) {
+    private void setSelfRenderTarget(long positionUs) {
         renderTexture.setRenderTarget(canvasWidth, canvasHeight);
         renderTexture.clear();
         if (programObject != null) {
             programObject.use();
             activeAttribData();
-            bindRenderTextures(shouldRender);
+            bindRenderTextures();
             updateRenderUniform(programObject, positionUs);
         }
-//        GLES20.glViewport(0, 0, canvasWidth, canvasHeight);
     }
 
-    private boolean[] renderInputs(long positionUs, long elapsedRealtimeUs) {
+    private boolean renderInputs(long positionUs, long elapsedRealtimeUs) {
         boolean shouldRender[] = new boolean[inputNodes.size()];
+        boolean allRendered = true;
         for (int i = 0; i < inputNodes.size(); i++) {
             shouldRender[i] = shouldRenderNode(inputNodes.valueAt(i), positionUs);
             if (shouldRender[i]) {
@@ -92,11 +92,10 @@ public abstract class RenderNode {
         }
         for (int i = 0; i < inputNodes.size(); i++) {
             if (shouldRender[i]) {
-                inputNodes.valueAt(i).updateRenderFrame();
-//                Log.w(TAG, "one of input frame invalid");
+                allRendered &= inputNodes.valueAt(i).updateRenderFrame();
             }
         }
-        return shouldRender;
+        return allRendered;
     }
 
     /**
@@ -222,7 +221,7 @@ public abstract class RenderNode {
      */
     protected abstract long doRender(ProgramObject programObject, long positionUs);
 
-    protected abstract void bindRenderTextures(boolean[] shouldRender);
+    protected abstract void bindRenderTextures();
 
     protected abstract void updateRenderUniform(ProgramObject programObject, long presentationTimeUs);
 
@@ -234,9 +233,11 @@ public abstract class RenderNode {
         this.endTimeMs = endTimeMs;
     }
 
-    public void updateRenderFrame() {
+    public boolean updateRenderFrame() {
         if (renderTexture != null && renderTexture.isFrameAvailable()) {
             renderTexture.updateTexImage();
+            return true;
         }
+        return false;
     }
 }

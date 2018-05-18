@@ -69,7 +69,7 @@ public class ImageMediaSource extends MediaSource {
     }
 
     @Override
-    protected void bindRenderTextures(boolean[] shouldRender) {
+    protected void bindRenderTextures() {
 
     }
 

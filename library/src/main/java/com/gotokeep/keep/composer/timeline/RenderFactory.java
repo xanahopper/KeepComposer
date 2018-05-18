@@ -37,7 +37,11 @@ public class RenderFactory {
 
     public RenderFactory(OverlayProvider overlayProvider) {
         this.overlayProvider = overlayProvider;
-        registerRenderType(VideoItem.class, item -> new VideoMediaSource(item.filePath));
+        registerRenderType(VideoItem.class, item -> {
+            VideoMediaSource source = new VideoMediaSource(item.filePath);
+            source.setPlaySpeed(item.playSpeed);
+            return source;
+        });
         registerRenderType(ImageItem.class, item -> new ImageMediaSource(item.filePath));
         registerRenderType(TransitionItem.class, item -> {
             MediaTransition transition = MediaTransitionFactory.getTransition(item.name, item.durationMs);

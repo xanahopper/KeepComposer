@@ -108,7 +108,7 @@ public abstract class MediaTransition extends RenderNode {
     }
 
     @Override
-    protected void bindRenderTextures(boolean[] shouldRender) {
+    protected void bindRenderTextures() {
         startNode = getStartNode();
         endNode = getEndNode();
         if (startNode != null) {

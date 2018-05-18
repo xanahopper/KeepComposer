@@ -19,7 +19,7 @@ public abstract class MediaItem implements Comparable<MediaItem> {
 
     long startTimeMs;
     long endTimeMs;
-    float playSpeed;
+    float playSpeed = 1f;
     int type;
     int layer;
 
