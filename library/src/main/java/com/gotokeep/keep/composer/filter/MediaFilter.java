@@ -15,10 +15,6 @@ public abstract class MediaFilter extends RenderNode {
 
     public abstract void setFilterParameters(Map<String, Object> params);
 
-    @Override
-    protected RenderTexture createRenderTexture() {
-        return new RenderTexture(RenderTexture.TEXTURE_NATIVE);
-    }
 
     @Override
     protected ProgramObject createProgramObject() {

@@ -15,6 +15,8 @@ public class TransitionItem extends MediaItem {
         super(TYPE_COMBINE, layer, null);
         this.startItem = startItem;
         this.endItem = endItem;
+        baseItem.put(0, startItem);
+        baseItem.put(1, endItem);
         setDurationMs(durationMs);
     }
 

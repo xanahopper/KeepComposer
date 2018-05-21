@@ -1,8 +1,6 @@
 package com.gotokeep.keep.composer;
 
 import android.opengl.GLES20;
-import android.util.Log;
-import android.util.SparseArray;
 
 import com.gotokeep.keep.composer.gles.ProgramObject;
 import com.gotokeep.keep.composer.util.TimeUtil;
@@ -11,16 +9,19 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
+ * 渲染节点将输入进行处理，绘制于内部的 {@link RenderTexture} 中以供下一个渲染节点使用
+ *
  * @author xana/cuixianming
  * @version 1.0
  * @since 2018/5/12 15:28
  */
 public abstract class RenderNode {
     private static final String TAG = RenderNode.class.getSimpleName();
-    public static final int KEY_MAIN = 0;
-    protected SparseArray<RenderNode> inputNodes = new SparseArray<>();
+    protected List<RenderNode> inputNodes = new ArrayList<>();
     protected RenderTexture renderTexture;
     protected ProgramObject programObject;
 
@@ -28,6 +29,7 @@ public abstract class RenderNode {
     protected long startTimeMs;
     protected long endTimeMs;
     protected long presentationTimeUs;
+    protected long renderTimeUs;
     protected int canvasWidth;
     protected int canvasHeight;
     protected int originWidth;
@@ -44,45 +46,50 @@ public abstract class RenderNode {
     protected FloatBuffer vertexBuffer;
     protected ShortBuffer texCoordBuffer;
 
-    public void setInputNode(int inputIndex, RenderNode inputNode) {
-        inputNodes.put(inputIndex, inputNode);
-    }
-
-    public RenderNode getMainInputNode(long presentationTimeUs) {
-        return inputNodes.size() > 0 ? inputNodes.valueAt(KEY_MAIN) : null;
-    }
-
-    public void setMainInputNode(RenderNode node) {
-        if (node != null) {
-            inputNodes.put(KEY_MAIN, node);
-        } else {
-            inputNodes.delete(KEY_MAIN);
-        }
+    public void addInputNode(RenderNode inputNode) {
+        inputNodes.add(inputNode);
     }
 
     public RenderTexture getOutputTexture() {
         return renderTexture;
     }
 
-    public long render(long positionUs, long elapsedRealtimeUs) {
-        boolean allRendered = renderInputs(positionUs, elapsedRealtimeUs);
+    public long acquireFrame(long positionUs) {
+        long renderTimeUs = 0;
+        if (!isFrameAvailable()) {
+            renderTimeUs = render(positionUs);
+        }
+        updateRenderFrame(positionUs);
+        this.renderTimeUs = renderTimeUs;
+        return renderTimeUs;
+    }
+
+    public long render(long positionUs) {
+        renderInputs(positionUs);
         if (needRenderSelf()) {
             setSelfRenderTarget(positionUs);
         }
         return doRender(programObject, positionUs);
     }
 
-    public void setViewport(int width, int height) {
-        canvasWidth = width;
-        canvasHeight = height;
+    public boolean isFrameAvailable() {
+        return renderTexture.isFrameAvailable();
     }
 
-    public void setOriginSize(int width, int height) {
-        originWidth = width;
-        originHeight = height;
+    protected void renderInputs(long positionUs) {
+        for (int i = 0; i < inputNodes.size(); i++) {
+            RenderNode node = inputNodes.get(i);
+            if (shouldRenderNode(node, positionUs)) {
+                node.acquireFrame(positionUs);
+            }
+        }
     }
 
-    private void setSelfRenderTarget(long positionUs) {
+    protected boolean needRenderSelf() {
+        return true;
+    }
+
+    protected void setSelfRenderTarget(long positionUs) {
         renderTexture.setRenderTarget(canvasWidth, canvasHeight);
         renderTexture.clear();
         if (programObject != null) {
@@ -93,21 +100,14 @@ public abstract class RenderNode {
         }
     }
 
-    private boolean renderInputs(long positionUs, long elapsedRealtimeUs) {
-        boolean shouldRender[] = new boolean[inputNodes.size()];
-        boolean allRendered = true;
-        for (int i = 0; i < inputNodes.size(); i++) {
-            shouldRender[i] = shouldRenderNode(inputNodes.valueAt(i), positionUs);
-            if (shouldRender[i]) {
-                inputNodes.valueAt(i).render(positionUs, elapsedRealtimeUs);
-            }
-        }
-        for (int i = 0; i < inputNodes.size(); i++) {
-            if (shouldRender[i]) {
-                allRendered &= inputNodes.valueAt(i).updateRenderFrame();
-            }
-        }
-        return allRendered;
+    public void setViewport(int width, int height) {
+        canvasWidth = width;
+        canvasHeight = height;
+    }
+
+    public void setOriginSize(int width, int height) {
+        originWidth = width;
+        originHeight = height;
     }
 
     /**
@@ -135,7 +135,7 @@ public abstract class RenderNode {
     }
 
     private void prepareInternal() {
-        renderTexture = createRenderTexture();
+        renderTexture = new RenderTexture(RenderTexture.TEXTURE_NATIVE);
         vertexBuffer = ByteBuffer.allocateDirect(DEFAULT_VERTEX_DATA.length * 4)
                 .order(ByteOrder.nativeOrder()).asFloatBuffer();
         vertexBuffer.put(DEFAULT_VERTEX_DATA).position(0);
@@ -164,7 +164,7 @@ public abstract class RenderNode {
 
     private void prepareInput() {
         for (int i = 0; i < inputNodes.size(); i++) {
-            RenderNode node = inputNodes.valueAt(i);
+            RenderNode node = inputNodes.get(i);
             if (node != null && !node.isPrepared()) {
                 node.prepare();
             }
@@ -196,9 +196,20 @@ public abstract class RenderNode {
         canvasHeight = height;
     }
 
-    public boolean awaitRenderFrame() {
-        frameAvailable = renderTexture.awaitFrameAvailable();
-        return frameAvailable;
+    public void setStartTimeMs(long startTimeMs) {
+        this.startTimeMs = startTimeMs;
+    }
+
+    public void setEndTimeMs(long endTimeMs) {
+        this.endTimeMs = endTimeMs;
+    }
+
+    public long updateRenderFrame(long positionUs) {
+        if (renderTexture != null && renderTexture.isFrameAvailable()) {
+            renderTexture.updateTexImage();
+            return getPresentationTimeUs();
+        }
+        return positionUs;
     }
 
     public boolean isInRange(long timeMs) {
@@ -209,22 +220,17 @@ public abstract class RenderNode {
         return true;
     }
 
-    protected abstract RenderTexture createRenderTexture();
-
     protected abstract ProgramObject createProgramObject();
 
     protected abstract void onPrepare();
 
     protected abstract void onRelease();
 
-    protected boolean needRenderSelf() {
-        return true;
-    }
-
     /**
      * Subclass should override this method to render the frame.
+     *
      * @param programObject program object will use
-     * @param positionUs current time in microsecond
+     * @param positionUs    current time in microsecond
      * @return time in microsecond of the frame that just rendered
      */
     protected abstract long doRender(ProgramObject programObject, long positionUs);
@@ -233,19 +239,7 @@ public abstract class RenderNode {
 
     protected abstract void updateRenderUniform(ProgramObject programObject, long presentationTimeUs);
 
-    public void setStartTimeMs(long startTimeMs) {
-        this.startTimeMs = startTimeMs;
-    }
-
-    public void setEndTimeMs(long endTimeMs) {
-        this.endTimeMs = endTimeMs;
-    }
-
-    public boolean updateRenderFrame() {
-        if (renderTexture != null && renderTexture.isFrameAvailable()) {
-            renderTexture.updateTexImage();
-            return true;
-        }
-        return false;
+    public long getRenderTimeUs() {
+        return renderTimeUs;
     }
 }

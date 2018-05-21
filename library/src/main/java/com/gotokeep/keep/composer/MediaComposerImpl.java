@@ -17,13 +17,9 @@ import com.gotokeep.keep.composer.timeline.Timeline;
 import com.gotokeep.keep.composer.util.MediaClock;
 import com.gotokeep.keep.composer.util.TimeUtil;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * @author xana/cuixianming
@@ -316,12 +312,12 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         elapsedRealtimeUs = TimeUtil.msToUs(SystemClock.elapsedRealtime());
 
         renderRoot.setViewport(canvasWidth, canvasHeight);
-        long renderTimeUs = renderRoot.render(currentTimeUs, elapsedRealtimeUs);
-
-        if (renderTimeUs > currentTimeUs) {
+        long renderTimeUs = renderRoot.acquireFrame(currentTimeUs);
+        Log.d(TAG, "doRenderWork: " + renderTimeUs + " " + currentTimeUs);
+        if (renderTimeUs >= currentTimeUs) {
+            Log.d(TAG, "doRenderWork: has frame and render to target");
             // render result to RenderTarget
             currentTimeUs = renderTimeUs;
-            renderRoot.updateRenderFrame();
             renderTarget.updateFrame(renderRoot, currentTimeUs);
             engine.swapBuffers();
             if (eventHandler != null) {
@@ -366,11 +362,15 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
                 }
                 if (renderNode != null) {
                     renderNode.inputNodes.clear();
-                    for (int j = 0; j < item.getBaseItem().size(); j++) {
-                        MediaItem dependItem = item.getBaseItem().valueAt(j);
-                        if (nodeCache.containsKey(dependItem)) {
-                            renderNode.setInputNode(j, nodeCache.get(dependItem));
+                    if (item.getBaseItem().size() > 0) {
+                        for (int j = 0; j < item.getBaseItem().size(); j++) {
+                            MediaItem dependItem = item.getBaseItem().valueAt(j);
+                            if (nodeCache.containsKey(dependItem)) {
+                                renderNode.addInputNode(nodeCache.get(dependItem));
+                            }
                         }
+                    } else {
+                        renderNode.addInputNode(root);
                     }
                     if (!renderNode.isPrepared()) {
                         renderNode.prepare();
@@ -387,25 +387,25 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         return root;
     }
 
-    private RenderNode maintainRenderTree(RenderNode root, long presentationTimeUs) {
-        if (root != null) {
-            for (int i = 0; i < root.inputNodes.size(); i++) {
-                int key = root.inputNodes.keyAt(i);
-                RenderNode node = root.inputNodes.valueAt(i);
-                node = maintainRenderTree(node, presentationTimeUs);
-                if (node != null) {
-                    root.inputNodes.put(key, node);
-                } else {
-                    root.inputNodes.remove(key);
-                }
-            }
-            if (!root.isInRange(TimeUtil.usToMs(presentationTimeUs)) ||
-                    root.getMainInputNode(presentationTimeUs) == null) {
-                root = root.getMainInputNode(presentationTimeUs);
-            }
-        }
-        return root;
-    }
+//    private RenderNode maintainRenderTree(RenderNode root, long presentationTimeUs) {
+//        if (root != null) {
+//            for (int i = 0; i < root.inputNodes.size(); i++) {
+//                int key = root.inputNodes.keyAt(i);
+//                RenderNode node = root.inputNodes.valueAt(i);
+//                node = maintainRenderTree(node, presentationTimeUs);
+//                if (node != null) {
+//                    root.inputNodes.put(key, node);
+//                } else {
+//                    root.inputNodes.remove(key);
+//                }
+//            }
+//            if (!root.isInRange(TimeUtil.usToMs(presentationTimeUs)) ||
+//                    root.getMainInputNode(presentationTimeUs) == null) {
+//                root = root.getMainInputNode(presentationTimeUs);
+//            }
+//        }
+//        return root;
+//    }
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {

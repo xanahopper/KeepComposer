@@ -42,22 +42,6 @@ public abstract class MediaTransition extends RenderNode {
     RenderNode startNode;
     RenderNode endNode;
 
-    @Override
-    public RenderNode getMainInputNode(long presentationTimeUs) {
-        for (int i = 0; i < inputNodes.size(); i++) {
-            RenderNode node = inputNodes.valueAt(i);
-            if (shouldRenderNode(node, presentationTimeUs)) {
-                return node;
-            }
-        }
-        return null;
-    }
-
-    @Override
-    protected RenderTexture createRenderTexture() {
-        return new RenderTexture(RenderTexture.TEXTURE_NATIVE);
-    }
-
     @CallSuper
     @Override
     protected void onPrepare() {
@@ -75,11 +59,18 @@ public abstract class MediaTransition extends RenderNode {
     }
 
     RenderNode getEndNode() {
-        return inputNodes.get(INDEX_END);
+        return inputNodes.size() > INDEX_END ? inputNodes.get(INDEX_END) : null;
     }
 
     RenderNode getStartNode() {
-        return inputNodes.get(INDEX_START);
+        return inputNodes.size() > INDEX_START ? inputNodes.get(INDEX_START) : null;
+    }
+
+    @Override
+    public boolean isFrameAvailable() {
+        startNode = getStartNode();
+        endNode = getEndNode();
+        return (startNode != null && startNode.isFrameAvailable()) || (endNode != null && endNode.isFrameAvailable());
     }
 
     @Override
@@ -96,15 +87,22 @@ public abstract class MediaTransition extends RenderNode {
     protected long doRender(ProgramObject programObject, long positionUs) {
         Log.d(TAG, "doRender");
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-        long presentationTimeUs = positionUs;
-        for (int i = 0; i < inputNodes.size(); i++) {
-            RenderNode node = inputNodes.valueAt(i);
-            if (node.getPresentationTimeUs() + TimeUtil.msToUs(node.getStartTimeMs()) > presentationTimeUs) {
-                presentationTimeUs = node.getPresentationTimeUs() + TimeUtil.msToUs(node.getStartTimeMs());
-            }
+
+        startNode = getStartNode();
+        endNode = getEndNode();
+        if (startNode != null) {
+            Log.d(TAG, "doRender: startNode.renderTimeUs = " + startNode.getRenderTimeUs() + ", " + positionUs);
         }
-        this.presentationTimeUs = presentationTimeUs;
-        return presentationTimeUs;
+        if (endNode != null) {
+            Log.d(TAG, "doRender: endNode.renderTimeUs = " + endNode.getRenderTimeUs());
+        }
+        if (startNode != null && startNode.getRenderTimeUs() >= positionUs) {
+            return startNode.getRenderTimeUs();
+        } else if (endNode != null && endNode.getRenderTimeUs() >= positionUs) {
+            return endNode.getRenderTimeUs();
+        } else {
+            return 0;
+        }
     }
 
     @Override

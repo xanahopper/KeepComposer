@@ -1,13 +1,13 @@
 package com.gotokeep.keep.composer.source;
 
-import com.gotokeep.keep.composer.RenderSource;
+import com.gotokeep.keep.composer.RenderNode;
 
 /**
  * @author xana/cuixianming
  * @version 1.0
  * @since 2018/5/13 13:30
  */
-public abstract class MediaSource extends RenderSource {
+public abstract class MediaSource extends RenderNode {
     public static final int TYPE_VIDEO = 0;
     public static final int TYPE_IMAGE = 1;
     public static final int TYPE_GENERATE = 2;
@@ -24,6 +24,11 @@ public abstract class MediaSource extends RenderSource {
 
     protected MediaSource(int mediaType) {
         this.mediaType = mediaType;
+    }
+
+    @Override
+    public void addInputNode(RenderNode inputNode) {
+
     }
 
     public boolean isEnded() {

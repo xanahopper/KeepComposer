@@ -9,6 +9,11 @@ import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.RenderTarget;
 import com.gotokeep.keep.composer.gles.ProgramObject;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
+
 /**
  * @author xana/cuixianming
  * @version 1.0
@@ -17,6 +22,15 @@ import com.gotokeep.keep.composer.gles.ProgramObject;
 public class PreviewRenderTarget extends RenderTarget implements SurfaceTexture.OnFrameAvailableListener {
     private ProgramObject programObject;
     private Surface inputSurface;
+    protected static final float[] DEFAULT_VERTEX_DATA = {
+            -1f, -1f, 0,
+            1f, -1f, 0,
+            -1f, 1f, 0,
+            1f, 1f, 0};
+    static final short[] DEFAULT_TEX_COORDS_DATA = {0, 0, 1, 0, 0, 1, 1, 1};
+
+    protected FloatBuffer vertexBuffer;
+    protected ShortBuffer texCoordBuffer;
 
     protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs, RenderNode renderNode) {
         GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
@@ -32,6 +46,12 @@ public class PreviewRenderTarget extends RenderTarget implements SurfaceTexture.
     public void updateFrame(RenderNode renderNode, long presentationTimeUs) {
         Log.d("Composer", "PreviewRenderTarget#updateFrame: " + presentationTimeUs);
         programObject.use();
+        GLES20.glBindAttribLocation(programObject.getProgramId(), 0, ProgramObject.ATTRIBUTE_POSITION);
+        GLES20.glBindAttribLocation(programObject.getProgramId(), 1, ProgramObject.ATTRIBUTE_TEX_COORDS);
+        GLES20.glVertexAttribPointer(0, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer);
+        GLES20.glEnableVertexAttribArray(0);
+        GLES20.glVertexAttribPointer(1, 2, GLES20.GL_SHORT, false, 0, texCoordBuffer);
+        GLES20.glEnableVertexAttribArray(1);
 
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
         renderNode.getOutputTexture().bind(0);
@@ -44,6 +64,13 @@ public class PreviewRenderTarget extends RenderTarget implements SurfaceTexture.
     @Override
     public void prepare() {
         programObject = new ProgramObject();
+        vertexBuffer = ByteBuffer.allocateDirect(DEFAULT_VERTEX_DATA.length * 4)
+                .order(ByteOrder.nativeOrder()).asFloatBuffer();
+        vertexBuffer.put(DEFAULT_VERTEX_DATA).position(0);
+
+        texCoordBuffer = ByteBuffer.allocateDirect(DEFAULT_TEX_COORDS_DATA.length * 2)
+                .order(ByteOrder.nativeOrder()).asShortBuffer();
+        texCoordBuffer.put(DEFAULT_TEX_COORDS_DATA).position(0);
     }
 
     @Override

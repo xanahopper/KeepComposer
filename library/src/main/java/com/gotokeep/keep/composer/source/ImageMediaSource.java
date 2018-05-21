@@ -35,12 +35,7 @@ public class ImageMediaSource extends MediaSource {
         super(TYPE_IMAGE);
         this.filePath = filePath;
         this.presentationTimeUs = 0;
-        this.intervalUs = TimeUtil.BILLION_US / DEFAULT_FRAME_RATE;
-    }
-
-    @Override
-    protected RenderTexture createRenderTexture() {
-        return new RenderTexture(RenderTexture.TEXTURE_NATIVE);
+        this.intervalUs = TimeUtil.BILLION_US / frameRate;
     }
 
     @Override
@@ -54,18 +49,30 @@ public class ImageMediaSource extends MediaSource {
     }
 
     @Override
-    protected boolean needRenderSelf() {
-        return false;
-    }
-
-    @Override
     protected void onRelease() {
         // renterTexture#release will release the loaded image and the texture resource. so here do nothing.
     }
 
     @Override
-    protected long doRender(ProgramObject programObject, long positionUs) {
+    public long acquireFrame(long positionUs) {
+        presentationTimeUs = positionUs - TimeUtil.msToUs(startTimeMs);
         return positionUs + intervalUs;
+    }
+
+    @Override
+    protected long doRender(ProgramObject programObject, long positionUs) {
+        presentationTimeUs = positionUs - TimeUtil.msToUs(startTimeMs);
+        return positionUs + intervalUs;
+    }
+
+    @Override
+    protected boolean needRenderSelf() {
+        return false;
+    }
+
+    @Override
+    public boolean isFrameAvailable() {
+        return isPrepared();
     }
 
     @Override

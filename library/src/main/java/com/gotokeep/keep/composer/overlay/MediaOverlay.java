@@ -73,11 +73,6 @@ public abstract class MediaOverlay extends RenderNode {
     }
 
     @Override
-    protected RenderTexture createRenderTexture() {
-        return new RenderTexture(RenderTexture.TEXTURE_NATIVE);
-    }
-
-    @Override
     protected ProgramObject createProgramObject() {
         return ProgramObject.getDefaultProgram();
     }
@@ -97,7 +92,7 @@ public abstract class MediaOverlay extends RenderNode {
     @Override
     protected void bindRenderTextures() {
         if (inputNodes.size() > 0) {
-            inputNodes.valueAt(0).getOutputTexture().bind(0);
+            inputNodes.get(0).getOutputTexture().bind(0);
         }
     }
 
@@ -106,13 +101,13 @@ public abstract class MediaOverlay extends RenderNode {
         // draw source
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
         renderOverlay(overlayProgramObject);
-        return inputNodes.size() > 0 ? inputNodes.valueAt(0).getPresentationTimeUs() : 0;
+        return inputNodes.size() > 0 ? inputNodes.get(0).getRenderTimeUs() : 0;
     }
 
     @Override
     protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs) {
         if (inputNodes.size() > 0) {
-            RenderNode node = inputNodes.valueAt(0);
+            RenderNode node = inputNodes.get(0);
             GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
                     1, false, node.getTransformMatrix(), 0);
         }

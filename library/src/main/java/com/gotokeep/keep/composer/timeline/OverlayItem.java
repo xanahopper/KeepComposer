@@ -71,10 +71,6 @@ public abstract class OverlayItem extends MediaItem {
         this.type = type;
     }
 
-    public MediaItem getBaseItem() {
-        return baseItem;
-    }
-
     public void setBaseItem(MediaItem baseItem) {
         this.baseItem = baseItem;
     }

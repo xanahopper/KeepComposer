@@ -58,11 +58,6 @@ public class VideoMediaSource extends MediaSource {
     }
 
     @Override
-    protected RenderTexture createRenderTexture() {
-        return new RenderTexture(RenderTexture.TEXTURE_NATIVE);
-    }
-
-    @Override
     protected ProgramObject createProgramObject() {
         return new ProgramObject(EXTERNAL_FRAGMENT_SHADER, ProgramObject.DEFAULT_UNIFORM_NAMES);
     }
@@ -98,8 +93,8 @@ public class VideoMediaSource extends MediaSource {
     }
 
     @Override
-    public long render(long positionUs, long elapsedRealtimeUs) {
-        long actualTimeUs = (long) ((positionUs - TimeUtil.msToUs(startTimeMs)));
+    public long render(long positionUs) {
+        long actualTimeUs = (positionUs - TimeUtil.msToUs(startTimeMs));
         if (actualTimeUs > getRealTime(TimeUtil.msToUs(durationMs))) {
             Log.d("Composer", "doRender: === END ===");
             ended = true;
@@ -130,18 +125,18 @@ public class VideoMediaSource extends MediaSource {
         }
         if (!encoded) {
             renderTexture.notifyNoFrame();
-            return presentationTimeUs;
+            return 0;
         } else {
             Log.d("VideoMediaSource", "doRender[" + name + "]: rendered a frame " + this.presentationTimeUs);
             decodeTexture.getSurfaceTexture().updateTexImage();
-            return super.render(positionUs, elapsedRealtimeUs);
+            return super.render(positionUs);
         }
     }
 
     @Override
     protected long doRender(ProgramObject programObject, long positionUs) {
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-        return presentationTimeUs + TimeUtil.msToUs(startTimeMs);
+        return getPresentationTimeUs();
     }
 
     @Override
@@ -191,6 +186,11 @@ public class VideoMediaSource extends MediaSource {
         decoder = MediaCodec.createDecoderByType(mime);
         decoder.configure(format, decodeSurface, null, 0);
         decoder.start();
+    }
+
+    @Override
+    public long getPresentationTimeUs() {
+        return getRealTime(presentationTimeUs);
     }
 
     private long getRealTime(long time) {

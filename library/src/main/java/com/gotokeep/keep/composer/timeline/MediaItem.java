@@ -31,7 +31,9 @@ public abstract class MediaItem implements Comparable<MediaItem> {
     public MediaItem(int type, int layer, MediaItem baseItem) {
         this.type = type;
         this.layer = layer;
-        this.baseItem.put(0, baseItem);
+        if (baseItem != null) {
+            this.baseItem.put(0, baseItem);
+        }
     }
 
     @Override
