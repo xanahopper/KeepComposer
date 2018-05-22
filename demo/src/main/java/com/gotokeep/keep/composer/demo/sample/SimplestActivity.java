@@ -53,7 +53,7 @@ public class SimplestActivity extends SampleActivity implements Handler.Callback
         composer.setVideoSize(640, 360);
 
         timeline = new Timeline();
-        VideoItem startItem = new VideoItem(SourceProvider.VIDEO_SRC[0]);
+        VideoItem startItem = new VideoItem(SourceProvider.VIDEO_SRC[1]);
         startItem.setStartTimeMs(0);
         startItem.setEndTimeMs(TimeUtil.secToMs(10));
 //        VideoItem endItem = new VideoItem(SourceProvider.VIDEO_SRC[1]);

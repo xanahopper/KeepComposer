@@ -12,6 +12,7 @@ import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.demo.SampleActivity;
 import com.gotokeep.keep.composer.demo.source.SourceProvider;
 import com.gotokeep.keep.composer.overlay.OverlayProvider;
+import com.gotokeep.keep.composer.timeline.ImageItem;
 import com.gotokeep.keep.composer.timeline.LayerItem;
 import com.gotokeep.keep.composer.timeline.Timeline;
 import com.gotokeep.keep.composer.timeline.Track;
@@ -23,7 +24,7 @@ import com.gotokeep.keep.composer.util.TimeUtil;
  * @version 1.0
  * @since 2018-05-16 10:09
  */
-public class SimpleOverlayActivity extends SampleActivity implements Handler.Callback, OverlayProvider, TextureView.SurfaceTextureListener, MediaComposer.PlayEventListener {
+public class ImageOverlayActivity extends SampleActivity implements Handler.Callback, OverlayProvider, TextureView.SurfaceTextureListener, MediaComposer.PlayEventListener {
     private MediaComposer composer;
     private Handler handler;
     private Timeline timeline;
@@ -70,9 +71,9 @@ public class SimpleOverlayActivity extends SampleActivity implements Handler.Cal
         composer.setPlayEventListener(this);
 
         timeline = new Timeline();
-        VideoItem item1 = new VideoItem(SourceProvider.VIDEO_SRC[0]);
+        ImageItem item1 = new ImageItem(SourceProvider.IMAGE_SRC[0]);
         item1.setStartTimeMs(TimeUtil.secToMs(0));
-        item1.setEndTimeMs(TimeUtil.secToMs(9));
+        item1.setEndTimeMs(TimeUtil.secToMs(7));
 
         LayerItem layerItem1 = new LayerItem(1, "");
         layerItem1.setStartTimeMs(TimeUtil.secToMs(1));

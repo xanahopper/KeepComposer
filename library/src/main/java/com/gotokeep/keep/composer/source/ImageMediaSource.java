@@ -6,6 +6,7 @@ import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
+import android.util.Log;
 
 import com.gotokeep.keep.composer.RenderTexture;
 import com.gotokeep.keep.composer.gles.ProgramObject;
@@ -22,6 +23,7 @@ import java.io.IOException;
  */
 public class ImageMediaSource extends MediaSource {
     private static final int DEFAULT_FRAME_RATE = 25;
+    private static final String TAG = ImageMediaSource.class.getSimpleName();
 
     private final String filePath;
     private final long intervalUs;
@@ -55,12 +57,15 @@ public class ImageMediaSource extends MediaSource {
 
     @Override
     public long acquireFrame(long positionUs) {
+        Log.d(TAG, "acquireFrame: " + positionUs + ", return " + (positionUs + intervalUs));
         presentationTimeUs = positionUs - TimeUtil.msToUs(startTimeMs);
-        return positionUs + intervalUs;
+        renderTimeUs = positionUs + intervalUs;
+        return renderTimeUs;
     }
 
     @Override
     protected long doRender(ProgramObject programObject, long positionUs) {
+        Log.d(TAG, "doRender: " + positionUs + ", return " + (positionUs + intervalUs));
         presentationTimeUs = positionUs - TimeUtil.msToUs(startTimeMs);
         return positionUs + intervalUs;
     }

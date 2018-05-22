@@ -94,13 +94,12 @@ public class VideoMediaSource extends MediaSource {
 
     @Override
     public long render(long positionUs) {
-        long actualTimeUs = (positionUs - TimeUtil.msToUs(startTimeMs));
-        if (actualTimeUs > getRealTime(TimeUtil.msToUs(durationMs))) {
+        long actualTimeUs = (long) ((positionUs - TimeUtil.msToUs(startTimeMs)) * playSpeed);
+        if (actualTimeUs > TimeUtil.msToUs(durationMs)) {
             Log.d("Composer", "doRender: === END ===");
             ended = true;
         }
         boolean encoded = false;
-        Log.v("VideoMediaSource", "doRender[" + name +"]: actualTimeUs  = " + actualTimeUs + ", presentationTimeUs = " + presentationTimeUs);
         while (!encoded && !ended && this.presentationTimeUs <= actualTimeUs) {
             int inputIndex = decoder.dequeueInputBuffer(TIMEOUT_US);
             if (inputIndex >= 0) {
@@ -118,9 +117,12 @@ public class VideoMediaSource extends MediaSource {
             }
             int outputIndex = decoder.dequeueOutputBuffer(decodeInfo, TIMEOUT_US);
             if (outputIndex > 0) {
-                encoded = true;
-                this.presentationTimeUs = getRealTime(decodeInfo.presentationTimeUs);
+                this.presentationTimeUs = decodeInfo.presentationTimeUs;
                 decoder.releaseOutputBuffer(outputIndex, presentationTimeUs >= actualTimeUs);
+                encoded = presentationTimeUs >= actualTimeUs;
+                Log.v("VideoMediaSource", "doRender[" + name +"]: actualTimeUs  = " + actualTimeUs + ", presentationTimeUs = " + presentationTimeUs);
+                Log.v("VideoMediaSource", "doRender[" + name +"]: positionUs  = " + positionUs + ", renderTimeUs = " + getPresentationTimeUs());
+                Log.v("VideoMediaSource", "doRender[" + name +"]: renderTimeUs  = " + (TimeUtil.msToUs(getStartTimeMs()) + getPresentationTimeUs()));
             }
         }
         if (!encoded) {
@@ -136,7 +138,7 @@ public class VideoMediaSource extends MediaSource {
     @Override
     protected long doRender(ProgramObject programObject, long positionUs) {
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-        return getPresentationTimeUs();
+        return getPresentationTimeUs() + TimeUtil.msToUs(startTimeMs);
     }
 
     @Override

@@ -68,9 +68,7 @@ public abstract class MediaTransition extends RenderNode {
 
     @Override
     public boolean isFrameAvailable() {
-        startNode = getStartNode();
-        endNode = getEndNode();
-        return (startNode != null && startNode.isFrameAvailable()) || (endNode != null && endNode.isFrameAvailable());
+        return false;
     }
 
     @Override
@@ -85,7 +83,6 @@ public abstract class MediaTransition extends RenderNode {
 
     @Override
     protected long doRender(ProgramObject programObject, long positionUs) {
-        Log.d(TAG, "doRender");
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 
         startNode = getStartNode();
@@ -96,13 +93,11 @@ public abstract class MediaTransition extends RenderNode {
         if (endNode != null) {
             Log.d(TAG, "doRender: endNode.renderTimeUs = " + endNode.getRenderTimeUs());
         }
-        if (startNode != null && startNode.getRenderTimeUs() >= positionUs) {
-            return startNode.getRenderTimeUs();
-        } else if (endNode != null && endNode.getRenderTimeUs() >= positionUs) {
-            return endNode.getRenderTimeUs();
-        } else {
-            return 0;
-        }
+        long startTimeUs = startNode != null ? startNode.getPresentationTimeUs() : Long.MAX_VALUE;
+        long endTimeUs = endNode != null ? endNode.getPresentationTimeUs() : Long.MAX_VALUE;
+        long timeUs = Math.min(startTimeUs, endTimeUs);
+        presentationTimeUs = timeUs != Long.MAX_VALUE ? timeUs : positionUs;
+        return presentationTimeUs + TimeUtil.msToUs(startTimeMs);
     }
 
     @Override
@@ -110,17 +105,22 @@ public abstract class MediaTransition extends RenderNode {
         startNode = getStartNode();
         endNode = getEndNode();
         if (startNode != null) {
-            Log.d(TAG, "bindRenderTextures: Start Item");
             startNode.getOutputTexture().bind(0);
         } else {
             RenderTexture.unbind(0);
         }
 
         if (endNode != null) {
-            Log.d(TAG, "bindRenderTextures: End Item");
             endNode.getOutputTexture().bind(1);
         } else {
             RenderTexture.unbind(0);
         }
+    }
+
+    @Override
+    protected boolean shouldRenderNode(RenderNode renderNode, long presentationTimeUs) {
+        Log.d(TAG, String.format("presentationTime = %d, renderNode.time = %d",
+                presentationTimeUs, renderNode.getRenderTimeUs()));
+        return presentationTimeUs >= renderNode.getRenderTimeUs();
     }
 }

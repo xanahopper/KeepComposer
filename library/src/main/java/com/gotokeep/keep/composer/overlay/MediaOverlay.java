@@ -49,6 +49,7 @@ public abstract class MediaOverlay extends RenderNode {
             "    gl_Position = uOverlayTransform * aPosition;  \n" +
             "    vTexCoords = (uTransformMatrix * vec4(aTexCoords, 0.0, 1.0)).st; \n" +
             "}                            \n";
+    private static final String TAG = MediaOverlay.class.getSimpleName();
 
     private int offsetX;
     private int offsetY;
@@ -92,6 +93,7 @@ public abstract class MediaOverlay extends RenderNode {
     @Override
     protected void bindRenderTextures() {
         if (inputNodes.size() > 0) {
+            Log.d(TAG, "bind Source texture: ");
             inputNodes.get(0).getOutputTexture().bind(0);
         }
     }
@@ -100,7 +102,10 @@ public abstract class MediaOverlay extends RenderNode {
     protected long doRender(ProgramObject programObject, long positionUs) {
         // draw source
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+        GLES20.glEnable(GLES20.GL_BLEND);
+        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
         renderOverlay(overlayProgramObject);
+        GLES20.glDisable(GLES20.GL_BLEND);
         return inputNodes.size() > 0 ? inputNodes.get(0).getRenderTimeUs() : 0;
     }
 
