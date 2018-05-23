@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.view.TextureView;
+import android.view.View;
 
 import com.gotokeep.keep.composer.MediaComposer;
 import com.gotokeep.keep.composer.MediaComposerFactory;
@@ -23,10 +24,13 @@ import com.gotokeep.keep.composer.util.TimeUtil;
  * @version 1.0
  * @since 2018-05-16 10:09
  */
-public class SimpleOverlayActivity extends SampleActivity implements Handler.Callback, OverlayProvider, TextureView.SurfaceTextureListener, MediaComposer.PlayEventListener {
+public class StepOverlayActivity extends SampleActivity implements Handler.Callback, OverlayProvider,
+        TextureView.SurfaceTextureListener, MediaComposer.PlayEventListener, View.OnClickListener {
     private MediaComposer composer;
     private Handler handler;
     private Timeline timeline;
+    private long positionUs = 0;
+    private long intervalUs = TimeUtil.BILLION_US / 30;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +40,7 @@ public class SimpleOverlayActivity extends SampleActivity implements Handler.Cal
         previewView.setSurfaceTextureListener(this);
 
         previewView.setVideoSize(640, 360, 0);
+        previewView.setOnClickListener(this);
     }
 
     @Override
@@ -100,6 +105,7 @@ public class SimpleOverlayActivity extends SampleActivity implements Handler.Cal
 
         composer.setTimeline(timeline);
         composer.prepare();
+        composer.setDebugMode(true);
         composer.play();
     }
 
@@ -152,5 +158,13 @@ public class SimpleOverlayActivity extends SampleActivity implements Handler.Cal
     @Override
     public void onError(MediaComposer composer, Exception exception) {
 
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (composer != null) {
+            composer.doDebugRender(positionUs);
+            positionUs += intervalUs;
+        }
     }
 }

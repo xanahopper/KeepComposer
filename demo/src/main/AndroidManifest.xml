@@ -69,6 +69,24 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
+        <activity android:name=".sample.SimpleFilterActivity"
+            android:icon="@drawable/ic_movie_filter"
+            android:label="MediaComposer Simple Filter">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".sample.StepOverlayActivity"
+            android:icon="@drawable/ic_debug_step"
+            android:label="MediaComposer Step Overlay">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

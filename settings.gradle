@@ -1,1 +1,1 @@
-include ':library', ':demo', ':library-director'
+include ':library-composer', ':demo', ':library-director'
