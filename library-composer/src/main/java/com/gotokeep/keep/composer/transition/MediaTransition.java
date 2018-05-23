@@ -5,7 +5,6 @@ import android.support.annotation.CallSuper;
 import android.util.Log;
 
 import com.gotokeep.keep.composer.RenderNode;
-import com.gotokeep.keep.composer.RenderTexture;
 import com.gotokeep.keep.composer.gles.ProgramObject;
 import com.gotokeep.keep.composer.util.TimeUtil;
 
@@ -101,14 +100,23 @@ public abstract class MediaTransition extends RenderNode {
         endNode = getEndNode();
         if (startNode != null) {
             startNode.getOutputTexture().bind(0);
-        } else {
-            RenderTexture.unbind(0);
         }
 
         if (endNode != null) {
             endNode.getOutputTexture().bind(1);
-        } else {
-            RenderTexture.unbind(0);
+        }
+    }
+
+    @Override
+    protected void unbindRenderTextures() {
+        startNode = getStartNode();
+        endNode = getEndNode();
+        if (startNode != null) {
+            startNode.getOutputTexture().unbind(0);
+        }
+
+        if (endNode != null) {
+            endNode.getOutputTexture().unbind(1);
         }
     }
 

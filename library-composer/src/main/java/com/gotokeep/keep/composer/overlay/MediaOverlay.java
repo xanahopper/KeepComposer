@@ -1,6 +1,5 @@
 package com.gotokeep.keep.composer.overlay;
 
-import android.graphics.Bitmap;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
 import android.support.annotation.CallSuper;
@@ -9,7 +8,6 @@ import android.util.Log;
 import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.gles.ProgramObject;
 import com.gotokeep.keep.composer.timeline.OverlayItem;
-import com.gotokeep.keep.composer.util.TimeUtil;
 
 /**
  * @author xana/cuixianming
@@ -63,7 +61,7 @@ public abstract class MediaOverlay extends RenderNode {
     protected float overlayTransform[];
     protected ProgramObject overlayProgramObject;
 
-    private static ProgramObject createOverlayProgramObject() {
+    private ProgramObject createOverlayProgramObject() {
         return new ProgramObject(OVERLAY_VERTEX_SHADER, ProgramObject.DEFAULT_FRAGMENT_SHADER, OVERLAY_UNIFORM_NAMES);
     }
 
@@ -76,7 +74,7 @@ public abstract class MediaOverlay extends RenderNode {
 
     @Override
     protected ProgramObject createProgramObject() {
-        return ProgramObject.getDefaultProgram();
+        return new ProgramObject();
     }
 
     @CallSuper
@@ -100,14 +98,21 @@ public abstract class MediaOverlay extends RenderNode {
     }
 
     @Override
+    protected void unbindRenderTextures() {
+        if (inputNodes.size() > 0) {
+            inputNodes.get(0).getOutputTexture().unbind(0);
+        }
+    }
+
+    @Override
     protected long doRender(ProgramObject programObject, long positionUs) {
         // draw source
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-//        GLES20.glEnable(GLES20.GL_BLEND);
-//        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+        GLES20.glEnable(GLES20.GL_BLEND);
+        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
         renderOverlay(overlayProgramObject, positionUs);
-//        GLES20.glDisable(GLES20.GL_BLEND);
-        return inputNodes.size() > 0 ? inputNodes.get(0).getPresentationTimeUs() + TimeUtil.msToUs(inputNodes.get(0).getStartTimeMs()) : 0;
+        GLES20.glDisable(GLES20.GL_BLEND);
+        return inputNodes.size() > 0 ? inputNodes.get(0).getRenderTimeUs() : 0;
     }
 
     @Override

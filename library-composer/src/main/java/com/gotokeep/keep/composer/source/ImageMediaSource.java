@@ -87,6 +87,11 @@ public class ImageMediaSource extends MediaSource {
     }
 
     @Override
+    protected void unbindRenderTextures() {
+
+    }
+
+    @Override
     protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs) {
 
     }

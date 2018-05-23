@@ -166,30 +166,41 @@ public class OpenGlUtils {
         }
 
         iProgId = GLES20.glCreateProgram();
-        GLES20.glAttachShader(iProgId, iVShader);
-        GLES20.glAttachShader(iProgId, iFShader);
-        GLES20.glLinkProgram(iProgId);
-        GLES20.glGetProgramiv(iProgId, GLES20.GL_LINK_STATUS, link, 0);
-        if (link[0] <= 0) {
+		checkGlError("glCreateProgram");
+		GLES20.glAttachShader(iProgId, iVShader);
+		checkGlError("glAttachShader");
+		GLES20.glAttachShader(iProgId, iFShader);
+		checkGlError("glAttachShader");
+		GLES20.glLinkProgram(iProgId);
+		checkGlError("glLinkProgram");
+		GLES20.glGetProgramiv(iProgId, GLES20.GL_LINK_STATUS, link, 0);
+		checkGlError("glGetProgramiv");
+		if (link[0] <= 0) {
             Log.d("Load Program", "Linking Failed");
             return 0;
         }
         GLES20.glDeleteShader(iVShader);
-        GLES20.glDeleteShader(iFShader);
-        return iProgId;
+		checkGlError("glDeleteShader");
+		GLES20.glDeleteShader(iFShader);
+		checkGlError("glDeleteShader");
+		return iProgId;
     }
 	
 	private static int loadShader(final String strSource, final int iType) {
         int[] compiled = new int[1];
         int iShader = GLES20.glCreateShader(iType);
+        checkGlError("createShader");
         if (iShader == 0) {
             Log.e(TAG, "loadShader: " + GLES20.glGetError());
 			return 0;
 		}
         GLES20.glShaderSource(iShader, strSource);
-        GLES20.glCompileShader(iShader);
-        GLES20.glGetShaderiv(iShader, GLES20.GL_COMPILE_STATUS, compiled, 0);
-        if (compiled[0] == 0) {
+		checkGlError("glShaderSource");
+		GLES20.glCompileShader(iShader);
+		checkGlError("glCompileShader");
+		GLES20.glGetShaderiv(iShader, GLES20.GL_COMPILE_STATUS, compiled, 0);
+		checkGlError("glGetShaderiv");
+		if (compiled[0] == 0) {
             Log.e("Load Shader Failed", "Compilation\n" + GLES20.glGetShaderInfoLog(iShader));
             return 0;
         }
@@ -219,7 +230,7 @@ public class OpenGlUtils {
 		if (error != GLES20.GL_NO_ERROR) {
 			String msg = op + ": glError 0x" + Integer.toHexString(error);
 			Log.e("OpenGlUtils", msg);
-			throw new RuntimeException(msg);
+			new RuntimeException(msg).printStackTrace();
 		}
 	}
 }

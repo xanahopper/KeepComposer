@@ -2,8 +2,10 @@ package com.gotokeep.keep.composer;
 
 import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
+import android.opengl.GLES11;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
+import android.opengl.Matrix;
 import android.support.annotation.IntDef;
 import android.util.Log;
 
@@ -14,6 +16,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+
+import javax.microedition.khronos.opengles.GL11Ext;
 
 /**
  * @author xana/cuixianming
@@ -71,17 +75,22 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
     private void createTexture(int textureTarget) {
         int texId[] = new int[1];
         GLES20.glGenTextures(1, texId, 0);
+        checkGlError("genTexture");
         this.textureTarget = textureTarget;
         this.textureId = texId[0];
 
         GLES20.glBindTexture(textureTarget, textureId);
+        checkGlError("bindTexture");
         GLES20.glTexParameteri(textureTarget, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
         GLES20.glTexParameteri(textureTarget, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
         GLES20.glTexParameteri(textureTarget, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
         GLES20.glTexParameteri(textureTarget, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
-
-        surfaceTexture = new SurfaceTexture(textureId);
-        surfaceTexture.setOnFrameAvailableListener(this);
+        GLES20.glBindTexture(textureTarget, 0);
+        checkGlError("bindTexture to 0");
+        if (textureTarget == TEXTURE_EXTERNAL) {
+            surfaceTexture = new SurfaceTexture(textureId);
+            surfaceTexture.setOnFrameAvailableListener(this);
+        }
     }
 
     public void release() {
@@ -113,6 +122,8 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
     public float[] getTransitionMatrix() {
         if (surfaceTexture != null) {
             surfaceTexture.getTransformMatrix(transitionMatrix);
+        } else {
+            Matrix.setIdentityM(transitionMatrix, 0);
         }
         return transitionMatrix;
     }
@@ -129,20 +140,25 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
     }
 
     public void bind(int activeId) {
+
         if (textureId == 0) {
             return;
         }
         if (activeId >= 0) {
             GLES20.glActiveTexture(GLES20.GL_TEXTURE0 + activeId);
+            checkGlError("active" + activeId);
         }
         GLES20.glBindTexture(textureTarget, textureId);
+        checkGlError("bindTexture(" + getTargetName(textureTarget) + ", " + textureId + ")");
     }
 
-    public static void unbind(int activeId) {
+    public void unbind(int activeId) {
         if (activeId >= 0) {
             GLES20.glActiveTexture(GLES20.GL_TEXTURE0 + activeId);
+            checkGlError("active" + activeId);
         }
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
+        GLES20.glBindTexture(textureTarget, 0);
+        checkGlError("unbindTexture(" + textureTarget + ")");
     }
 
     public boolean awaitFrameAvailable() {
@@ -183,22 +199,31 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
     public boolean setRenderTarget(int canvasWidth, int canvasHeight) {
         if (textureId == 0) {
             GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
+            checkGlError("bindFramebuffer");
             return true;
         }
         if (framebufferId <= 0) {
             int ids[] = new int[1];
             GLES20.glGenFramebuffers(1, ids, 0);
+            checkGlError("genFramebuffers");
             framebufferId = ids[0];
             GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, framebufferId);
+            checkGlError("bindFramebuffer");
             GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0, textureTarget, textureId, 0);
+            checkGlError("glFramebufferTexture2D");
             GLES20.glBindTexture(textureTarget, textureId);
+            checkGlError("glBindTexture");
             GLES20.glTexImage2D(textureTarget, 0, GLES20.GL_RGBA, canvasWidth, canvasHeight, 0,
                     GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, null);
+            checkGlError("glTexImage2D");
             GLES20.glBindTexture(textureTarget, 0);
+            checkGlError("glBindTexture");
         } else {
             GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, framebufferId);
+            checkGlError("glFramebufferTexture2D");
         }
         GLES20.glViewport(0, 0, canvasWidth, canvasHeight);
+        checkGlError("glFramebufferTexture2D");
         return GLES20.glCheckFramebufferStatus(GLES20.GL_FRAMEBUFFER) == GLES20.GL_FRAMEBUFFER_COMPLETE;
     }
 
@@ -249,5 +274,23 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
             }
         }
         return null;
+    }
+
+    public void checkGlError(String op) {
+        int error;
+        while ((error = GLES20.glGetError()) != GLES20.GL_NO_ERROR) {
+            Log.e(TAG, op + ": glError " + error);
+//            throw new RuntimeException(op + ": glError " + error);
+        }
+    }
+
+    private String getTargetName(int textureTarget) {
+        if (textureTarget == GLES20.GL_TEXTURE_2D) {
+            return "TEXTURE_2D";
+        } else if (textureTarget == GLES11Ext.GL_TEXTURE_EXTERNAL_OES) {
+            return "TEXTURE_EXTERNAL_OES";
+        } else {
+            return "unknown";
+        }
     }
 }

@@ -1,6 +1,5 @@
 package com.gotokeep.keep.composer;
 
-import android.graphics.Bitmap;
 import android.opengl.GLES20;
 import android.util.Log;
 
@@ -30,7 +29,9 @@ public abstract class RenderNode {
     private boolean prepared = false;
     protected long startTimeMs;
     protected long endTimeMs;
+    // 当前 Node 本身时间
     protected long presentationTimeUs;
+    // 当前 Node 渲染出的全局时间
     protected long renderTimeUs;
     protected int canvasWidth;
     protected int canvasHeight;
@@ -58,12 +59,9 @@ public abstract class RenderNode {
     }
 
     public long acquireFrame(long positionUs) {
-        long renderTimeUs = 0;
         if (!isFrameAvailable()) {
             renderTimeUs = render(positionUs);
         }
-        updateRenderFrame(positionUs);
-        this.renderTimeUs = renderTimeUs;
         return renderTimeUs;
     }
 
@@ -72,7 +70,9 @@ public abstract class RenderNode {
         if (needRenderSelf()) {
             setSelfRenderTarget(positionUs);
         }
-        return doRender(programObject, positionUs);
+        long timeUs = doRender(programObject, positionUs);
+        unbindRenderTextures();
+        return timeUs;
     }
 
     public boolean isFrameAvailable() {
@@ -101,17 +101,6 @@ public abstract class RenderNode {
             bindRenderTextures();
             updateRenderUniform(programObject, positionUs);
         }
-    }
-
-    public long updateRenderFrame(long positionUs) {
-        long updateTimeUs = positionUs;
-        if (renderTexture != null) {
-            if (renderTexture.isFrameAvailable()) {
-                renderTexture.updateTexImage();
-                updateTimeUs = getPresentationTimeUs();
-            }
-        }
-        return updateTimeUs;
     }
 
     public void setViewport(int width, int height) {
@@ -145,7 +134,7 @@ public abstract class RenderNode {
             renderTexture.release();
             renderTexture = null;
         }
-        if (programObject != null) {
+        if (programObject != null && programObject != ProgramObject.getDefaultProgram()) {
             programObject.release();
             programObject = null;
         }
@@ -165,20 +154,26 @@ public abstract class RenderNode {
 
         programObject = createProgramObject();
         if (programObject != null) {
+            Log.e(TAG, "prepareInternal: " + getClass().getSimpleName());
             programObject.use();
 
             GLES20.glBindAttribLocation(programObject.getProgramId(), 0, ProgramObject.ATTRIBUTE_POSITION);
+            checkGlError("glBindAttribLocation");
             GLES20.glBindAttribLocation(programObject.getProgramId(), 1, ProgramObject.ATTRIBUTE_TEX_COORDS);
-
+            checkGlError("glBindAttribLocation");
             activeAttribData();
         }
     }
 
     protected void activeAttribData() {
         GLES20.glVertexAttribPointer(0, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer);
+        checkGlError("glVertexAttribPointer");
         GLES20.glEnableVertexAttribArray(0);
+        checkGlError("glEnableVertexAttribArray");
         GLES20.glVertexAttribPointer(1, 2, GLES20.GL_SHORT, false, 0, texCoordBuffer);
+        checkGlError("glVertexAttribPointer");
         GLES20.glEnableVertexAttribArray(1);
+        checkGlError("glEnableVertexAttribArray");
     }
 
     private void prepareInput() {
@@ -207,7 +202,7 @@ public abstract class RenderNode {
     }
 
     public float[] getTransformMatrix() {
-        return renderTexture.getTransitionMatrix();
+        return getOutputTexture().getTransitionMatrix();
     }
 
     public void setCanvasSize(int width, int height) {
@@ -246,15 +241,25 @@ public abstract class RenderNode {
      *
      * @param programObject program object will use
      * @param positionUs    current time in microsecond
-     * @return time in microsecond of the frame that just rendered
+     * @return time in microsecond of the frame that just rendered in timeline
      */
     protected abstract long doRender(ProgramObject programObject, long positionUs);
 
     protected abstract void bindRenderTextures();
 
+    protected abstract void unbindRenderTextures();
+
     protected abstract void updateRenderUniform(ProgramObject programObject, long presentationTimeUs);
 
     public long getRenderTimeUs() {
         return renderTimeUs;
+    }
+
+    public void checkGlError(String op) {
+        int error;
+        while ((error = GLES20.glGetError()) != GLES20.GL_NO_ERROR) {
+            Log.e(TAG, op + ": glError " + error);
+            throw new RuntimeException(op + ": glError " + error);
+        }
     }
 }

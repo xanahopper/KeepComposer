@@ -65,6 +65,11 @@ public class KeepExternalFilter extends MediaFilter {
     }
 
     @Override
+    protected void unbindRenderTextures() {
+
+    }
+
+    @Override
     protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs) {
 
     }

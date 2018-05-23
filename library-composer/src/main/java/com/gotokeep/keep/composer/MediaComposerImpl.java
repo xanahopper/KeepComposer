@@ -359,7 +359,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         renderRoot.setViewport(canvasWidth, canvasHeight);
         long renderTimeUs = renderRoot.acquireFrame(currentTimeUs);
         Log.d(TAG, "doRenderWork: " + renderTimeUs + " " + currentTimeUs);
-        if (renderTimeUs >= currentTimeUs) {
+        if (renderTimeUs >= currentTimeUs && renderTarget != null) {
             Log.d(TAG, "doRenderWork: has frame and render to target");
             // render result to RenderTarget
             currentTimeUs = renderTimeUs;

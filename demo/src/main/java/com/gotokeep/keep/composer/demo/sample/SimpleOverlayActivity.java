@@ -82,19 +82,19 @@ public class SimpleOverlayActivity extends SampleActivity implements Handler.Cal
         layerItem1.setOffsetY(30);
         layerItem1.setScale(0.5f);
 
-        LayerItem layerItem2 = new LayerItem(1, "");
-        layerItem2.setStartTimeMs(TimeUtil.secToMs(1));
-        layerItem2.setEndTimeMs(TimeUtil.secToMs(6));
-        layerItem2.setRotation(30f);
-        layerItem2.setOffsetX(80);
-        layerItem2.setOffsetY(30);
-        layerItem2.setScale(0.5f);
+//        LayerItem layerItem2 = new LayerItem(1, "");
+//        layerItem2.setStartTimeMs(TimeUtil.secToMs(1));
+//        layerItem2.setEndTimeMs(TimeUtil.secToMs(6));
+//        layerItem2.setRotation(30f);
+//        layerItem2.setOffsetX(80);
+//        layerItem2.setOffsetY(30);
+//        layerItem2.setScale(0.5f);
 
         Track videoTrack = new Track(true, 0);
         videoTrack.addMediaItem(item1);
         Track overlayTrack = new Track(true, 1);
         overlayTrack.addMediaItem(layerItem1);
-        overlayTrack.addMediaItem(layerItem2);
+//        overlayTrack.addMediaItem(layerItem2);
         timeline.addMediaTrack(videoTrack);
         timeline.addMediaTrack(overlayTrack);
 

@@ -14,6 +14,7 @@ import com.gotokeep.keep.composer.gles.EglCore;
  * @since 2018/5/13 14:07
  */
 public final class ComposerEngine {
+    private static final String TAG = ComposerEngine.class.getSimpleName();
     private EglCore eglCore;
     private EGLSurface eglSurface;
 
@@ -49,9 +50,18 @@ public final class ComposerEngine {
         this.width = width;
         this.height = height;
         GLES20.glViewport(0, 0, width, height);
+        checkGlError("glViewport");
     }
 
     public void swapBuffers() {
         eglCore.swapBuffers(eglSurface);
+    }
+
+    public void checkGlError(String op) {
+        int error;
+        while ((error = GLES20.glGetError()) != GLES20.GL_NO_ERROR) {
+            Log.e(TAG, op + ": glError " + error);
+//            throw new RuntimeException(op + ": glError " + error);
+        }
     }
 }

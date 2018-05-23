@@ -1,6 +1,5 @@
 package com.gotokeep.keep.composer.source;
 
-import android.graphics.Bitmap;
 import android.media.MediaCodec;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
@@ -129,9 +128,10 @@ public class VideoMediaSource extends MediaSource {
         }
         if (encoded) {
             Log.d("VideoMediaSource", "doRender[" + name + "]: rendered a frame " + this.presentationTimeUs);
-            decodeTexture.getSurfaceTexture().updateTexImage();
+            decodeTexture.updateTexImage();
             return super.render(positionUs);
         } else {
+            decodeTexture.notifyNoFrame();
             renderTexture.notifyNoFrame();
             return 0;
         }
@@ -144,15 +144,30 @@ public class VideoMediaSource extends MediaSource {
     }
 
     @Override
+    public RenderTexture getOutputTexture() {
+        return renderTexture;
+    }
+
+    @Override
     protected void bindRenderTextures() {
         decodeTexture.bind(0);
+        checkGlError("bindDecodeTexture");
+    }
+
+    @Override
+    protected void unbindRenderTextures() {
+        decodeTexture.unbind(0);
+        checkGlError("unbindDecodeTexture");
     }
 
     @Override
     protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs) {
         GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
                 1, false, decodeTexture.getTransitionMatrix(), 0);
+        checkGlError("updateDecodeTextureTransformMatrix");
         GLES20.glUniform1i(programObject.getUniformLocation(ProgramObject.UNIFORM_TEXTURE), 0);
+        checkGlError("updateDecodeTextureId");
+
     }
 
     private void prepareExtractorAndInfo() throws IOException {
@@ -174,7 +189,8 @@ public class VideoMediaSource extends MediaSource {
         extractor.selectTrack(trackIndex);
         width = format.containsKey(MediaFormat.KEY_WIDTH) ? format.getInteger(MediaFormat.KEY_WIDTH) : 0;
         height = format.containsKey(MediaFormat.KEY_HEIGHT) ? format.getInteger(MediaFormat.KEY_HEIGHT) : 0;
-        durationMs = format.containsKey(MediaFormat.KEY_DURATION) ? TimeUtil.usToMs(format.getLong(MediaFormat.KEY_DURATION)):
+        durationMs = format.containsKey(MediaFormat.KEY_DURATION) ? TimeUtil.usToMs(format.getLong(MediaFormat
+                .KEY_DURATION)) :
                 DURATION_INFINITE;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             rotation = format.containsKey(MediaFormat.KEY_ROTATION) ? format.getInteger(MediaFormat.KEY_ROTATION) : 0;

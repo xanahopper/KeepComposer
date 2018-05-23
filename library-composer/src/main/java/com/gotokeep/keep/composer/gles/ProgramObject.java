@@ -1,7 +1,8 @@
 package com.gotokeep.keep.composer.gles;
 
-import android.graphics.Matrix;
 import android.opengl.GLES20;
+import android.opengl.Matrix;
+import android.util.Log;
 
 import java.util.Map;
 import java.util.TreeMap;
@@ -20,6 +21,7 @@ public final class ProgramObject {
             UNIFORM_TRANSFORM_MATRIX,
             UNIFORM_TEXTURE
     };
+    private static final String TAG = ProgramObject.class.getSimpleName();
 
     private int programId = -1;
     private String vertexShader;
@@ -66,6 +68,10 @@ public final class ProgramObject {
         return defaultProgram;
     }
 
+    static {
+        Matrix.setIdentityM(DEFAULT_MATRIX, 0);
+    }
+
     public ProgramObject() {
         this(DEFAULT_FRAGMENT_SHADER, DEFAULT_UNIFORM_NAMES);
     }
@@ -84,6 +90,7 @@ public final class ProgramObject {
 
     public void use() {
         GLES20.glUseProgram(programId);
+        checkGlError("useProgram:" + programId);
     }
 
     public int getProgramId() {
@@ -99,18 +106,23 @@ public final class ProgramObject {
         if (uniformNames != null) {
             for (String uniformName : uniformNames) {
                 int loc = GLES20.glGetUniformLocation(programId, uniformName);
+                checkGlError("getUniformLocation(" + programId + ", " + uniformName + ") = " + loc);
+                if (loc == -1) {
+                    Log.e("ProgramObject", "initUniformLocations: invalid uniform location for " + uniformName +
+                                    " : " + GLES20.glGetError());
+                }
                 uniforms.put(uniformName, loc);
             }
         }
     }
 
     private void initDefaultTransform() {
+        use();
         int loc = getUniformLocation(UNIFORM_TRANSFORM_MATRIX);
         float st[] = new float[16];
-        Matrix matrix = new Matrix();
-        matrix.reset();
-        matrix.getValues(st);
+        Matrix.setIdentityM(st, 0);
         GLES20.glUniformMatrix4fv(loc, 1, false, st, 0);
+        checkGlError("uniformMatrix4fv: " + loc);
     }
 
     public int getUniformLocation(String name) {
@@ -118,7 +130,18 @@ public final class ProgramObject {
     }
 
     public void release() {
-        GLES20.glDeleteProgram(programId);
+        if (defaultProgram == null || programId != defaultProgram.programId) {
+            GLES20.glDeleteProgram(programId);
+            checkGlError("deleteProgram: " + programId);
+        }
         programId = -1;
+    }
+
+    public void checkGlError(String op) {
+        int error;
+        while ((error = GLES20.glGetError()) != GLES20.GL_NO_ERROR) {
+            Log.e(TAG, op + ": glError " + error + " in " + getClass().getSimpleName());
+            new RuntimeException(op + ": glError " + error).printStackTrace();
+        }
     }
 }
