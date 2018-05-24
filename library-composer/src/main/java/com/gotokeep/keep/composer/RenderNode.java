@@ -155,7 +155,6 @@ public abstract class RenderNode {
 
         programObject = createProgramObject();
         if (programObject != null) {
-            Log.e(TAG, "prepareInternal: " + getClass().getSimpleName());
             programObject.use();
 
             GLES20.glBindAttribLocation(programObject.getProgramId(), 0, ProgramObject.ATTRIBUTE_POSITION);

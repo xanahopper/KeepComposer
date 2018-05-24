@@ -374,7 +374,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         long audioTimeUs = audioSource != null ? audioSource.acquireBuffer(currentTimeUs) : 0;
         Log.d(TAG, "doRenderWork: " + renderTimeUs + " " + currentTimeUs);
         if (renderTarget != null) {
-            if (audioTimeUs >= currentTimeUs && audioSource != null) {
+            if (audioTimeUs >= currentTimeUs && audioSource != null && audioSource.isHasData()) {
                 renderTarget.updateAudioChunk(audioSource);
             }
             if (renderTimeUs >= currentTimeUs) {
@@ -391,7 +391,8 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
                 }
             }
             if (export) {
-                long time = Math.min(audioTimeUs, renderTimeUs);
+                long time = (audioSource != null && audioSource.isHasData()) ?
+                        Math.min(audioTimeUs, renderTimeUs) : renderTimeUs;
                 if (time <= exportTimeUs) {
                     exportTimeUs += TimeUtil.msToUs(10);
                 } else {

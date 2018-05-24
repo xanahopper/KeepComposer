@@ -74,6 +74,7 @@ public class PreviewRenderTarget extends RenderTarget implements SurfaceTexture.
             } else if (audioSource.getRenderOutputStatus() >= 0) {
                 MediaCodec.BufferInfo info = audioSource.getAudioInfo();
                 audioTrack.write(audioSource.getChunk(), info.offset, info.offset + info.size);
+                audioSource.resetChunk();
             }
         }
     }

@@ -32,6 +32,8 @@ public class TransitionExportActivity extends SampleActivity implements Handler.
     private MediaComposer composer;
     private Handler handler;
     private Timeline timeline;
+    private static final int EXPORT_WIDTH = 960;
+    private static final int EXPORT_HEIGHT = 540;
     private boolean gotoNext = false;
 
     @Override
@@ -55,7 +57,7 @@ public class TransitionExportActivity extends SampleActivity implements Handler.
 
     private void startExport() {
         composer = MediaComposerFactory.createMediaComposer(this, handler);
-        composer.setVideoSize(640, 360);
+        composer.setVideoSize(EXPORT_WIDTH, EXPORT_HEIGHT);
         composer.setPlayEventListener(this);
 
         timeline = new Timeline();
@@ -98,11 +100,11 @@ public class TransitionExportActivity extends SampleActivity implements Handler.
 
         composer.setTimeline(timeline);
         ExportConfiguration configuration = ExportConfiguration.newBuilder()
-                .setVideoSize(640, 360)
+                .setVideoSize(EXPORT_WIDTH, EXPORT_HEIGHT)
                 .setFrameRate(25)
                 .setVideoBitRate(3000 * 1024)
                 .setAudioBitRate(128 * 1024)
-                .setKeyFrameInterval(10)
+                .setKeyFrameInterval(1)
                 .setOutputFilePath(SourceProvider.OUTPUT_PATH[0])
                 .build();
         composer.export(configuration);

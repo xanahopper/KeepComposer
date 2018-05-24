@@ -38,6 +38,7 @@ public class MuxerRenderTarget extends RenderTarget {
     private MediaCodec videoEncoder;
     private MediaFormat videoFormat;
     private MediaCodec.BufferInfo videoInfo = new MediaCodec.BufferInfo();
+    private boolean hasAudio = false;
     private MediaCodec audioEncoder;
     private MediaFormat audioFormat;
     private MediaCodec.BufferInfo audioInfo = new MediaCodec.BufferInfo();
@@ -154,6 +155,7 @@ public class MuxerRenderTarget extends RenderTarget {
 
     @Override
     public void prepareAudio(int sampleRate, int channelCount) {
+        hasAudio = true;
         audioFormat = MediaFormat.createAudioFormat(AUDIO_MIME,
                 sampleRate, channelCount);
         audioFormat.setInteger(MediaFormat.KEY_BIT_RATE, exportConfiguration.getAudioBitRate());
@@ -190,10 +192,10 @@ public class MuxerRenderTarget extends RenderTarget {
             }
             if (outputIndex >= 0) {
                 ByteBuffer outputBuffer = getOutputBuffer(videoEncoder, outputIndex);
-//                if ((videoInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
-//                    videoEncoder.releaseOutputBuffer(outputIndex, false);
-//                    return;
-//                }
+                if ((videoInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
+                    videoEncoder.releaseOutputBuffer(outputIndex, false);
+                    return;
+                }
                 if (videoInfo.size != 0) {
                     muxer.writeSampleData(videoTrackIndex, outputBuffer, videoInfo);
                 }
@@ -214,9 +216,11 @@ public class MuxerRenderTarget extends RenderTarget {
             int inputIndex = audioEncoder.dequeueInputBuffer(TIMEOUT_US);
             if (inputIndex >= 0) {
                 ByteBuffer inputBuffer = getInputBuffer(audioEncoder, inputIndex);
+                inputBuffer.clear();
                 if (size >= 0) {
                     inputBuffer.position(0);
                     inputBuffer.put(audioSource.getChunk());
+                    audioSource.resetChunk();
                     audioEncoder.queueInputBuffer(inputIndex, 0, size, presentationTime,
                             audioInfo.flags);
                 } else {
@@ -236,23 +240,24 @@ public class MuxerRenderTarget extends RenderTarget {
             }
             if (outputIndex >= 0) {
                 ByteBuffer outputBuffer = getOutputBuffer(audioEncoder, outputIndex);
-//                if ((audioInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
-//                    audioEncoder.releaseOutputBuffer(outputIndex, false);
-//                    return;
-//                }
+                if ((audioInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
+                    audioEncoder.releaseOutputBuffer(outputIndex, false);
+                    return;
+                }
                 if (audioInfo.size != 0) {
                     muxer.writeSampleData(audioTrackIndex, outputBuffer, audioInfo);
                 }
                 if ((audioInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
                     audioEncoderDone = true;
                 }
+                outputBuffer.clear();
             }
             audioEncoder.releaseOutputBuffer(outputIndex, false);
         }
     }
 
     private void updateMuxerState() {
-        if (videoTrackIndex >= 0 && audioTrackIndex >= 0 && !muxing) {
+        if (videoTrackIndex >= 0 && (audioTrackIndex >= 0 || !hasAudio) && !muxing) {
             muxer.start();
             muxing = true;
         }
@@ -263,8 +268,12 @@ public class MuxerRenderTarget extends RenderTarget {
         if (videoEncoder != null && !videoEncoderDone) {
             videoEncoder.signalEndOfInputStream();
         }
-        if (audioEncoder != null && !audioEncoderDone) {
-            audioEncoder.signalEndOfInputStream();
+//        if (audioEncoder != null && !audioEncoderDone) {
+//            audioEncoder.signalEndOfInputStream();
+//        }
+        if (muxing) {
+            muxer.stop();
+            muxing = false;
         }
     }
 
@@ -285,7 +294,9 @@ public class MuxerRenderTarget extends RenderTarget {
             audioEncoder = null;
         }
         if (muxer != null) {
-            muxer.stop();
+            if (muxing) {
+                muxer.stop();
+            }
             muxer.release();
             muxer = null;
         }

@@ -37,6 +37,7 @@ public final class AudioSource {
     private long sampleTimeUs;
     private int sampleFlags;
     private byte[] chunk;
+    private boolean hasData = false;
 
     long presentationTimeUs;
     long renderTimeUs;
@@ -83,8 +84,6 @@ public final class AudioSource {
     public long acquireBuffer(long positionUs) {
         if (positionUs >= renderTimeUs) {
             renderTimeUs = render(positionUs);
-        } else {
-            chunk = new byte[0];
         }
         return renderTimeUs;
     }
@@ -140,6 +139,9 @@ public final class AudioSource {
                     Log.d("AudioSource", "doRender: rendered a buffer " + this.presentationTimeUs + ", " + positionUs);
                     break;
             }
+        }
+        if (decoded) {
+            hasData = true;
         }
         return decoded ? presentationTimeUs + TimeUtil.msToUs(startTimeMs) : positionUs;
     }
@@ -207,5 +209,13 @@ public final class AudioSource {
 
     public int getChannelCount() {
         return channelCount;
+    }
+
+    public void resetChunk() {
+        hasData = false;
+    }
+
+    public boolean isHasData() {
+        return hasData;
     }
 }
