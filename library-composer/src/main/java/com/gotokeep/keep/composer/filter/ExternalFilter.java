@@ -8,7 +8,7 @@ package com.gotokeep.keep.composer.filter;
 public interface ExternalFilter {
     void init();
 
-    void destory();
+    void destroy();
 
     void onInputSizeChanged(int width, int height);
 

@@ -1,6 +1,5 @@
 package com.gotokeep.keep.composer.filter.basic;
 
-import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.filter.ExternalFilter;
 import com.gotokeep.keep.composer.filter.MediaFilter;
 import com.gotokeep.keep.composer.gles.ProgramObject;
@@ -51,12 +50,15 @@ public class KeepExternalFilter extends MediaFilter {
 
     @Override
     protected void onRelease() {
-        externalFilter.destory();
+        externalFilter.destroy();
     }
 
     @Override
     protected long doRender(ProgramObject programObject, long positionUs) {
-        return 0;
+        if (externalFilter != null) {
+            externalFilter.onDrawFrame(inputNodes.get(0).getOutputTexture().getTextureId());
+        }
+        return inputNodes.get(0).getRenderTimeUs();
     }
 
     @Override
