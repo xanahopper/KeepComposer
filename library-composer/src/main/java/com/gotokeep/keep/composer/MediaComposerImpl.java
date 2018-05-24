@@ -261,6 +261,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
 
     private void setPreviewInternal(TextureView previewView) {
         releaseRenderTarget();
+        export = false;
         previewView.setSurfaceTextureListener(this);
         if (previewView.isAvailable()) {
             renderTarget = new PreviewRenderTarget();
@@ -386,7 +387,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         }
         long nextOperationStartTime = operationTimeMs + intervalTimeMs;
         long nextOperationDelayMs = nextOperationStartTime - SystemClock.elapsedRealtime();
-        if (nextOperationDelayMs <= 0) {
+        if (nextOperationDelayMs <= 0 || export) {
             handler.sendEmptyMessage(MSG_DO_SOME_WORK);
         } else {
             handler.sendEmptyMessageDelayed(MSG_DO_SOME_WORK, nextOperationDelayMs);

@@ -61,32 +61,34 @@ public class WatermarkOverlay extends LayerOverlay {
     }
 
     protected void updateResource(long positionUs) {
-        Bitmap image = BitmapFactory.decodeFile(layerImagePath);
+        if (positionUs == 0) {
+            Bitmap image = BitmapFactory.decodeFile(layerImagePath);
 
-        Matrix imageMatrix = new Matrix();
-        imageMatrix.postScale(imageScale, imageScale);
-        imageMatrix.postRotate(imageRotation);
-        imageMatrix.postTranslate(imageLeft, imageTop);
-        RectF rect = new RectF(0, 0, image.getWidth(), image.getHeight());
-        imageMatrix.mapRect(rect);
-        TextPaint textPaint = new TextPaint();
-        textPaint.setTextSize(textSize);
-        textPaint.setColor(textColor);
-        float textWidth = textPaint.measureText(text);
+            Matrix imageMatrix = new Matrix();
+            imageMatrix.postScale(imageScale, imageScale);
+            imageMatrix.postRotate(imageRotation);
+            imageMatrix.postTranslate(imageLeft, imageTop);
+            RectF rect = new RectF(0, 0, image.getWidth(), image.getHeight());
+            imageMatrix.mapRect(rect);
+            TextPaint textPaint = new TextPaint();
+            textPaint.setTextSize(textSize);
+            textPaint.setColor(textColor);
+            float textWidth = textPaint.measureText(text);
 
-        Bitmap targetImage = Bitmap.createBitmap((int) Math.max(rect.width(), textWidth),
-                (int) Math.max(rect.height(), textTop + textSize), Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(targetImage);
-        canvas.drawBitmap(image, imageMatrix, null);
-        image.recycle();
+            Bitmap targetImage = Bitmap.createBitmap((int) Math.max(rect.width(), textWidth),
+                    (int) Math.max(rect.height(), textTop + textSize), Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(targetImage);
+            canvas.drawBitmap(image, imageMatrix, null);
+            image.recycle();
 
-        canvas.drawText(text, textLeft, textTop, textPaint);
-        int format = GLUtils.getInternalFormat(targetImage);
+            canvas.drawText(text, textLeft, textTop, textPaint);
+            int format = GLUtils.getInternalFormat(targetImage);
 
-        layerTexture.bind();
-        GLUtils.texImage2D(layerTexture.getTextureTarget(), 0, format, targetImage, 0);
+            layerTexture.bind();
+            GLUtils.texImage2D(layerTexture.getTextureTarget(), 0, format, targetImage, 0);
 
-        targetImage.recycle();
+            targetImage.recycle();
+        }
     }
 
     public static final class Builder {

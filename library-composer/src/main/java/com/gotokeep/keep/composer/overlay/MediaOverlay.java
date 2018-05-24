@@ -2,12 +2,16 @@ package com.gotokeep.keep.composer.overlay;
 
 import android.opengl.GLES20;
 import android.opengl.Matrix;
+import android.os.Build;
 import android.support.annotation.CallSuper;
 import android.util.Log;
 
 import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.gles.ProgramObject;
 import com.gotokeep.keep.composer.timeline.OverlayItem;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author xana/cuixianming
@@ -70,6 +74,7 @@ public abstract class MediaOverlay extends RenderNode {
         offsetY = item.getOffsetY();
         rotation = item.getRotation();
         scale = item.getScale();
+        position = item.getPositionInt();
     }
 
     @Override

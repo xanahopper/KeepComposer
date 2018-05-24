@@ -32,6 +32,7 @@ public final class ComposerEngine {
 
     public void setup(Surface outputSurface) {
         Log.d("Composer", "setup@" + Thread.currentThread().getName());
+        release();
         eglCore = new EglCore(null, EglCore.FLAG_RECORDABLE);
         eglSurface = eglCore.createWindowSurface(outputSurface);
         eglCore.makeCurrent(eglSurface);
@@ -43,6 +44,7 @@ public final class ComposerEngine {
             eglCore.releaseSurface(eglSurface);
             eglCore.release();
             eglCore = null;
+            eglSurface = null;
         }
     }
 

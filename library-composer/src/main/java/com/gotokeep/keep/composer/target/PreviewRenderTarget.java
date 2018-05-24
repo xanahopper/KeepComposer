@@ -32,11 +32,6 @@ public class PreviewRenderTarget extends RenderTarget implements SurfaceTexture.
     protected FloatBuffer vertexBuffer;
     protected ShortBuffer texCoordBuffer;
 
-    protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs, RenderNode renderNode) {
-        GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
-                1, false, renderNode.getTransformMatrix(), 0);
-    }
-
     @Override
     public Surface getInputSurface() {
         return inputSurface;

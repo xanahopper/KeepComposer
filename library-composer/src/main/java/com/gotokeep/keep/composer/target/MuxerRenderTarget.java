@@ -8,8 +8,13 @@ import android.view.Surface;
 import com.gotokeep.keep.composer.ExportConfiguration;
 import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.RenderTarget;
+import com.gotokeep.keep.composer.gles.ProgramObject;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
 
 /**
  * @author xana/cuixianming
@@ -28,6 +33,17 @@ public class MuxerRenderTarget extends RenderTarget {
 
     private ExportConfiguration exportConfiguration;
     private String exportPath;
+    private ProgramObject programObject;
+
+    protected static final float[] DEFAULT_VERTEX_DATA = {
+            -1f, -1f, 0,
+            1f, -1f, 0,
+            -1f, 1f, 0,
+            1f, 1f, 0};
+    static final short[] DEFAULT_TEX_COORDS_DATA = {0, 0, 1, 0, 0, 1, 1, 1};
+
+    protected FloatBuffer vertexBuffer;
+    protected ShortBuffer texCoordBuffer;
 
     public MuxerRenderTarget(ExportConfiguration exportConfiguration) {
         this.exportConfiguration = exportConfiguration;
@@ -52,7 +68,14 @@ public class MuxerRenderTarget extends RenderTarget {
 
     @Override
     public void prepare() {
+        programObject = new ProgramObject();
+        vertexBuffer = ByteBuffer.allocateDirect(DEFAULT_VERTEX_DATA.length * 4)
+                .order(ByteOrder.nativeOrder()).asFloatBuffer();
+        vertexBuffer.put(DEFAULT_VERTEX_DATA).position(0);
 
+        texCoordBuffer = ByteBuffer.allocateDirect(DEFAULT_TEX_COORDS_DATA.length * 2)
+                .order(ByteOrder.nativeOrder()).asShortBuffer();
+        texCoordBuffer.put(DEFAULT_TEX_COORDS_DATA).position(0);
     }
 
     @Override
@@ -62,6 +85,9 @@ public class MuxerRenderTarget extends RenderTarget {
 
     @Override
     public void release() {
-
+        if (programObject != null) {
+            programObject.release();
+            programObject = null;
+        }
     }
 }
