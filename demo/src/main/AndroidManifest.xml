@@ -87,7 +87,15 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
-        <activity android:name=".sample.TransitionExportActivity" />
+        <activity android:name=".sample.TransitionExportActivity"
+            android:icon="@drawable/ic_export"
+            android:label="MediaComposer Export Transition">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

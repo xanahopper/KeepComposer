@@ -39,4 +39,8 @@ public final class TimeUtil {
     public static String usToString(long timeUs) {
         return String.format("%02d:%03d", timeUs / 1000000, (timeUs % 1000000) / 1000);
     }
+
+    public static long usToNs(long timeUs) {
+        return timeUs * 1000;
+    }
 }

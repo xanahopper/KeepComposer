@@ -84,6 +84,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     private boolean export = false;
     private boolean playing = false;
     private long elapsedRealtimeUs;
+    private long exportTimeUs = 0;
 
     private boolean debugMode = false;
     private long debugPositionUs = 0;
@@ -277,8 +278,11 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         releaseRenderTarget();
         export = true;
         renderTarget = new MuxerRenderTarget(exportConfiguration);
+        videoWidth = canvasWidth = exportConfiguration.getWidth();
+        videoHeight = canvasHeight = exportConfiguration.getHeight();
         engine.setup(renderTarget.getInputSurface());
-        handler.sendEmptyMessage(MSG_PLAY);
+        prepare();
+        play();
     }
 
     private void prepareInternal() {
@@ -292,7 +296,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         if (timeline.getAudioItem() != null) {
             audioSource = new AudioSource(timeline.getAudioItem().getFilePath());
             audioSource.prepare();
-            renderTarget.prepareAudio(audioSource.getSampleRate());
+            renderTarget.prepareAudio(audioSource.getSampleRate(), audioSource.getChannelCount());
         }
         if (eventHandler != null) {
             eventHandler.sendEmptyMessage(export ? EVENT_EXPORT_PREPARE : EVENT_PLAY_PREPARE);
@@ -349,7 +353,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
 
     private void doRenderWork() {
         long operationStartMs = SystemClock.elapsedRealtime();
-        currentTimeUs = debugMode ? debugPositionUs : mediaClock.getPositionUs();
+        currentTimeUs = debugMode ? debugPositionUs : getCurrentTimeUs();
         if (renderRoot == null) {
             Log.d(TAG, "doRenderWork: RenderRoot is empty");
             if (eventHandler != null) {
@@ -358,6 +362,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
             return;
         }
         if (currentTimeUs > TimeUtil.msToUs(timeline.getEndTimeMs())) {
+            renderTarget.complete();
             stop();
             return;
         }
@@ -376,11 +381,21 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
                 Log.d(TAG, "doRenderWork: has frame and render to target");
                 // render result to RenderTarget
                 currentTimeUs = renderTimeUs;
-                renderTarget.updateFrame(renderRoot, currentTimeUs);
-                engine.swapBuffers();
+                if (export) {
+                    engine.setPresentationTime(TimeUtil.usToNs(renderTimeUs));
+                }
+                renderTarget.updateFrame(renderRoot, currentTimeUs, engine);
                 if (eventHandler != null) {
                     eventHandler.obtainMessage(export ? EVENT_EXPORT_PROGRESS : EVENT_PLAY_POSITION_CHANGE,
                             new PositionInfo(currentTimeUs, timeline.getEndTimeMs())).sendToTarget();
+                }
+            }
+            if (export) {
+                long time = Math.min(audioTimeUs, renderTimeUs);
+                if (time <= exportTimeUs) {
+                    exportTimeUs += TimeUtil.msToUs(10);
+                } else {
+                    exportTimeUs = time;
                 }
             }
         }
@@ -391,6 +406,16 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         } else {
             handler.removeMessages(MSG_DO_SOME_WORK);
         }
+    }
+
+    private long getCurrentTimeUs() {
+        long time;
+        if (export) {
+            time = exportTimeUs;
+        } else {
+            time = mediaClock.getPositionUs();
+        }
+        return time;
     }
 
     private void scheduleNextWork(long operationTimeMs, long intervalTimeMs) {

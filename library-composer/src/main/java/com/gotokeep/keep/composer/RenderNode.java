@@ -1,5 +1,6 @@
 package com.gotokeep.keep.composer;
 
+import android.media.MediaFormat;
 import android.opengl.GLES20;
 import android.util.Log;
 
@@ -59,7 +60,7 @@ public abstract class RenderNode {
     }
 
     public long acquireFrame(long positionUs) {
-        if (!isFrameAvailable()) {
+        if (!isFrameAvailable() && positionUs >= renderTimeUs) {
             renderTimeUs = render(positionUs);
         }
         return renderTimeUs;

@@ -14,13 +14,13 @@ public abstract class RenderTarget {
 
     public abstract Surface getInputSurface();
 
-    public abstract void updateFrame(RenderNode renderNode, long presentationTimeUs);
+    public abstract void updateFrame(RenderNode renderNode, long presentationTimeUs, ComposerEngine engine);
 
     public abstract void updateAudioChunk(AudioSource audioSource);
 
     public abstract void prepareVideo();
 
-    public abstract void prepareAudio(int sampleRate);
+    public abstract void prepareAudio(int sampleRate, int channelCount);
 
     public abstract void complete();
 

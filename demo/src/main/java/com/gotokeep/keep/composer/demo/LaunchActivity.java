@@ -8,6 +8,9 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.drawable.Drawable;
+import android.media.MediaCodecInfo;
+import android.media.MediaCodecList;
+import android.os.Build;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.DrawableCompat;
@@ -15,6 +18,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,6 +44,19 @@ public class LaunchActivity extends AppCompatActivity {
                     Manifest.permission.READ_EXTERNAL_STORAGE,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE
             }, 0);
+        }
+        for (int i = 0; i < MediaCodecList.getCodecCount(); i++) {
+            MediaCodecInfo codecInfo = MediaCodecList.getCodecInfoAt(i);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                String supportedTypes[] = codecInfo.getSupportedTypes();
+                for (String type : supportedTypes) {
+                    Log.d("MediaCodec", "type: " + type);
+                    MediaCodecInfo.CodecCapabilities capabilities = codecInfo.getCapabilitiesForType(type);
+                    int count = capabilities.getMaxSupportedInstances();
+                    String name = codecInfo.getName();
+                    Log.d("MediaCodec", name + " MaxSupportedInstance = " + count + ", " + (codecInfo.isEncoder() ? "encoder" : "decoder"));
+                }
+            }
         }
     }
 

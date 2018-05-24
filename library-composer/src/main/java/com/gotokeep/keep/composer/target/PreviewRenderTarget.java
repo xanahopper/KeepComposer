@@ -9,6 +9,7 @@ import android.opengl.GLES20;
 import android.util.Log;
 import android.view.Surface;
 
+import com.gotokeep.keep.composer.ComposerEngine;
 import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.RenderTarget;
 import com.gotokeep.keep.composer.gles.ProgramObject;
@@ -46,7 +47,7 @@ public class PreviewRenderTarget extends RenderTarget implements SurfaceTexture.
     }
 
     @Override
-    public void updateFrame(RenderNode renderNode, long presentationTimeUs) {
+    public void updateFrame(RenderNode renderNode, long presentationTimeUs, ComposerEngine engine) {
         Log.d("Composer", "PreviewRenderTarget#updateFrame: " + presentationTimeUs);
         programObject.use();
         GLES20.glBindAttribLocation(programObject.getProgramId(), 0, ProgramObject.ATTRIBUTE_POSITION);
@@ -62,6 +63,7 @@ public class PreviewRenderTarget extends RenderTarget implements SurfaceTexture.
                 1, false, renderNode.getTransformMatrix(), 0);
         GLES20.glUniform1i(programObject.getUniformLocation(ProgramObject.UNIFORM_TEXTURE), 0);
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+        engine.swapBuffers();
     }
 
     @Override
@@ -89,7 +91,7 @@ public class PreviewRenderTarget extends RenderTarget implements SurfaceTexture.
     }
 
     @Override
-    public void prepareAudio(int sampleRate) {
+    public void prepareAudio(int sampleRate, int channelCount) {
         this.sampleRate = sampleRate;
         buffSize = AudioTrack.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT);
         audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRate,

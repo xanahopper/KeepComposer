@@ -66,4 +66,10 @@ public final class ComposerEngine {
 //            throw new RuntimeException(op + ": glError " + error);
         }
     }
+
+    public void setPresentationTime(long nsecs) {
+        if (eglCore != null) {
+            eglCore.setPresentationTime(eglSurface, nsecs);
+        }
+    }
 }

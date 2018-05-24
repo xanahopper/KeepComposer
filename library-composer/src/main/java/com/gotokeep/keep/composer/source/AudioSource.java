@@ -26,6 +26,7 @@ public final class AudioSource {
     long endTimeMs;
     long durationMs;
     int sampleRate;
+    int channelCount;
 
     private int audioTrack = -1;
     private MediaExtractor audioExtractor;
@@ -83,7 +84,7 @@ public final class AudioSource {
         if (positionUs >= renderTimeUs) {
             renderTimeUs = render(positionUs);
         } else {
-            chunk = null;
+            chunk = new byte[0];
         }
         return renderTimeUs;
     }
@@ -164,6 +165,7 @@ public final class AudioSource {
             durationMs = audioFormat.containsKey(MediaFormat.KEY_DURATION) ? TimeUtil.usToMs(audioFormat.getLong(MediaFormat.KEY_DURATION)) :
                     MediaUtil.getDuration(filePath);
             sampleRate = audioFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE);
+            channelCount = audioFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT);
         }
     }
 
@@ -201,5 +203,9 @@ public final class AudioSource {
 
     public MediaCodec.BufferInfo getAudioInfo() {
         return audioInfo;
+    }
+
+    public int getChannelCount() {
+        return channelCount;
     }
 }
