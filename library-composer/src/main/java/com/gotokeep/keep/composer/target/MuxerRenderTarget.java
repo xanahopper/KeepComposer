@@ -9,6 +9,7 @@ import com.gotokeep.keep.composer.ExportConfiguration;
 import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.RenderTarget;
 import com.gotokeep.keep.composer.gles.ProgramObject;
+import com.gotokeep.keep.composer.source.AudioSource;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -67,7 +68,12 @@ public class MuxerRenderTarget extends RenderTarget {
     }
 
     @Override
-    public void prepare() {
+    public void updateAudioChunk(AudioSource audioSource) {
+
+    }
+
+    @Override
+    public void prepareVideo() {
         programObject = new ProgramObject();
         vertexBuffer = ByteBuffer.allocateDirect(DEFAULT_VERTEX_DATA.length * 4)
                 .order(ByteOrder.nativeOrder()).asFloatBuffer();
@@ -76,6 +82,11 @@ public class MuxerRenderTarget extends RenderTarget {
         texCoordBuffer = ByteBuffer.allocateDirect(DEFAULT_TEX_COORDS_DATA.length * 2)
                 .order(ByteOrder.nativeOrder()).asShortBuffer();
         texCoordBuffer.put(DEFAULT_TEX_COORDS_DATA).position(0);
+    }
+
+    @Override
+    public void prepareAudio(int sampleRate) {
+
     }
 
     @Override

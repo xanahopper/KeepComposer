@@ -12,4 +12,8 @@ public class AudioItem extends MediaItem {
         super(TYPE_SOURCE, 0, null);
         this.filePath = filePath;
     }
+
+    public String getFilePath() {
+        return filePath;
+    }
 }

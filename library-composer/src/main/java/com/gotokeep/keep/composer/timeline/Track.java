@@ -73,12 +73,15 @@ public final class Track {
 
     public void prepare(RenderFactory renderFactory) {
         Collections.sort(items, MediaItem::compareTo);
-//        for (MediaItem item : items) {
+        for (MediaItem item : items) {
+            if (item.getEndTimeMs() > endTimeMs) {
+                endTimeMs = item.getEndTimeMs();
+            }
 //            RenderNode node = renderFactory.createRenderNode(item);
 //            if (node != null && !node.isPrepared()) {
-//                node.prepare();
+//                node.prepareVideo();
 //            }
-//        }
+        }
     }
 
     public List<MediaItem> getItems() {

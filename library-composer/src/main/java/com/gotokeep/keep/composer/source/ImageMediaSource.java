@@ -113,7 +113,7 @@ public class ImageMediaSource extends MediaSource {
             GLUtils.texImage2D(renderTexture.getTextureTarget(), 0, format, finalImage, GLES20.GL_UNSIGNED_BYTE, 0);
             finalImage.recycle();
         } catch (IOException e) {
-            throw new IllegalArgumentException("ImageMediaSource prepare failed.", e);
+            throw new IllegalArgumentException("ImageMediaSource prepareVideo failed.", e);
         }
 
         durationMs = DURATION_INFINITE;

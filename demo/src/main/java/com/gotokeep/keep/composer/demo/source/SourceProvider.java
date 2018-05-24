@@ -19,6 +19,10 @@ public class SourceProvider {
             "/sdcard/ADM/qrcode.php.png",
     };
 
+    public static final String[] AUDIO_SRC = {
+            "/sdcard/DCIM/KeepStory/Demo/bgm.mp3"
+    };
+
     public static final String[] OUTPUT_PATH = new String[] {
             "/sdcard/DCIM/KeepStory/Demo/generate.mp4"
     };

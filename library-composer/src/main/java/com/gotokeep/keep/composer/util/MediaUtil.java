@@ -6,6 +6,7 @@ import android.media.MediaCodec;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Build;
+import android.text.TextUtils;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;
@@ -68,5 +69,12 @@ public class MediaUtil {
         } else {
             return value;
         }
+    }
+
+    public static long getDuration(String filepath) {
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        retriever.setDataSource(filepath);
+        String duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+        return TextUtils.isEmpty(duration) ? 0 : Long.parseLong(duration);
     }
 }

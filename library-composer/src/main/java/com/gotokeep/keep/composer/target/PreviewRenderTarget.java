@@ -1,6 +1,10 @@
 package com.gotokeep.keep.composer.target;
 
 import android.graphics.SurfaceTexture;
+import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.media.AudioTrack;
+import android.media.MediaCodec;
 import android.opengl.GLES20;
 import android.util.Log;
 import android.view.Surface;
@@ -8,6 +12,7 @@ import android.view.Surface;
 import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.RenderTarget;
 import com.gotokeep.keep.composer.gles.ProgramObject;
+import com.gotokeep.keep.composer.source.AudioSource;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -22,6 +27,9 @@ import java.nio.ShortBuffer;
 public class PreviewRenderTarget extends RenderTarget implements SurfaceTexture.OnFrameAvailableListener {
     private ProgramObject programObject;
     private Surface inputSurface;
+    private int sampleRate;
+    private int buffSize;
+    private AudioTrack audioTrack;
     protected static final float[] DEFAULT_VERTEX_DATA = {
             -1f, -1f, 0,
             1f, -1f, 0,
@@ -57,7 +65,19 @@ public class PreviewRenderTarget extends RenderTarget implements SurfaceTexture.
     }
 
     @Override
-    public void prepare() {
+    public void updateAudioChunk(AudioSource audioSource) {
+        if (audioTrack != null) {
+            if (audioSource.getRenderOutputStatus() == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+                audioTrack.setPlaybackRate(audioSource.getSampleRate());
+            } else if (audioSource.getRenderOutputStatus() >= 0) {
+                MediaCodec.BufferInfo info = audioSource.getAudioInfo();
+                audioTrack.write(audioSource.getChunk(), info.offset, info.offset + info.size);
+            }
+        }
+    }
+
+    @Override
+    public void prepareVideo() {
         programObject = new ProgramObject();
         vertexBuffer = ByteBuffer.allocateDirect(DEFAULT_VERTEX_DATA.length * 4)
                 .order(ByteOrder.nativeOrder()).asFloatBuffer();
@@ -66,6 +86,16 @@ public class PreviewRenderTarget extends RenderTarget implements SurfaceTexture.
         texCoordBuffer = ByteBuffer.allocateDirect(DEFAULT_TEX_COORDS_DATA.length * 2)
                 .order(ByteOrder.nativeOrder()).asShortBuffer();
         texCoordBuffer.put(DEFAULT_TEX_COORDS_DATA).position(0);
+    }
+
+    @Override
+    public void prepareAudio(int sampleRate) {
+        this.sampleRate = sampleRate;
+        buffSize = AudioTrack.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT);
+        audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRate,
+                AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT,
+                buffSize, AudioTrack.MODE_STREAM);
+        audioTrack.play();
     }
 
     @Override
@@ -82,6 +112,11 @@ public class PreviewRenderTarget extends RenderTarget implements SurfaceTexture.
         if (inputSurface != null) {
             inputSurface.release();
             inputSurface = null;
+        }
+        if (audioTrack != null) {
+            audioTrack.stop();
+            audioTrack.release();
+            audioTrack = null;
         }
     }
 

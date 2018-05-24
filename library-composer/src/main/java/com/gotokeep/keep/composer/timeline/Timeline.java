@@ -16,12 +16,21 @@ import java.util.ListIterator;
 public final class Timeline {
     private final List<Track> tracks = new ArrayList<>();
     private long endTimeMs;
+    private AudioItem audioItem;
 
     public void addMediaTrack(Track track) {
         tracks.add(track);
         if (track.getEndTimeMs() > endTimeMs) {
             endTimeMs = track.getEndTimeMs();
         }
+    }
+
+    public void setAudioItem(AudioItem audioItem) {
+        this.audioItem = audioItem;
+    }
+
+    public AudioItem getAudioItem() {
+        return audioItem;
     }
 
     public SparseArray<List<MediaItem>> queryPresentationTimeItems(long presentationTimeUs) {
@@ -42,6 +51,10 @@ public final class Timeline {
         for (Track track : tracks) {
             if (track != null) {
                 track.prepare(renderFactory);
+                if (track.getEndTimeMs() > endTimeMs) {
+                    endTimeMs = track.getEndTimeMs();
+                    audioItem.setEndTimeMs(endTimeMs);
+                }
             }
         }
     }

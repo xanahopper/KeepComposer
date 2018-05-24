@@ -12,6 +12,7 @@ import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.demo.SampleActivity;
 import com.gotokeep.keep.composer.demo.source.SourceProvider;
 import com.gotokeep.keep.composer.overlay.OverlayProvider;
+import com.gotokeep.keep.composer.timeline.AudioItem;
 import com.gotokeep.keep.composer.timeline.ImageItem;
 import com.gotokeep.keep.composer.timeline.LayerItem;
 import com.gotokeep.keep.composer.timeline.Timeline;
@@ -89,6 +90,7 @@ public class ImageOverlayActivity extends SampleActivity implements Handler.Call
         overlayTrack.addMediaItem(layerItem1);
         timeline.addMediaTrack(videoTrack);
         timeline.addMediaTrack(overlayTrack);
+        timeline.setAudioItem(new AudioItem(SourceProvider.AUDIO_SRC[0]));
 
         composer.setTimeline(timeline);
         composer.prepare();

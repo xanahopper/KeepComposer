@@ -72,7 +72,7 @@ public class VideoMediaSource extends MediaSource {
             prepareExtractorAndInfo();
             prepareDecoder();
         } catch (IOException e) {
-            throw new RuntimeException("VideoMediaSource prepare failed.", e);
+            throw new RuntimeException("VideoMediaSource prepareVideo failed.", e);
         }
     }
 

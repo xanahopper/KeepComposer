@@ -3,6 +3,8 @@ package com.gotokeep.keep.composer;
 
 import android.view.Surface;
 
+import com.gotokeep.keep.composer.source.AudioSource;
+
 /**
  * @author xana/cuixianming
  * @version 1.0
@@ -14,7 +16,11 @@ public abstract class RenderTarget {
 
     public abstract void updateFrame(RenderNode renderNode, long presentationTimeUs);
 
-    public abstract void prepare();
+    public abstract void updateAudioChunk(AudioSource audioSource);
+
+    public abstract void prepareVideo();
+
+    public abstract void prepareAudio(int sampleRate);
 
     public abstract void complete();
 

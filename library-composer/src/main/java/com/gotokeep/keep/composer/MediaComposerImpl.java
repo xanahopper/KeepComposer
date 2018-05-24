@@ -9,6 +9,7 @@ import android.util.Log;
 import android.util.SparseArray;
 import android.view.TextureView;
 
+import com.gotokeep.keep.composer.source.AudioSource;
 import com.gotokeep.keep.composer.target.MuxerRenderTarget;
 import com.gotokeep.keep.composer.target.PreviewRenderTarget;
 import com.gotokeep.keep.composer.timeline.MediaItem;
@@ -69,6 +70,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     private ExportEventListener exportEventListener;
     private RenderTarget renderTarget;
     private RenderNode renderRoot;
+    private AudioSource audioSource;
     private RenderFactory renderFactory;
     private Map<MediaItem, RenderNode> renderNodeMap;
     private ComposerEngine engine;
@@ -284,9 +286,14 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         if (renderTarget == null) {
             return;
         }
-        renderTarget.prepare();
+        renderTarget.prepareVideo();
         timeline.prepare(renderFactory);
         renderRoot = generateRenderTree(currentTimeUs);
+        if (timeline.getAudioItem() != null) {
+            audioSource = new AudioSource(timeline.getAudioItem().getFilePath());
+            audioSource.prepare();
+            renderTarget.prepareAudio(audioSource.getSampleRate());
+        }
         if (eventHandler != null) {
             eventHandler.sendEmptyMessage(export ? EVENT_EXPORT_PREPARE : EVENT_PLAY_PREPARE);
         }
@@ -359,16 +366,22 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
 
         renderRoot.setViewport(canvasWidth, canvasHeight);
         long renderTimeUs = renderRoot.acquireFrame(currentTimeUs);
+        long audioTimeUs = audioSource != null ? audioSource.acquireBuffer(currentTimeUs) : 0;
         Log.d(TAG, "doRenderWork: " + renderTimeUs + " " + currentTimeUs);
-        if (renderTimeUs >= currentTimeUs && renderTarget != null) {
-            Log.d(TAG, "doRenderWork: has frame and render to target");
-            // render result to RenderTarget
-            currentTimeUs = renderTimeUs;
-            renderTarget.updateFrame(renderRoot, currentTimeUs);
-            engine.swapBuffers();
-            if (eventHandler != null) {
-                eventHandler.obtainMessage(export ? EVENT_EXPORT_PROGRESS : EVENT_PLAY_POSITION_CHANGE,
-                        new PositionInfo(currentTimeUs, timeline.getEndTimeMs())).sendToTarget();
+        if (renderTarget != null) {
+            if (audioTimeUs >= currentTimeUs && audioSource != null) {
+                renderTarget.updateAudioChunk(audioSource);
+            }
+            if (renderTimeUs >= currentTimeUs) {
+                Log.d(TAG, "doRenderWork: has frame and render to target");
+                // render result to RenderTarget
+                currentTimeUs = renderTimeUs;
+                renderTarget.updateFrame(renderRoot, currentTimeUs);
+                engine.swapBuffers();
+                if (eventHandler != null) {
+                    eventHandler.obtainMessage(export ? EVENT_EXPORT_PROGRESS : EVENT_PLAY_POSITION_CHANGE,
+                            new PositionInfo(currentTimeUs, timeline.getEndTimeMs())).sendToTarget();
+                }
             }
         }
 
@@ -474,7 +487,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         engine.setup(surface);
         engine.setViewport(width, height);
         if (export) {
-            renderTarget.prepare();
+            renderTarget.prepareVideo();
         }
     }
 
