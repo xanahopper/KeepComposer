@@ -1,7 +1,16 @@
 package com.gotokeep.keep.director;
 
+import com.gotokeep.keep.composer.filter.FilterFactory;
 import com.gotokeep.keep.composer.timeline.MediaItem;
+import com.gotokeep.keep.composer.timeline.item.FilterItem;
+import com.gotokeep.keep.composer.timeline.item.ImageItem;
+import com.gotokeep.keep.composer.timeline.item.TransitionItem;
+import com.gotokeep.keep.composer.timeline.item.VideoItem;
+import com.gotokeep.keep.composer.util.MediaUtil;
+import com.gotokeep.keep.director.data.Chapter;
+import com.gotokeep.keep.director.data.Filter;
 import com.gotokeep.keep.director.data.MediaData;
+import com.gotokeep.keep.director.data.Transition;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,6 +27,23 @@ public final class MediaFactory {
     public static <M extends MediaData, T extends MediaItem> void
         registerCreator(Class<M> dataType, MediaItemCreator<M, T> creator) {
         creatorMap.put(dataType, creator);
+    }
+
+    static {
+        registerCreator(Chapter.class, item -> {
+            String mime = MediaUtil.getMime(item.getSource());
+            if (mime.startsWith("image/")) {
+                return new ImageItem(item.getSource());
+            } else if (mime.startsWith("video/")) {
+                return new VideoItem(item.getSource());
+            } else {
+                return null;
+            }
+        });
+
+        registerCreator(Filter.class, item -> new FilterItem(item.getName(), item.getParams()));
+
+        registerCreator(Transition.class, item -> new TransitionItem(null, null, item.getDuration(), 0));
     }
 
     @SuppressWarnings("unchecked")

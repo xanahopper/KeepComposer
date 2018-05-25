@@ -1,0 +1,42 @@
+
+{
+  "type": "template",
+  "version": 1,
+  "id": "[唯一 ID]",
+  "name": "[模板名称]",
+  "strategy": "all",
+  "meta": {
+    "pattern": "all",
+    "duration": 30000,
+    "filter": {
+      "name": "sepia_tone"
+    },
+    "overlay": [
+      {
+        "startTime": 0,
+        "endTime": 2000,
+        "position": "center",
+        "layer": {
+          "url": "https://img3.doubanio.com/view/photo/l/public/p2497773806.jpg",
+          "width": 200,
+          "height": 200
+        }
+      }
+    ],
+    "music": "http://7xt05i.com1.z0.glb.clouddn.com/%E5%8F%8C%E8%8A%82%E6%A3%8D.mp3",
+    "minFragment": 2,
+    "maxFragment": 30
+  },
+  "chapter": {
+    "default": {
+      "playSpeed": {
+        "action": 3,
+        "rest": 1
+      },
+      "transition": {
+        "name": "fade",
+        "duration": 400
+      }
+    }
+  }
+}

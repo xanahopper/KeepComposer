@@ -27,4 +27,17 @@ public class SourceProvider {
             "/sdcard/DCIM/KeepStory/Demo/generate.mp4"
     };
 
+    public static final String[] VIDEO_FRAGMENT = {
+            "/sdcard/DCIM/source/A031C049_main_s.mp4",
+            "/sdcard/DCIM/source/A051C078_main_s.mp4",
+            "/sdcard/DCIM/source/B008C028_main_s.mp4",
+            "/sdcard/DCIM/source/B009C020_main_s.mp4",
+            "/sdcard/DCIM/source/B035C002_main_s.mp4",
+            "/sdcard/DCIM/source/B042C051_main_s.mp4",
+            "/sdcard/DCIM/source/B057C042_main_s.mp4",
+            "/sdcard/DCIM/source/B058C061_main_s.mp4",
+            "/sdcard/DCIM/source/B058C062_main_s.mp4",
+            "/sdcard/DCIM/source/B078C010_main_s.mp4",
+    };
+
 }

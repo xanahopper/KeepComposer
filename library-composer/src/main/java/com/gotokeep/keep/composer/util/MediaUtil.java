@@ -7,6 +7,7 @@ import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Build;
 import android.text.TextUtils;
+import android.webkit.MimeTypeMap;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;
@@ -76,5 +77,9 @@ public class MediaUtil {
         retriever.setDataSource(filepath);
         String duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
         return TextUtils.isEmpty(duration) ? 0 : Long.parseLong(duration);
+    }
+
+    public static String getMime(String source) {
+        return MimeTypeMap.getSingleton().getMimeTypeFromExtension(MimeTypeMap.getFileExtensionFromUrl(source));
     }
 }

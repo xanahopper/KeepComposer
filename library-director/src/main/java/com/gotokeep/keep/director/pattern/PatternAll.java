@@ -65,6 +65,7 @@ public class PatternAll implements SelectPattern {
             }
         }
         AudioItem globalAudio = !TextUtils.isEmpty(meta.getMusic()) ? new AudioItem(meta.getMusic()) : null;
+        timeline.setAudioItem(globalAudio);
 
         Transition globalTransition = null;
         ChapterSet chapterSet = script.getChapter();
