@@ -11,8 +11,25 @@ public class FilterItem extends MediaItem {
     protected String name;
     protected Map<String, Object> params;
 
-    public FilterItem(MediaItem baseItem, int layer, Map<String, Object> params) {
-        super(TYPE_DRAW, layer, baseItem);
+    public FilterItem(String name, Map<String, Object> params) {
+        super(TYPE_DRAW, 0, null);
+        this.params = params;
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Map<String, Object> getParams() {
+        return params;
+    }
+
+    public void setParams(Map<String, Object> params) {
         this.params = params;
     }
 }

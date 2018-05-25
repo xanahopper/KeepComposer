@@ -12,7 +12,7 @@ public interface ExternalFilter {
 
     void onInputSizeChanged(int width, int height);
 
+    void onDisplaySizeChanged(int width, int height);
+
     int onDrawFrame(int textureId);
-
-
 }

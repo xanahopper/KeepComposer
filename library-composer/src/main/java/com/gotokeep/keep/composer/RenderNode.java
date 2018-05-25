@@ -262,4 +262,12 @@ public abstract class RenderNode {
             throw new RuntimeException(op + ": glError " + error);
         }
     }
+
+    public int getCanvasWidth() {
+        return canvasWidth;
+    }
+
+    public int getCanvasHeight() {
+        return canvasHeight;
+    }
 }

@@ -23,7 +23,9 @@ public abstract class MediaFilter extends RenderNode {
 
     @Override
     protected void onPrepare() {
-        programObject.use();
+        if (programObject != null) {
+            programObject.use();
+        }
         prepareProgramInternal(programObject);
     }
 

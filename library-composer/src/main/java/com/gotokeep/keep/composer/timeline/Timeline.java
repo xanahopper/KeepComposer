@@ -35,9 +35,7 @@ public final class Timeline {
 
     public SparseArray<List<MediaItem>> queryPresentationTimeItems(long presentationTimeUs) {
         SparseArray<List<MediaItem>> mediaItems = new SparseArray<>();
-        ListIterator<Track> iterator = tracks.listIterator();
-        while (iterator.hasNext()) {
-            Track track = iterator.next();
+        for (Track track : tracks) {
             mediaItems.put(track.getLayer(), track.queryPresentationTimeItems(presentationTimeUs));
         }
         return mediaItems;

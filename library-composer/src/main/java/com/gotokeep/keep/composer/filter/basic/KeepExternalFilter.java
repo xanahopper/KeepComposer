@@ -1,5 +1,6 @@
 package com.gotokeep.keep.composer.filter.basic;
 
+import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.filter.ExternalFilter;
 import com.gotokeep.keep.composer.filter.MediaFilter;
 import com.gotokeep.keep.composer.gles.ProgramObject;
@@ -21,6 +22,12 @@ public class KeepExternalFilter extends MediaFilter {
     @Override
     public void setFilterParameters(Map<String, Object> params) {
 
+    }
+
+    @Override
+    public void setViewport(int width, int height) {
+        super.setViewport(width, height);
+        externalFilter.onDisplaySizeChanged(width, height);
     }
 
     @Override
@@ -46,6 +53,8 @@ public class KeepExternalFilter extends MediaFilter {
     @Override
     protected void prepareProgramInternal(ProgramObject programObject) {
         externalFilter.init();
+        RenderNode inputNode = inputNodes.get(0);
+        externalFilter.onInputSizeChanged(inputNode.getCanvasWidth(), inputNode.getCanvasHeight());
     }
 
     @Override

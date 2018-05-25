@@ -1,6 +1,7 @@
 package com.gotokeep.keep.composer.demo;
 
 import android.Manifest;
+import android.app.Application;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -24,6 +25,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.seu.magicfilter.utils.MagicParams;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,7 +41,7 @@ public class LaunchActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(new Adapter(getActivitiesList()));
-
+        MagicParams.context = getApplicationContext();
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{
                     Manifest.permission.READ_EXTERNAL_STORAGE,

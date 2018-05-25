@@ -4,15 +4,13 @@ import android.util.Log;
 
 import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.filter.MediaFilter;
-import com.gotokeep.keep.composer.filter.MediaFilterFactory;
+import com.gotokeep.keep.composer.filter.FilterFactory;
 import com.gotokeep.keep.composer.overlay.LayerOverlay;
 import com.gotokeep.keep.composer.overlay.MediaOverlay;
 import com.gotokeep.keep.composer.overlay.OverlayProvider;
-import com.gotokeep.keep.composer.overlay.SubtitleOverlay;
 import com.gotokeep.keep.composer.overlay.WatermarkOverlay;
 import com.gotokeep.keep.composer.source.ImageMediaSource;
 import com.gotokeep.keep.composer.source.VideoMediaSource;
-import com.gotokeep.keep.composer.transition.MediaTransition;
 import com.gotokeep.keep.composer.transition.MediaTransitionFactory;
 
 import java.util.HashMap;
@@ -78,9 +76,11 @@ public class RenderFactory {
 //            return overlay;
 //        });
         registerRenderType(FilterItem.class, item -> {
-            MediaFilter filter = MediaFilterFactory.getFilter(item.name);
+            MediaFilter filter = FilterFactory.getExternalFilter(item.name);
             if (filter != null) {
                 filter.setFilterParameters(item.params);
+                filter.setStartTimeMs(item.startTimeMs);
+                filter.setEndTimeMs(item.endTimeMs);
             }
             return filter;
         });

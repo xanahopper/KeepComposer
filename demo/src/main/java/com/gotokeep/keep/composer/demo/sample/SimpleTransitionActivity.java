@@ -13,8 +13,10 @@ import com.gotokeep.keep.composer.MediaComposerFactory;
 import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.demo.SampleActivity;
 import com.gotokeep.keep.composer.demo.source.SourceProvider;
+import com.gotokeep.keep.composer.filter.FilterFactory;
 import com.gotokeep.keep.composer.overlay.OverlayProvider;
 import com.gotokeep.keep.composer.timeline.AudioItem;
+import com.gotokeep.keep.composer.timeline.FilterItem;
 import com.gotokeep.keep.composer.timeline.ImageItem;
 import com.gotokeep.keep.composer.timeline.LayerItem;
 import com.gotokeep.keep.composer.timeline.Timeline;
@@ -22,6 +24,7 @@ import com.gotokeep.keep.composer.timeline.Track;
 import com.gotokeep.keep.composer.timeline.TransitionItem;
 import com.gotokeep.keep.composer.timeline.VideoItem;
 import com.gotokeep.keep.composer.util.TimeUtil;
+import com.seu.magicfilter.filter.DemoFilterFactory;
 
 /**
  * @author xana/cuixianming
@@ -42,6 +45,7 @@ public class SimpleTransitionActivity extends SampleActivity implements Handler.
         previewView.setSurfaceTextureListener(this);
 
         previewView.setVideoSize(640, 360, 0);
+        FilterFactory.registerExternalFilterFactory(DemoFilterFactory.getInstance());
         if (getIntent().hasExtra("gotoNext")) {
             Log.d("Composer", "onCreate: " + getIntent().getStringExtra("gotoNext"));
             gotoNext = true;
@@ -100,7 +104,7 @@ public class SimpleTransitionActivity extends SampleActivity implements Handler.
             TransitionItem transitionItem2 = new TransitionItem(item2, item3, 2000, 1);
             transitionTrack.addMediaItem(transitionItem1);
             transitionTrack.addMediaItem(transitionItem2);
-            Track overlayTrack = new Track(true, 2);
+            Track overlayTrack = new Track(true, 3);
             LayerItem layerItem = new LayerItem(2, "");
             layerItem.setTimeRangeMs(TimeUtil.secToMs(0), TimeUtil.secToMs(4));
             layerItem.setScale(0.5f);
@@ -112,8 +116,14 @@ public class SimpleTransitionActivity extends SampleActivity implements Handler.
             layerItem1.setOffsetY(150);
             overlayTrack.addMediaItem(layerItem);
             overlayTrack.addMediaItem(layerItem1);
+
+            FilterItem filterItem = new FilterItem("sunset", null);
+            filterItem.setTimeRangeMs(0, TimeUtil.secToMs(8));
+            Track filterTrack = new Track(true, 2);
+            filterTrack.addMediaItem(filterItem);
             timeline.addMediaTrack(videoTrack);
             timeline.addMediaTrack(transitionTrack);
+            timeline.addMediaTrack(filterTrack);
             timeline.addMediaTrack(overlayTrack);
             timeline.setAudioItem(new AudioItem(SourceProvider.AUDIO_SRC[0]));
         } else {
