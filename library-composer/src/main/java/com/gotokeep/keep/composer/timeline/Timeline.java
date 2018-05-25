@@ -53,9 +53,12 @@ public final class Timeline {
                 track.prepare(renderFactory);
                 if (track.getEndTimeMs() > endTimeMs) {
                     endTimeMs = track.getEndTimeMs();
-                    audioItem.setEndTimeMs(endTimeMs);
                 }
             }
+        }
+
+        if (audioItem != null) {
+            audioItem.setEndTimeMs(endTimeMs);
         }
     }
 

@@ -210,6 +210,9 @@ public class MuxerRenderTarget extends RenderTarget {
     private void drainAudioEncoder(AudioSource audioSource) {
         if (videoOutputFormat == null || muxing) {
             // feed input buffer
+            if (audioSource.getRenderOutputStatus() < 0) {
+                return;
+            }
             audioInfo = audioSource.getAudioInfo();
             int size = audioInfo.size;
             long presentationTime = audioInfo.presentationTimeUs;

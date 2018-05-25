@@ -11,6 +11,7 @@ import com.gotokeep.keep.composer.MediaComposerFactory;
 import com.gotokeep.keep.composer.demo.SampleActivity;
 import com.gotokeep.keep.composer.demo.source.SourceProvider;
 import com.gotokeep.keep.composer.overlay.OverlayProvider;
+import com.gotokeep.keep.composer.timeline.AudioItem;
 import com.gotokeep.keep.composer.timeline.ImageItem;
 import com.gotokeep.keep.composer.timeline.Timeline;
 import com.gotokeep.keep.composer.timeline.Track;
@@ -60,6 +61,7 @@ public class ImageActivity extends SampleActivity implements Handler.Callback, O
         Track videoTrack = new Track(true, 0);
         videoTrack.addMediaItem(startItem);
         timeline.addMediaTrack(videoTrack);
+        timeline.setAudioItem(new AudioItem(SourceProvider.AUDIO_SRC[0]));
 
         composer.setTimeline(timeline);
         composer.prepare();

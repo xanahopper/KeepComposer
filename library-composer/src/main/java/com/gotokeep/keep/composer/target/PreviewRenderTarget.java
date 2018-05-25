@@ -74,6 +74,9 @@ public class PreviewRenderTarget extends RenderTarget implements SurfaceTexture.
             } else if (audioSource.getRenderOutputStatus() >= 0) {
                 MediaCodec.BufferInfo info = audioSource.getAudioInfo();
                 audioTrack.write(audioSource.getChunk(), info.offset, info.offset + info.size);
+                if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
+                    Log.d("PreviewRenderTarget", "updateAudioChunk: reach audio EOS");
+                }
                 audioSource.resetChunk();
             }
         }
@@ -103,7 +106,7 @@ public class PreviewRenderTarget extends RenderTarget implements SurfaceTexture.
 
     @Override
     public void complete() {
-
+        audioTrack.stop();
     }
 
     @Override

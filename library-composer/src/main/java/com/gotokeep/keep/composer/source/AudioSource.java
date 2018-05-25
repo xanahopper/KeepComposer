@@ -82,9 +82,9 @@ public final class AudioSource {
     }
 
     public long acquireBuffer(long positionUs) {
-        if (positionUs >= renderTimeUs) {
-            renderTimeUs = render(positionUs);
-        }
+//        if (positionUs >= renderTimeUs) {
+        renderTimeUs = render(positionUs);
+//        }
         return renderTimeUs;
     }
 
@@ -94,15 +94,16 @@ public final class AudioSource {
 
     private long render(long positionUs) {
         boolean decoded = false;
-        while (!decoded && !ended && presentationTimeUs <= positionUs) {
+        while (!decoded && !ended) {
             int inputIndex = audioDecoder.dequeueInputBuffer(1000);
             if (inputIndex >= 0) {
                 ByteBuffer buffer = getInputBuffer(audioDecoder, inputIndex);
                 buffer.clear();
                 audioExtractor.selectTrack(audioTrack);
                 int sampleSize = audioExtractor.readSampleData(buffer, 0);
-                if (sampleSize < 0) {
+                if (sampleSize < 0 || positionUs >= TimeUtil.msToUs(endTimeMs)) {
                     audioDecoder.queueInputBuffer(inputIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+                    ended = true;
                 } else {
                     sampleTimeUs = audioExtractor.getSampleTime();
                     sampleFlags = audioExtractor.getSampleFlags();
@@ -124,6 +125,7 @@ public final class AudioSource {
                 case MediaCodec.INFO_OUTPUT_FORMAT_CHANGED:
                     audioFormat = audioDecoder.getOutputFormat();
                     sampleRate = audioFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE);
+                    decoded = true;
                     break;
                 case MediaCodec.INFO_TRY_AGAIN_LATER:
                     break;
@@ -135,7 +137,7 @@ public final class AudioSource {
                     buffer.get(chunk);
                     buffer.clear();
                     audioDecoder.releaseOutputBuffer(outputIndex, false);
-                    decoded = presentationTimeUs >= positionUs;
+                    decoded = true;
                     Log.d("AudioSource", "doRender: rendered a buffer " + this.presentationTimeUs + ", " + positionUs);
                     break;
             }
