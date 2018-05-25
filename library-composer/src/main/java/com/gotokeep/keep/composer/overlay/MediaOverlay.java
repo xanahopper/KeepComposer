@@ -2,16 +2,12 @@ package com.gotokeep.keep.composer.overlay;
 
 import android.opengl.GLES20;
 import android.opengl.Matrix;
-import android.os.Build;
 import android.support.annotation.CallSuper;
 import android.util.Log;
 
 import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.gles.ProgramObject;
-import com.gotokeep.keep.composer.timeline.OverlayItem;
-
-import java.util.HashSet;
-import java.util.Set;
+import com.gotokeep.keep.composer.timeline.item.OverlayItem;
 
 /**
  * @author xana/cuixianming
@@ -97,7 +93,7 @@ public abstract class MediaOverlay extends RenderNode {
     @Override
     protected void bindRenderTextures() {
         if (inputNodes.size() > 0) {
-            Log.d(TAG, "bind Source texture: ");
+//            Log.d(TAG, "bind Source texture: ");
             inputNodes.get(0).getOutputTexture().bind(0);
         }
     }

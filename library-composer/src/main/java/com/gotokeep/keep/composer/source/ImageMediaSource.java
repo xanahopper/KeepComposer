@@ -2,14 +2,12 @@ package com.gotokeep.keep.composer.source;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
 import android.util.Log;
 
-import com.gotokeep.keep.composer.RenderTexture;
 import com.gotokeep.keep.composer.gles.ProgramObject;
 import com.gotokeep.keep.composer.util.MediaUtil;
 import com.gotokeep.keep.composer.util.TimeUtil;
@@ -47,6 +45,11 @@ public class ImageMediaSource extends MediaSource {
     }
 
     @Override
+    protected void onPreload() {
+
+    }
+
+    @Override
     protected void onPrepare() {
         prepareInternal(filePath);
     }
@@ -58,7 +61,7 @@ public class ImageMediaSource extends MediaSource {
 
     @Override
     public long acquireFrame(long positionUs) {
-        Log.d(TAG, "acquireFrame: " + positionUs + ", return " + (positionUs + intervalUs));
+//        Log.d(TAG, "acquireFrame: " + positionUs + ", return " + (positionUs + intervalUs));
         presentationTimeUs = positionUs - TimeUtil.msToUs(startTimeMs);
         renderTimeUs = positionUs + intervalUs;
         return renderTimeUs;
@@ -66,7 +69,7 @@ public class ImageMediaSource extends MediaSource {
 
     @Override
     protected long doRender(ProgramObject programObject, long positionUs) {
-        Log.d(TAG, "doRender: " + positionUs + ", return " + (positionUs + intervalUs));
+//        Log.d(TAG, "doRender: " + positionUs + ", return " + (positionUs + intervalUs));
         presentationTimeUs = positionUs - TimeUtil.msToUs(startTimeMs);
         return positionUs + intervalUs;
     }

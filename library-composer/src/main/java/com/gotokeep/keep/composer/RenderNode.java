@@ -1,10 +1,10 @@
 package com.gotokeep.keep.composer;
 
-import android.media.MediaFormat;
 import android.opengl.GLES20;
 import android.util.Log;
 
 import com.gotokeep.keep.composer.gles.ProgramObject;
+import com.gotokeep.keep.composer.gles.RenderTexture;
 import com.gotokeep.keep.composer.util.TimeUtil;
 
 import java.nio.ByteBuffer;
@@ -118,6 +118,10 @@ public abstract class RenderNode {
         this.debugMode = debugMode;
     }
 
+    public void preload() {
+        onPreload();
+    }
+
     /**
      * after prepared, resource will be initialized in memory. And call {@link #release()} to release.
      */
@@ -158,22 +162,22 @@ public abstract class RenderNode {
             programObject.use();
 
             GLES20.glBindAttribLocation(programObject.getProgramId(), 0, ProgramObject.ATTRIBUTE_POSITION);
-            checkGlError("glBindAttribLocation");
+          //checkGlError("glBindAttribLocation");
             GLES20.glBindAttribLocation(programObject.getProgramId(), 1, ProgramObject.ATTRIBUTE_TEX_COORDS);
-            checkGlError("glBindAttribLocation");
+          //checkGlError("glBindAttribLocation");
             activeAttribData();
         }
     }
 
     protected void activeAttribData() {
         GLES20.glVertexAttribPointer(0, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer);
-        checkGlError("glVertexAttribPointer");
+      //checkGlError("glVertexAttribPointer");
         GLES20.glEnableVertexAttribArray(0);
-        checkGlError("glEnableVertexAttribArray");
+      //checkGlError("glEnableVertexAttribArray");
         GLES20.glVertexAttribPointer(1, 2, GLES20.GL_SHORT, false, 0, texCoordBuffer);
-        checkGlError("glVertexAttribPointer");
+      //checkGlError("glVertexAttribPointer");
         GLES20.glEnableVertexAttribArray(1);
-        checkGlError("glEnableVertexAttribArray");
+      //checkGlError("glEnableVertexAttribArray");
     }
 
     private void prepareInput() {
@@ -232,6 +236,8 @@ public abstract class RenderNode {
 
     protected abstract ProgramObject createProgramObject();
 
+    protected abstract void onPreload();
+
     protected abstract void onPrepare();
 
     protected abstract void onRelease();
@@ -256,11 +262,11 @@ public abstract class RenderNode {
     }
 
     public void checkGlError(String op) {
-        int error;
-        while ((error = GLES20.glGetError()) != GLES20.GL_NO_ERROR) {
-            Log.e(TAG, op + ": glError " + error);
-            throw new RuntimeException(op + ": glError " + error);
-        }
+//        int error;
+//        while ((error = GLES20.glGetError()) != GLES20.GL_NO_ERROR) {
+//            Log.e(TAG, op + ": glError " + error);
+//            throw new RuntimeException(op + ": glError " + error);
+//        }
     }
 
     public int getCanvasWidth() {

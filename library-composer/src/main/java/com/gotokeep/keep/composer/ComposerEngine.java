@@ -20,7 +20,6 @@ public final class ComposerEngine {
 
     private int width;
     private int height;
-    private int framebufferId;
 
     public ComposerEngine() {
 
@@ -52,7 +51,7 @@ public final class ComposerEngine {
         this.width = width;
         this.height = height;
         GLES20.glViewport(0, 0, width, height);
-        checkGlError("glViewport");
+      //checkGlError("glViewport");
     }
 
     public void swapBuffers() {
@@ -60,11 +59,10 @@ public final class ComposerEngine {
     }
 
     public void checkGlError(String op) {
-        int error;
-        while ((error = GLES20.glGetError()) != GLES20.GL_NO_ERROR) {
-            Log.e(TAG, op + ": glError " + error);
-//            throw new RuntimeException(op + ": glError " + error);
-        }
+//        int error;
+//        while ((error = GLES20.glGetError()) != GLES20.GL_NO_ERROR) {
+//            Log.e(TAG, op + ": glError " + error);
+//        }
     }
 
     public void setPresentationTime(long nsecs) {

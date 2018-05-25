@@ -81,12 +81,12 @@ public abstract class MediaTransition extends RenderNode {
 
         startNode = getStartNode();
         endNode = getEndNode();
-        if (startNode != null) {
-            Log.d(TAG, "doRender: startNode.renderTimeUs = " + startNode.getRenderTimeUs() + ", " + positionUs);
-        }
-        if (endNode != null) {
-            Log.d(TAG, "doRender: endNode.renderTimeUs = " + endNode.getRenderTimeUs());
-        }
+//        if (startNode != null) {
+//            Log.d(TAG, "doRender: startNode.renderTimeUs = " + startNode.getRenderTimeUs() + ", " + positionUs);
+//        }
+//        if (endNode != null) {
+//            Log.d(TAG, "doRender: endNode.renderTimeUs = " + endNode.getRenderTimeUs());
+//        }
         long startTimeUs = startNode != null ? startNode.getPresentationTimeUs() : Long.MAX_VALUE;
         long endTimeUs = endNode != null ? endNode.getPresentationTimeUs() : Long.MAX_VALUE;
         long timeUs = Math.min(startTimeUs, endTimeUs);
@@ -122,8 +122,8 @@ public abstract class MediaTransition extends RenderNode {
 
     @Override
     protected boolean shouldRenderNode(RenderNode renderNode, long presentationTimeUs) {
-        Log.d(TAG, String.format("presentationTime = %d, renderNode.time = %d",
-                presentationTimeUs, renderNode.getRenderTimeUs()));
+//        Log.d(TAG, String.format("presentationTime = %d, renderNode.time = %d",
+//                presentationTimeUs, renderNode.getRenderTimeUs()));
         return presentationTimeUs >= renderNode.getRenderTimeUs();
     }
 

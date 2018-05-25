@@ -9,7 +9,7 @@ import android.os.Build;
 import android.util.Log;
 import android.view.Surface;
 
-import com.gotokeep.keep.composer.RenderTexture;
+import com.gotokeep.keep.composer.gles.RenderTexture;
 import com.gotokeep.keep.composer.exception.UnsupportedFormatException;
 import com.gotokeep.keep.composer.gles.ProgramObject;
 import com.gotokeep.keep.composer.util.MediaUtil;
@@ -63,13 +63,21 @@ public class VideoMediaSource extends MediaSource {
     }
 
     @Override
+    protected void onPreload() {
+        try {
+            prepareExtractorAndInfo();
+        } catch (IOException e) {
+            throw new RuntimeException("VideoMediaSource preload failed.", e);
+        }
+    }
+
+    @Override
     public void onPrepare() {
         // this called from GL(engine) thread
-        if (decoder != null || extractor != null) {
+        if (decoder != null) {
             throw new IllegalStateException("VideoMediaSource already prepared.");
         }
         try {
-            prepareExtractorAndInfo();
             prepareDecoder();
         } catch (IOException e) {
             throw new RuntimeException("VideoMediaSource prepareVideo failed.", e);
@@ -127,7 +135,7 @@ public class VideoMediaSource extends MediaSource {
             }
         }
         if (encoded) {
-            Log.d("VideoMediaSource", "doRender[" + name + "]: rendered a frame " + this.presentationTimeUs);
+//            Log.d("VideoMediaSource", "doRender[" + name + "]: rendered a frame " + this.presentationTimeUs);
             decodeTexture.updateTexImage();
             return super.render(positionUs);
         } else {
@@ -151,27 +159,29 @@ public class VideoMediaSource extends MediaSource {
     @Override
     protected void bindRenderTextures() {
         decodeTexture.bind(0);
-        checkGlError("bindDecodeTexture");
+      //checkGlError("bindDecodeTexture");
     }
 
     @Override
     protected void unbindRenderTextures() {
         decodeTexture.unbind(0);
-        checkGlError("unbindDecodeTexture");
+      //checkGlError("unbindDecodeTexture");
     }
 
     @Override
     protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs) {
         GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
                 1, false, decodeTexture.getTransitionMatrix(), 0);
-        checkGlError("updateDecodeTextureTransformMatrix");
+      //checkGlError("updateDecodeTextureTransformMatrix");
         GLES20.glUniform1i(programObject.getUniformLocation(ProgramObject.UNIFORM_TEXTURE), 0);
-        checkGlError("updateDecodeTextureId");
+      //checkGlError("updateDecodeTextureId");
 
     }
 
     private void prepareExtractorAndInfo() throws IOException {
-        extractor = new MediaExtractor();
+        if (extractor == null) {
+            extractor = new MediaExtractor();
+        }
         extractor.setDataSource(filePath);
         for (int i = 0; i < extractor.getTrackCount(); i++) {
             MediaFormat trackFormat = extractor.getTrackFormat(i);

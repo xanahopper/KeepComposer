@@ -90,7 +90,7 @@ public final class ProgramObject {
 
     public void use() {
         GLES20.glUseProgram(programId);
-        checkGlError("useProgram:" + programId);
+      //checkGlError("useProgram:" + programId);
     }
 
     public int getProgramId() {
@@ -106,7 +106,7 @@ public final class ProgramObject {
         if (uniformNames != null) {
             for (String uniformName : uniformNames) {
                 int loc = GLES20.glGetUniformLocation(programId, uniformName);
-                checkGlError("getUniformLocation(" + programId + ", " + uniformName + ") = " + loc);
+              //checkGlError("getUniformLocation(" + programId + ", " + uniformName + ") = " + loc);
                 if (loc == -1) {
                     Log.e("ProgramObject", "initUniformLocations: invalid uniform location for " + uniformName +
                                     " : " + GLES20.glGetError());
@@ -122,7 +122,7 @@ public final class ProgramObject {
         float st[] = new float[16];
         Matrix.setIdentityM(st, 0);
         GLES20.glUniformMatrix4fv(loc, 1, false, st, 0);
-        checkGlError("uniformMatrix4fv: " + loc);
+      //checkGlError("uniformMatrix4fv: " + loc);
     }
 
     public int getUniformLocation(String name) {
@@ -132,16 +132,16 @@ public final class ProgramObject {
     public void release() {
         if (defaultProgram == null || programId != defaultProgram.programId) {
             GLES20.glDeleteProgram(programId);
-            checkGlError("deleteProgram: " + programId);
+          //checkGlError("deleteProgram: " + programId);
         }
         programId = -1;
     }
 
     public void checkGlError(String op) {
-        int error;
-        while ((error = GLES20.glGetError()) != GLES20.GL_NO_ERROR) {
-            Log.e(TAG, op + ": glError " + error + " in " + getClass().getSimpleName());
-            new RuntimeException(op + ": glError " + error).printStackTrace();
-        }
+//        int error;
+//        while ((error = GLES20.glGetError()) != GLES20.GL_NO_ERROR) {
+//            Log.e(TAG, op + ": glError " + error + " in " + getClass().getSimpleName());
+//            new RuntimeException(op + ": glError " + error).printStackTrace();
+//        }
     }
 }

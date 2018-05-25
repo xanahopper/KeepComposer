@@ -36,6 +36,11 @@ public class KeepExternalFilter extends MediaFilter {
     }
 
     @Override
+    protected void onPreload() {
+
+    }
+
+    @Override
     protected String getVertexShader() {
         return null;
     }

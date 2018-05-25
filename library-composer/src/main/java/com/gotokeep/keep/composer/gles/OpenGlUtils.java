@@ -189,7 +189,7 @@ public class OpenGlUtils {
 	private static int loadShader(final String strSource, final int iType) {
         int[] compiled = new int[1];
         int iShader = GLES20.glCreateShader(iType);
-        checkGlError("createShader");
+      //checkGlError("createShader");
         if (iShader == 0) {
             Log.e(TAG, "loadShader: " + GLES20.glGetError());
 			return 0;

@@ -43,6 +43,11 @@ public class FadeTransition extends MediaTransition {
     }
 
     @Override
+    protected void onPreload() {
+
+    }
+
+    @Override
     protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs) {
 
         startNode = getStartNode();
@@ -50,7 +55,7 @@ public class FadeTransition extends MediaTransition {
 
         long positionUs = TimeUtil.usToMs(presentationTimeUs);
         float alpha = (float) (positionUs - startTimeMs) / durationMs;
-        Log.d("FadeTransition", String.format("updateRenderUniform: time = %d, startTime = %d alpha = %.1f", positionUs, startTimeMs, alpha));
+//        Log.d("FadeTransition", String.format("updateRenderUniform: time = %d, startTime = %d alpha = %.1f", positionUs, startTimeMs, alpha));
         alpha = MediaUtil.clamp(alpha, 0.0f, 1.0f);
         GLES20.glUniform1f(programObject.getUniformLocation(UNIFORM_ALPHA), alpha);
 

@@ -2,11 +2,10 @@ package com.gotokeep.keep.composer.timeline;
 
 import android.util.SparseArray;
 
+import com.gotokeep.keep.composer.timeline.item.AudioItem;
+
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 
 /**
  * @author xana/cuixianming

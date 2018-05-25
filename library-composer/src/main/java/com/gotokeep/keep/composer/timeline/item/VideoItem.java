@@ -1,4 +1,6 @@
-package com.gotokeep.keep.composer.timeline;
+package com.gotokeep.keep.composer.timeline.item;
+
+import com.gotokeep.keep.composer.timeline.MediaItem;
 
 /**
  * @author xana/cuixianming
@@ -11,5 +13,9 @@ public class VideoItem extends MediaItem {
     public VideoItem(String filePath) {
         super(TYPE_SOURCE, 0, null);
         this.filePath = filePath;
+    }
+
+    public String getFilePath() {
+        return filePath;
     }
 }

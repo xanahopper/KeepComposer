@@ -11,6 +11,13 @@ import com.gotokeep.keep.composer.overlay.OverlayProvider;
 import com.gotokeep.keep.composer.overlay.WatermarkOverlay;
 import com.gotokeep.keep.composer.source.ImageMediaSource;
 import com.gotokeep.keep.composer.source.VideoMediaSource;
+import com.gotokeep.keep.composer.timeline.item.AudioItem;
+import com.gotokeep.keep.composer.timeline.item.FilterItem;
+import com.gotokeep.keep.composer.timeline.item.ImageItem;
+import com.gotokeep.keep.composer.timeline.item.LayerItem;
+import com.gotokeep.keep.composer.timeline.item.TransitionItem;
+import com.gotokeep.keep.composer.timeline.item.VideoItem;
+import com.gotokeep.keep.composer.timeline.item.WatermarkItem;
 import com.gotokeep.keep.composer.transition.MediaTransitionFactory;
 
 import java.util.HashMap;
@@ -36,14 +43,14 @@ public class RenderFactory {
     public RenderFactory(OverlayProvider overlayProvider) {
         this.overlayProvider = overlayProvider;
         registerRenderType(VideoItem.class, item -> {
-            VideoMediaSource source = new VideoMediaSource(item.filePath);
-            source.setPlaySpeed(item.playSpeed);
+            VideoMediaSource source = new VideoMediaSource(item.getFilePath());
+            source.setPlaySpeed(item.getPlaySpeed());
             return source;
         });
-        registerRenderType(ImageItem.class, item -> new ImageMediaSource(item.filePath));
-        registerRenderType(TransitionItem.class, item -> MediaTransitionFactory.getTransition(item.name, item.durationMs));
+        registerRenderType(ImageItem.class, item -> new ImageMediaSource(item.getFilePath()));
+        registerRenderType(TransitionItem.class, item -> MediaTransitionFactory.getTransition(item.getName(), item.getDurationMs()));
         registerRenderType(LayerItem.class, item -> {
-            MediaOverlay overlay = new LayerOverlay(overlayProvider.getLayerImagePath(item.name));
+            MediaOverlay overlay = new LayerOverlay(overlayProvider.getLayerImagePath(item.getName()));
             overlay.initWithMediaItem(item);
             return overlay;
         });
@@ -61,26 +68,13 @@ public class RenderFactory {
             overlay.initWithMediaItem(item);
             return overlay;
         });
-//        registerRenderType(OverlayItem.class, item -> {
-//            MediaOverlay overlay = null;
-//            if (OverlayItem.TYPE_LAYER.equals(item.type)) {
-//                overlay = new LayerOverlay(overlayProvider.getLayerImagePath(item.name));
-//            } else if (OverlayItem.TYPE_WATERMARK.equals(item.type)) {
-//                overlay = new WatermarkOverlay();
-//            } else if (OverlayItem.TYPE_SUBTITLE.equals(item.type)) {
-//                overlay = new SubtitleOverlay();
-//            }
-//            if (overlay != null) {
-//                overlay.initWithMediaItem(item);
-//            }
-//            return overlay;
-//        });
+
         registerRenderType(FilterItem.class, item -> {
-            MediaFilter filter = FilterFactory.getExternalFilter(item.name);
+            MediaFilter filter = FilterFactory.getExternalFilter(item.getName());
             if (filter != null) {
-                filter.setFilterParameters(item.params);
-                filter.setStartTimeMs(item.startTimeMs);
-                filter.setEndTimeMs(item.endTimeMs);
+                filter.setFilterParameters(item.getParams());
+                filter.setStartTimeMs(item.getStartTimeMs());
+                filter.setEndTimeMs(item.getEndTimeMs());
             }
             return filter;
         });

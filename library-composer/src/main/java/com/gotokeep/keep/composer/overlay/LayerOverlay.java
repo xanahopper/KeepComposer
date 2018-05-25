@@ -7,7 +7,7 @@ import android.opengl.GLES20;
 import android.opengl.GLUtils;
 import android.util.Log;
 
-import com.gotokeep.keep.composer.RenderTexture;
+import com.gotokeep.keep.composer.gles.RenderTexture;
 import com.gotokeep.keep.composer.gles.ProgramObject;
 import com.gotokeep.keep.composer.util.MediaUtil;
 
@@ -23,6 +23,11 @@ public class LayerOverlay extends MediaOverlay {
 
     public LayerOverlay(String layerImagePath) {
         this.layerImagePath = layerImagePath;
+    }
+
+    @Override
+    protected void onPreload() {
+
     }
 
     @Override
@@ -67,6 +72,6 @@ public class LayerOverlay extends MediaOverlay {
 
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 
-        Log.d("MediaOverlay", "render layer");
+//        Log.d("MediaOverlay", "render layer");
     }
 }

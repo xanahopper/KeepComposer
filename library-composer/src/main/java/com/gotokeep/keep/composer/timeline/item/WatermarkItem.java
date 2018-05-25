@@ -1,4 +1,4 @@
-package com.gotokeep.keep.composer.timeline;
+package com.gotokeep.keep.composer.timeline.item;
 
 /**
  * @author xana/cuixianming

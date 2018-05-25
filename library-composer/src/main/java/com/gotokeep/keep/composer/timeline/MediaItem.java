@@ -21,12 +21,12 @@ public abstract class MediaItem implements Comparable<MediaItem> {
 
     private static Comparator<? super MediaItem> comparator;
 
-    long startTimeMs;
-    long endTimeMs;
-    float playSpeed = 1f;
-    SparseArray<MediaItem> baseItem = new SparseArray<>();
-    int type;
-    int layer;
+    protected long startTimeMs;
+    protected long endTimeMs;
+    protected float playSpeed = 1f;
+    protected SparseArray<MediaItem> baseItem = new SparseArray<>();
+    protected int type;
+    protected int layer;
 
     public MediaItem(int type, int layer, MediaItem baseItem) {
         this.type = type;

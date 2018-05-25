@@ -1,9 +1,6 @@
 package com.gotokeep.keep.composer;
 
-import android.graphics.Matrix;
-import android.graphics.RectF;
-
-import com.gotokeep.keep.composer.timeline.LayerItem;
+import com.gotokeep.keep.composer.timeline.item.LayerItem;
 import com.gotokeep.keep.composer.timeline.MediaItem;
 
 import org.junit.Test;

@@ -8,7 +8,6 @@ import android.graphics.RectF;
 import android.opengl.GLUtils;
 import android.text.TextPaint;
 
-import com.gotokeep.keep.composer.RenderTexture;
 import com.gotokeep.keep.composer.gles.ProgramObject;
 
 /**

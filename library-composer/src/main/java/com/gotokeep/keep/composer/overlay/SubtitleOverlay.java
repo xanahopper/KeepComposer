@@ -10,6 +10,11 @@ import com.gotokeep.keep.composer.gles.ProgramObject;
 public class SubtitleOverlay extends MediaOverlay {
 
     @Override
+    protected void onPreload() {
+
+    }
+
+    @Override
     protected void onPrepare() {
         super.onPrepare();
     }

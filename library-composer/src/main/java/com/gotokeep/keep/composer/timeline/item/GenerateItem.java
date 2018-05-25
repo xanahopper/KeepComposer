@@ -1,4 +1,6 @@
-package com.gotokeep.keep.composer.timeline;
+package com.gotokeep.keep.composer.timeline.item;
+
+import com.gotokeep.keep.composer.timeline.MediaItem;
 
 /**
  * @author xana/cuixianming

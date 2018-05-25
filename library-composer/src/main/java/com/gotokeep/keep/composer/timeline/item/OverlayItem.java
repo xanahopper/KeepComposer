@@ -1,7 +1,9 @@
-package com.gotokeep.keep.composer.timeline;
+package com.gotokeep.keep.composer.timeline.item;
 
 import android.os.Build;
 import android.util.Log;
+
+import com.gotokeep.keep.composer.timeline.MediaItem;
 
 /**
  * @author xana/cuixianming

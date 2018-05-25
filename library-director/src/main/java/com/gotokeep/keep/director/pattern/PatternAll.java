@@ -3,13 +3,13 @@ package com.gotokeep.keep.director.pattern;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
-import com.gotokeep.keep.composer.timeline.AudioItem;
-import com.gotokeep.keep.composer.timeline.FilterItem;
-import com.gotokeep.keep.composer.timeline.OverlayItem;
+import com.gotokeep.keep.composer.timeline.item.AudioItem;
+import com.gotokeep.keep.composer.timeline.item.FilterItem;
+import com.gotokeep.keep.composer.timeline.item.OverlayItem;
 import com.gotokeep.keep.composer.timeline.Timeline;
 import com.gotokeep.keep.composer.timeline.Track;
-import com.gotokeep.keep.composer.timeline.TransitionItem;
-import com.gotokeep.keep.composer.timeline.VideoItem;
+import com.gotokeep.keep.composer.timeline.item.TransitionItem;
+import com.gotokeep.keep.composer.timeline.item.VideoItem;
 import com.gotokeep.keep.director.MediaFactory;
 import com.gotokeep.keep.director.SelectPattern;
 import com.gotokeep.keep.director.VideoFragment;

@@ -11,11 +11,10 @@ import com.gotokeep.keep.composer.MediaComposerFactory;
 import com.gotokeep.keep.composer.demo.SampleActivity;
 import com.gotokeep.keep.composer.demo.source.SourceProvider;
 import com.gotokeep.keep.composer.overlay.OverlayProvider;
-import com.gotokeep.keep.composer.timeline.AudioItem;
-import com.gotokeep.keep.composer.timeline.ImageItem;
+import com.gotokeep.keep.composer.timeline.item.AudioItem;
+import com.gotokeep.keep.composer.timeline.item.ImageItem;
 import com.gotokeep.keep.composer.timeline.Timeline;
 import com.gotokeep.keep.composer.timeline.Track;
-import com.gotokeep.keep.composer.timeline.VideoItem;
 import com.gotokeep.keep.composer.util.TimeUtil;
 
 /**

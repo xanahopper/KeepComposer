@@ -138,7 +138,7 @@ public final class AudioSource {
                     buffer.clear();
                     audioDecoder.releaseOutputBuffer(outputIndex, false);
                     decoded = true;
-                    Log.d("AudioSource", "doRender: rendered a buffer " + this.presentationTimeUs + ", " + positionUs);
+//                    Log.d("AudioSource", "doRender: rendered a buffer " + this.presentationTimeUs + ", " + positionUs);
                     break;
             }
         }

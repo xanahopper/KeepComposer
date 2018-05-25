@@ -13,7 +13,7 @@ import android.view.TextureView;
 import com.gotokeep.keep.composer.source.AudioSource;
 import com.gotokeep.keep.composer.target.MuxerRenderTarget;
 import com.gotokeep.keep.composer.target.PreviewRenderTarget;
-import com.gotokeep.keep.composer.timeline.AudioItem;
+import com.gotokeep.keep.composer.timeline.item.AudioItem;
 import com.gotokeep.keep.composer.timeline.MediaItem;
 import com.gotokeep.keep.composer.timeline.RenderFactory;
 import com.gotokeep.keep.composer.timeline.Timeline;
@@ -103,11 +103,11 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
 
         this.renderFactory = renderFactory;
 
-        this.videoThread = new HandlerThread("ComposerImpl:video");
+        this.videoThread = new HandlerThread("ComposerImpl:video", HandlerThread.MAX_PRIORITY);
         this.videoThread.start();
         this.videoHandler = new Handler(videoThread.getLooper(), this);
 
-        this.audioThread = new HandlerThread("ComposerImpl:audio");
+        this.audioThread = new HandlerThread("ComposerImpl:audio", HandlerThread.MAX_PRIORITY);
         this.audioThread.start();
         this.audioHandler = new Handler(audioThread.getLooper(), this);
 
@@ -399,7 +399,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         long operationStartMs = SystemClock.elapsedRealtime();
         videoTimeUs = debugMode ? debugPositionUs : getCurrentTimeUs();
         if (renderRoot == null) {
-            Log.d(TAG, "doRenderWork: RenderRoot is empty");
+//            Log.d(TAG, "doRenderWork: RenderRoot is empty");
             if (eventHandler != null) {
                 eventHandler.sendEmptyMessage(export ? EVENT_EXPORT_COMPLETE : EVENT_PLAY_STOP);
             }
@@ -415,10 +415,10 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
 
         renderRoot.setViewport(canvasWidth, canvasHeight);
         long renderTimeUs = renderRoot.acquireFrame(videoTimeUs);
-        Log.d(TAG, "doRenderWork: " + renderTimeUs + " " + videoTimeUs);
+//        Log.d(TAG, "doRenderWork: " + renderTimeUs + " " + videoTimeUs);
         if (renderTarget != null) {
             if (renderTimeUs >= videoTimeUs) {
-                Log.d(TAG, "doRenderWork: has frame and render to target");
+//                Log.d(TAG, "doRenderWork: has frame and render to target");
                 // render result to RenderTarget
                 videoTimeUs = renderTimeUs;
                 if (export) {

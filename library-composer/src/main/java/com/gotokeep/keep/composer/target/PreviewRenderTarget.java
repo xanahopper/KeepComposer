@@ -48,7 +48,6 @@ public class PreviewRenderTarget extends RenderTarget implements SurfaceTexture.
 
     @Override
     public void updateFrame(RenderNode renderNode, long presentationTimeUs, ComposerEngine engine) {
-        Log.d("Composer", "PreviewRenderTarget#updateFrame: " + presentationTimeUs);
         programObject.use();
         GLES20.glBindAttribLocation(programObject.getProgramId(), 0, ProgramObject.ATTRIBUTE_POSITION);
         GLES20.glBindAttribLocation(programObject.getProgramId(), 1, ProgramObject.ATTRIBUTE_TEX_COORDS);

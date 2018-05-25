@@ -1,7 +1,6 @@
 package com.gotokeep.keep.composer.filter;
 
 import com.gotokeep.keep.composer.RenderNode;
-import com.gotokeep.keep.composer.RenderTexture;
 import com.gotokeep.keep.composer.gles.ProgramObject;
 
 import java.util.Map;

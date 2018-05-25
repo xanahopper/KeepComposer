@@ -14,7 +14,7 @@ import java.util.List;
  * @version 1.0
  * @since 2018-05-18 16:08
  */
-public final class Track {
+public class Track {
     private static Comparator<? super Track> comparator;
 
     private final List<MediaItem> items = new LinkedList<>();
@@ -77,10 +77,10 @@ public final class Track {
             if (item.getEndTimeMs() > endTimeMs) {
                 endTimeMs = item.getEndTimeMs();
             }
-//            RenderNode node = renderFactory.createRenderNode(item);
-//            if (node != null && !node.isPrepared()) {
-//                node.prepareVideo();
-//            }
+            RenderNode node = renderFactory.createRenderNode(item);
+            if (node != null) {
+                node.preload();
+            }
         }
     }
 
