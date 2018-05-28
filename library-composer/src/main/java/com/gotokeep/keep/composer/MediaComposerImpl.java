@@ -348,6 +348,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         mediaClock.stop();
         videoHandler.removeMessages(MSG_DO_SOME_WORK);
         audioHandler.removeMessages(MSG_DO_AUDIO_WORK);
+        renderTarget.complete();
         if (eventHandler != null) {
             eventHandler.sendEmptyMessage(export ? EVENT_EXPORT_COMPLETE : EVENT_PLAY_STOP);
         }
@@ -409,7 +410,6 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
             return;
         }
         if (videoTimeUs > TimeUtil.msToUs(timeline.getEndTimeMs())) {
-            renderTarget.complete();
             stop();
             return;
         }
@@ -435,7 +435,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
             }
             if (export) {
                 if (renderTimeUs <= exportTimeUs) {
-                    exportTimeUs += TimeUtil.msToUs(frameIntervalUs);
+                    exportTimeUs += frameIntervalUs;
                 } else {
                     exportTimeUs = renderTimeUs;
                 }

@@ -55,7 +55,8 @@ public class SimplestActivity extends SampleActivity implements Handler.Callback
         timeline = new Timeline();
         VideoItem startItem = new VideoItem(SourceProvider.VIDEO_SRC[1]);
         startItem.setStartTimeMs(0);
-        startItem.setEndTimeMs(TimeUtil.secToMs(10));
+        startItem.setEndTimeMs(4500);
+        startItem.setPlaySpeed(5f);
 //        VideoItem endItem = new VideoItem(SourceProvider.VIDEO_SRC[1]);
 //        endItem.setStartTimeMs(TimeUtil.secToMs(10));
 //        endItem.setEndTimeMs(TimeUtil.secToMs(20));

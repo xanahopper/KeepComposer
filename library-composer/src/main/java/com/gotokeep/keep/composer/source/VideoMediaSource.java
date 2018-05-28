@@ -116,13 +116,23 @@ public class VideoMediaSource extends MediaSource {
             int inputIndex = decoder.dequeueInputBuffer(TIMEOUT_US);
             if (inputIndex >= 0) {
                 ByteBuffer buffer = MediaUtil.getInputBuffer(decoder, inputIndex);
-                buffer.clear();
-                int bufferSize = extractor.readSampleData(buffer, 0);
-                sampleTimeUs = extractor.getSampleTime();
-                sampleFlags = extractor.getSampleFlags();
-                decoder.queueInputBuffer(inputIndex, 0, bufferSize, sampleTimeUs, sampleFlags);
-                if (!extractor.advance()) {
-                    ended = true;
+                int bufferSize;
+//                do {
+                    buffer.clear();
+                    bufferSize = extractor.readSampleData(buffer, 0);
+                    sampleTimeUs = extractor.getSampleTime();
+                    sampleFlags = extractor.getSampleFlags();
+                    if (!extractor.advance() || sampleTimeUs < 0) {
+                        ended = true;
+                    }
+                    Log.d("VideoMediaSource", "readSampleData: sampleTimeUs = " + sampleTimeUs + ", flags = " +
+                            sampleFlags);
+//                } while (sampleTimeUs <= actualTimeUs &&
+//                        ((sampleFlags & MediaExtractor.SAMPLE_FLAG_SYNC) == 0) &&
+//                        !ended);
+                Log.d("VideoMediaSource", "render: feed to decoder input buffer " + sampleTimeUs);
+                if (!ended) {
+                    decoder.queueInputBuffer(inputIndex, 0, bufferSize, sampleTimeUs, sampleFlags);
                 }
             } else {
                 Log.w("VideoMediaSource", "doRender: cannot dequeue input buffer from decoder, reason: " + inputIndex);
@@ -130,6 +140,7 @@ public class VideoMediaSource extends MediaSource {
             int outputIndex = decoder.dequeueOutputBuffer(decodeInfo, TIMEOUT_US);
             if (outputIndex > 0) {
                 this.presentationTimeUs = decodeInfo.presentationTimeUs;
+                boolean keyFrame = (decodeInfo.flags & MediaCodec.BUFFER_FLAG_SYNC_FRAME) != 0;
                 decoder.releaseOutputBuffer(outputIndex, presentationTimeUs >= actualTimeUs);
                 encoded = presentationTimeUs >= actualTimeUs;
             }

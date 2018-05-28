@@ -99,6 +99,9 @@ public class MuxerRenderTarget extends RenderTarget {
 
     @Override
     public void updateAudioChunk(AudioSource audioSource) {
+        while (audioTrackIndex >= 0 && !muxing) {
+            // wait for mux begin
+        }
         drainAudioEncoder(audioSource);
         if (audioTrackIndex < 0 && audioOutputFormat != null) {
             audioTrackIndex = muxer.addTrack(audioOutputFormat);
@@ -200,6 +203,7 @@ public class MuxerRenderTarget extends RenderTarget {
                     muxer.writeSampleData(videoTrackIndex, outputBuffer, videoInfo);
                 }
                 if ((videoInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
+                    Log.d("muxer", "drainVideoEncoder: end");
                     videoEncoderDone = true;
                 }
             }
@@ -247,7 +251,10 @@ public class MuxerRenderTarget extends RenderTarget {
                     audioEncoder.releaseOutputBuffer(outputIndex, false);
                     return;
                 }
-                if (audioInfo.size != 0) {
+
+                if (audioInfo.size > 0 && audioInfo.presentationTimeUs >= 0) {
+                    Log.d("Muxer", "writeSampleData: " + audioInfo.size + ", " + audioInfo.presentationTimeUs + ", " +
+                             + audioInfo.flags + ", " + outputBuffer.limit());
                     muxer.writeSampleData(audioTrackIndex, outputBuffer, audioInfo);
                 }
                 if ((audioInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
@@ -268,9 +275,11 @@ public class MuxerRenderTarget extends RenderTarget {
 
     @Override
     public void complete() {
-        if (videoEncoder != null && !videoEncoderDone) {
-            videoEncoder.signalEndOfInputStream();
-        }
+        Log.d("muxer", "complete");
+//        if (videoEncoder != null && !videoEncoderDone) {
+//            Log.d("muxer", "complete: video done");
+//            videoEncoder.signalEndOfInputStream();
+//        }
 //        if (audioEncoder != null && !audioEncoderDone) {
 //            audioEncoder.signalEndOfInputStream();
 //        }

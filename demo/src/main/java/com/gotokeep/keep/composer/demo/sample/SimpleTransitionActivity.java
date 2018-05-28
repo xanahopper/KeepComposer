@@ -91,7 +91,7 @@ public class SimpleTransitionActivity extends SampleActivity implements Handler.
             VideoItem item2 = new VideoItem(SourceProvider.VIDEO_SRC[1]);
             item2.setStartTimeMs(TimeUtil.secToMs(3));
             item2.setEndTimeMs(TimeUtil.secToMs(6));
-            item2.setPlaySpeed(2f);
+            item2.setPlaySpeed(5f);
             VideoItem item3 = new VideoItem(SourceProvider.VIDEO_SRC[0]);
             item3.setStartTimeMs(TimeUtil.secToMs(6));
             item3.setEndTimeMs(TimeUtil.secToMs(9));
