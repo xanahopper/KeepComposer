@@ -125,7 +125,7 @@ public class VideoMediaSource extends MediaSource {
                     ended = true;
                 }
             } else {
-                Log.w("VideoMediaSource", "doRender: cannot dequeue input buffer from decoder");
+                Log.w("VideoMediaSource", "doRender: cannot dequeue input buffer from decoder, reason: " + inputIndex);
             }
             int outputIndex = decoder.dequeueOutputBuffer(decodeInfo, TIMEOUT_US);
             if (outputIndex > 0) {
@@ -214,6 +214,7 @@ public class VideoMediaSource extends MediaSource {
         decodeTexture = new RenderTexture(RenderTexture.TEXTURE_EXTERNAL, "decodeTexture");
         decodeSurface = new Surface(decodeTexture.getSurfaceTexture());
         decoder = MediaCodec.createDecoderByType(mime);
+        Log.d("VideoMediaSource", "decoder name: " + decoder.getName());
         decoder.configure(format, decodeSurface, null, 0);
         decoder.start();
     }

@@ -1,6 +1,7 @@
 package com.gotokeep.keep.composer.overlay;
 
 import android.opengl.GLES20;
+import android.opengl.GLES30;
 import android.opengl.Matrix;
 import android.support.annotation.CallSuper;
 import android.util.Log;

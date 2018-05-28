@@ -93,6 +93,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     private AtomicBoolean playing = new AtomicBoolean(false);
     private long elapsedRealtimeUs;
     private long exportTimeUs = 0;
+    private long frameIntervalUs = 0;
 
     private boolean debugMode = false;
     private long debugPositionUs = 0;
@@ -295,6 +296,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         releaseRenderTarget();
         export = true;
         renderTarget = new MuxerRenderTarget(exportConfiguration);
+        frameIntervalUs = TimeUtil.BILLION_US / exportConfiguration.getFrameRate();
         videoWidth = canvasWidth = exportConfiguration.getWidth();
         videoHeight = canvasHeight = exportConfiguration.getHeight();
         engine.setup(renderTarget.getInputSurface());
@@ -433,14 +435,14 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
             }
             if (export) {
                 if (renderTimeUs <= exportTimeUs) {
-                    exportTimeUs += TimeUtil.msToUs(30);
+                    exportTimeUs += TimeUtil.msToUs(frameIntervalUs);
                 } else {
                     exportTimeUs = renderTimeUs;
                 }
             }
         }
-        cleanupInvalidRenderNode(videoTimeUs);
-        renderRoot = generateRenderTree(videoTimeUs);
+//        cleanupInvalidRenderNode(videoTimeUs);
+        renderRoot = generateRenderTree(export ? exportTimeUs : videoTimeUs);
         if (renderRoot != null) {
             scheduleNextWork(operationStartMs, 10);
         } else {

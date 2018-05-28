@@ -63,7 +63,7 @@ public class LayerOverlay extends MediaOverlay {
         // draw layer
 //        GLES20.glEnable(GLES20.GL_BLEND);
         overlayProgramObject.use();
-        activeAttribData();
+//        activeAttribData();
         layerTexture.bind(0);
         updateLayerMatrix();
         GLES20.glUniformMatrix4fv(overlayProgramObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
