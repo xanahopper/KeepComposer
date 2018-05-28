@@ -33,7 +33,7 @@ public class TransitionItem extends MediaItem {
             this.endTimeMs = endItem.getStartTimeMs() + durationMs / 2;
             startItem.setEndTimeMs(endTimeMs);
             endItem.setStartTimeMs(startTimeMs);
-        } else if (startItem.getEndTimeMs() > endItem.getStartTimeMs() && startItem.getEndTimeMs() - endItem.getEndTimeMs() == durationMs) {
+        } else if (startItem.getEndTimeMs() > endItem.getStartTimeMs() && startItem.getEndTimeMs() - endItem.getStartTimeMs() == durationMs) {
             this.startTimeMs = endItem.getStartTimeMs();
             this.endTimeMs = startItem.getEndTimeMs();
         } else {

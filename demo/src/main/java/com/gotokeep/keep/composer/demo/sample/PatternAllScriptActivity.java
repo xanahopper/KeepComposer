@@ -98,19 +98,23 @@ public class PatternAllScriptActivity extends SampleActivity implements Handler.
             VideoFragment videoFragment = new VideoFragment(SourceProvider.VIDEO_FRAGMENT[i], i, null);
             videoFragments.add(videoFragment);
         }
-        KeepDirector director = new KeepDirector(scriptText);
+        KeepDirector director = new KeepDirector(getApplicationContext(), scriptText);
+        boolean verified = director.verifyScript();
+        if (verified) {
+            try {
+                timeline = director.buildTimeline(videoFragments);
+            } catch (UnsuitableException e) {
+                Toast.makeText(this, "视频数量不符，不能使用此模板", Toast.LENGTH_SHORT).show();
+                composer.release();
+                return;
+            }
 
-        try {
-            timeline = director.buildTimeline(videoFragments);
-        } catch (UnsuitableException e) {
-            Toast.makeText(this, "视频数量不符，不能使用此模板", Toast.LENGTH_SHORT).show();
-            composer.release();
-            return;
+            composer.setTimeline(timeline);
+            composer.prepare();
+            composer.play();
+        } else {
+            Toast.makeText(this, "脚本资源下载中，稍后再试", Toast.LENGTH_SHORT).show();
         }
-
-        composer.setTimeline(timeline);
-        composer.prepare();
-        composer.play();
     }
 
     @Override

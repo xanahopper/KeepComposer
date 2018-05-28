@@ -1,5 +1,8 @@
 package com.gotokeep.keep.director.data;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author xana/cuixianming
  * @version 1.0
@@ -94,5 +97,17 @@ public final class Overlay implements MediaData {
                 ", layer=" + layer +
                 ", watermark=" + watermark +
                 '}';
+    }
+
+    @Override
+    public List<String> getResources() {
+        List<String> resources = new ArrayList<>();
+        if (layer != null) {
+            resources.addAll(layer.getResources());
+        }
+        if (watermark != null) {
+            resources.addAll(watermark.getResources());
+        }
+        return resources;
     }
 }

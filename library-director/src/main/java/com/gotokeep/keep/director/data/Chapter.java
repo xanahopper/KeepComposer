@@ -1,5 +1,6 @@
 package com.gotokeep.keep.director.data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -117,5 +118,10 @@ public final class Chapter implements MediaData {
                 ", effect=" + effect +
                 ", music=" + music +
                 '}';
+    }
+
+    @Override
+    public List<String> getResources() {
+        return new ArrayList<>();
     }
 }

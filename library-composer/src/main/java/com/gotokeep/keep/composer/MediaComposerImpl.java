@@ -21,6 +21,7 @@ import com.gotokeep.keep.composer.util.MediaClock;
 import com.gotokeep.keep.composer.util.TimeUtil;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -438,7 +439,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
                 }
             }
         }
-
+        cleanupInvalidRenderNode(videoTimeUs);
         renderRoot = generateRenderTree(videoTimeUs);
         if (renderRoot != null) {
             scheduleNextWork(operationStartMs, 10);
@@ -514,6 +515,17 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
             }
         }
         return root;
+    }
+
+    private void cleanupInvalidRenderNode(long presentationTimeUs) {
+        Iterator<Map.Entry<MediaItem, RenderNode>> iterator = renderNodeMap.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<MediaItem, RenderNode> entry = iterator.next();
+            if (TimeUtil.usToMs(presentationTimeUs) > entry.getKey().getEndTimeMs()) {
+                entry.getValue().release();
+                iterator.remove();
+            }
+        }
     }
 
 //    private RenderNode maintainRenderTree(RenderNode root, long presentationTimeUs) {

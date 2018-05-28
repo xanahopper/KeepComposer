@@ -1,5 +1,8 @@
 package com.gotokeep.keep.director.data;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author xana/cuixianming
  * @version 1.0
@@ -36,5 +39,10 @@ public final class Music implements MediaData {
                 "id='" + id + '\'' +
                 ", url='" + url + '\'' +
                 '}';
+    }
+
+    @Override
+    public List<String> getResources() {
+        return new ArrayList<>();
     }
 }

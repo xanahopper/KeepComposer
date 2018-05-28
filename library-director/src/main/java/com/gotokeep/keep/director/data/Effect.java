@@ -1,5 +1,8 @@
 package com.gotokeep.keep.director.data;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author xana/cuixianming
  * @version 1.0
@@ -47,5 +50,10 @@ public final class Effect implements MediaData {
                 ", startTime=" + startTime +
                 ", endTime=" + endTime +
                 '}';
+    }
+
+    @Override
+    public List<String> getResources() {
+        return new ArrayList<>();
     }
 }

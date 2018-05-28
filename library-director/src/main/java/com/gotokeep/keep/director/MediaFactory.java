@@ -4,12 +4,17 @@ import com.gotokeep.keep.composer.filter.FilterFactory;
 import com.gotokeep.keep.composer.timeline.MediaItem;
 import com.gotokeep.keep.composer.timeline.item.FilterItem;
 import com.gotokeep.keep.composer.timeline.item.ImageItem;
+import com.gotokeep.keep.composer.timeline.item.LayerItem;
+import com.gotokeep.keep.composer.timeline.item.OverlayItem;
 import com.gotokeep.keep.composer.timeline.item.TransitionItem;
 import com.gotokeep.keep.composer.timeline.item.VideoItem;
+import com.gotokeep.keep.composer.timeline.item.WatermarkItem;
 import com.gotokeep.keep.composer.util.MediaUtil;
 import com.gotokeep.keep.director.data.Chapter;
 import com.gotokeep.keep.director.data.Filter;
+import com.gotokeep.keep.director.data.LayerOverlay;
 import com.gotokeep.keep.director.data.MediaData;
+import com.gotokeep.keep.director.data.Overlay;
 import com.gotokeep.keep.director.data.Transition;
 
 import java.util.HashMap;
@@ -30,31 +35,46 @@ public final class MediaFactory {
     }
 
     static {
-        registerCreator(Chapter.class, item -> {
+        registerCreator(Chapter.class, (manager, item) -> {
             String mime = MediaUtil.getMime(item.getSource());
             if (mime.startsWith("image/")) {
-                return new ImageItem(item.getSource());
+                return new ImageItem(manager.getCacheFilePath(item.getSource()));
             } else if (mime.startsWith("video/")) {
-                return new VideoItem(item.getSource());
+                return new VideoItem(manager.getCacheFilePath(item.getSource()));
             } else {
                 return null;
             }
         });
 
-        registerCreator(Filter.class, item -> new FilterItem(item.getName(), item.getParams()));
+        registerCreator(Filter.class, (manager, item) -> new FilterItem(item.getName(), item.getParams()));
 
-        registerCreator(Transition.class, item -> new TransitionItem(null, null, item.getDuration(), 0));
+        registerCreator(Transition.class, (manager, item) -> new TransitionItem(null, null, item.getDuration(), 0));
+
+        registerCreator(Overlay.class, (manager, item) -> {
+            if (item.getLayer() != null) {
+                LayerItem layerItem = new LayerItem(manager.getCacheFilePath(item.getLayer().getUrl()));
+                layerItem.setTimeRangeMs(item.getStartTime(), item.getEndTime());
+                layerItem.setScale(item.getScale());
+                layerItem.setOffsetX(item.getOffsetX());
+                layerItem.setOffsetY(item.getOffsetY());
+                layerItem.setRotation(item.getRotation());
+                layerItem.setPosition(item.getPosition());
+                return layerItem;
+            } else {
+                return new WatermarkItem(0);
+            }
+        });
     }
 
     @SuppressWarnings("unchecked")
     public static <M extends MediaData, T extends MediaItem> T
-    createMediaItem(M mediaData) {
+    createMediaItem(ResourceManager resourceManager, M mediaData) {
         if (mediaData == null) {
             return null;
         }
         MediaItemCreator<M, T> creator = (MediaItemCreator<M, T>) creatorMap.get(mediaData.getClass());
         if (creator != null) {
-            return creator.createMediaItem(mediaData);
+            return creator.createMediaItem(resourceManager, mediaData);
         } else {
             return null;
         }
@@ -62,19 +82,19 @@ public final class MediaFactory {
 
     @SuppressWarnings("unchecked")
     public static <M extends MediaData, T extends MediaItem> T
-    createMediaItem(M mediaData, Class<T> dataType) {
+    createMediaItem(ResourceManager resourceManager, M mediaData, Class<T> dataType) {
         if (mediaData == null) {
             return null;
         }
         MediaItemCreator<M, T> creator = (MediaItemCreator<M, T>) creatorMap.get(mediaData.getClass());
         if (creator != null) {
-            return creator.createMediaItem(mediaData);
+            return creator.createMediaItem(resourceManager, mediaData);
         } else {
             return null;
         }
     }
 
     public interface MediaItemCreator<M extends MediaData, T extends MediaItem> {
-        T createMediaItem(M mediaData);
+        T createMediaItem(ResourceManager resourceManager, M mediaData);
     }
 }

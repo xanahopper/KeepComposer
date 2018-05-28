@@ -9,15 +9,16 @@
     "pattern": "all",
     "duration": 30000,
     "filter": {
-      "name": "sepia_tone"
+      "name": "sunset"
     },
     "overlay": [
       {
         "startTime": 0,
         "endTime": 2000,
         "position": "center",
+        "scale": 0.5,
         "layer": {
-          "url": "https://img3.doubanio.com/view/photo/l/public/p2497773806.jpg",
+          "url": "https://staticweb.keepcdn.com/show/images/homepage/slogan-cfd33df7dd.png",
           "width": 200,
           "height": 200
         }

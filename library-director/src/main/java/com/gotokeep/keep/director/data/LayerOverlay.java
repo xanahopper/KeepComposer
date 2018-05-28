@@ -1,5 +1,10 @@
 package com.gotokeep.keep.director.data;
 
+import com.gotokeep.keep.composer.timeline.item.OverlayItem;
+
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author xana/cuixianming
  * @version 1.0
@@ -36,5 +41,12 @@ public final class LayerOverlay implements MediaData {
                 "id='" + id + '\'' +
                 ", url='" + url + '\'' +
                 '}';
+    }
+
+    @Override
+    public List<String> getResources() {
+        List<String> result = new ArrayList<>();
+        result.add(url);
+        return result;
     }
 }

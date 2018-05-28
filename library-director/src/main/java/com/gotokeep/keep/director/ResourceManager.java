@@ -1,7 +1,14 @@
 package com.gotokeep.keep.director;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
+import android.util.Log;
 import android.webkit.MimeTypeMap;
+import android.widget.Toast;
+
+import com.liulishuo.filedownloader.BaseDownloadTask;
+import com.liulishuo.filedownloader.FileDownloadSampleListener;
+import com.liulishuo.filedownloader.FileDownloader;
 
 import java.io.File;
 import java.security.MessageDigest;
@@ -14,12 +21,13 @@ import java.security.NoSuchAlgorithmException;
  * @version 1.0
  * @since 2018-05-25 18:15
  */
-public final class ResourceManager {
+public final class ResourceManager extends FileDownloadSampleListener {
     private Context context;
     private File cacheDir = null;
 
     private ResourceManager(Context context) {
         this.context = context;
+        FileDownloader.setup(context);
     }
 
     private static final class InstanceHolder {
@@ -37,7 +45,7 @@ public final class ResourceManager {
 
     public void init(String cacheDirPath) {
         synchronized (this) {
-            if (cacheDir != null) {
+            if (cacheDir == null) {
                 cacheDir = new File(cacheDirPath);
             }
         }
@@ -47,15 +55,34 @@ public final class ResourceManager {
         return path != null && (path.startsWith("/") || path.startsWith("file:/"));
     }
 
-    public File getCacheFilePath(String resourcePath) {
+    public String getCacheFilePath(String resourcePath) {
         if (isLocalFile(resourcePath)) {
-            return new File(resourcePath);
+            return resourcePath;
         } else {
-            return new File(cacheDir, MD5(resourcePath) + MimeTypeMap.getFileExtensionFromUrl(resourcePath));
+            return new File(cacheDir, getFileName(resourcePath)).getAbsolutePath();
         }
     }
 
+    public boolean isResourceCached(String url) {
+        File file = new File(getCacheFilePath(url));
+        return file.exists();
+    }
 
+    public void cacheFiile(String url) {
+        if (isLocalFile(url)) {
+            return;
+        }
+        String path = getCacheFilePath(url);
+        FileDownloader.getImpl().create(url)
+                .setPath(path)
+                .setListener(this)
+                .start();
+    }
+
+    @NonNull
+    public static String getFileName(String resourcePath) {
+        return MD5(resourcePath) + "." + MimeTypeMap.getFileExtensionFromUrl(resourcePath);
+    }
 
     public static String MD5(String sourceStr) {
         String result = "";
@@ -80,4 +107,15 @@ public final class ResourceManager {
         return result;
     }
 
+    @Override
+    protected void completed(BaseDownloadTask task) {
+        Toast.makeText(context, task.getUrl() + "下载完毕", Toast.LENGTH_SHORT).show();
+        Log.d("Director", "completed: " + task.getUrl());
+    }
+
+    @Override
+    protected void error(BaseDownloadTask task, Throwable e) {
+        Toast.makeText(context, task.getUrl() + "下载错误", Toast.LENGTH_SHORT).show();
+        Log.e("Director", "error: " + task.getUrl(), e);
+    }
 }

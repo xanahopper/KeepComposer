@@ -1,5 +1,8 @@
 package com.gotokeep.keep.director.data;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author xana/cuixianming
  * @version 1.0
@@ -36,5 +39,10 @@ public final class Transition implements MediaData {
                 "name='" + name + '\'' +
                 ", duration=" + duration +
                 '}';
+    }
+
+    @Override
+    public List<String> getResources() {
+        return new ArrayList<>();
     }
 }

@@ -1,5 +1,6 @@
 package com.gotokeep.keep.composer.timeline;
 
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.gotokeep.keep.composer.RenderNode;
@@ -50,7 +51,8 @@ public class RenderFactory {
         registerRenderType(ImageItem.class, item -> new ImageMediaSource(item.getFilePath()));
         registerRenderType(TransitionItem.class, item -> MediaTransitionFactory.getTransition(item.getName(), item.getDurationMs()));
         registerRenderType(LayerItem.class, item -> {
-            MediaOverlay overlay = new LayerOverlay(overlayProvider.getLayerImagePath(item.getName()));
+            String filePath = TextUtils.isEmpty(item.getUrl()) ? overlayProvider.getLayerImagePath(item.getName()) : item.getUrl();
+            MediaOverlay overlay = new LayerOverlay(filePath);
             overlay.initWithMediaItem(item);
             return overlay;
         });

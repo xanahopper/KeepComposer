@@ -1,5 +1,7 @@
 package com.gotokeep.keep.director.data;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -33,5 +35,10 @@ public final class Filter implements MediaData {
                 "name='" + name + '\'' +
                 ", params=" + params +
                 '}';
+    }
+
+    @Override
+    public List<String> getResources() {
+        return new ArrayList<>();
     }
 }
