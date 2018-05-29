@@ -33,7 +33,7 @@ public class ImageMediaSource extends MediaSource {
     }
 
     public ImageMediaSource(String filePath, int frameRate) {
-        super(TYPE_IMAGE);
+        super(TYPE_STATIC);
         this.filePath = filePath;
         this.presentationTimeUs = 0;
         this.intervalUs = TimeUtil.BILLION_US / frameRate;

@@ -93,8 +93,8 @@ public class PatternAll extends BasePattern {
                 sourceTrack.addMediaItem(header);
             }
             if (footer != null) {
-                sourceDurationMs -= chapterSet.getFooter().getDuration();
-                footer.setTimeRangeMs(totalDurationMs - chapterSet.getFooter().getDuration(), totalDurationMs);
+//                sourceDurationMs = chapterSet.getFooter().getDuration();
+                footer.setTimeRangeMs(totalDurationMs, totalDurationMs + chapterSet.getFooter().getDuration());
                 sourceTrack.addMediaItem(footer);
             }
         }

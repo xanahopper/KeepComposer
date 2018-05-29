@@ -22,6 +22,9 @@ import java.util.List;
  * @since 2018/5/12 15:28
  */
 public abstract class RenderNode {
+    public static final int NODE_SOURCE = 0;
+    public static final int NODE_RENDER = 1;
+
     private static final String TAG = RenderNode.class.getSimpleName();
     protected List<RenderNode> inputNodes = new ArrayList<>();
     protected RenderTexture renderTexture;
@@ -41,12 +44,12 @@ public abstract class RenderNode {
     protected boolean frameAvailable = false;
     protected boolean debugMode = false;
 
-    protected static final float[] DEFAULT_VERTEX_DATA = {
+    private static final float[] DEFAULT_VERTEX_DATA = {
             -1f, -1f, 0,
             1f, -1f, 0,
             -1f, 1f, 0,
             1f, 1f, 0};
-    static final short[] DEFAULT_TEX_COORDS_DATA = {0, 0, 1, 0, 0, 1, 1, 1};
+    private static final short[] DEFAULT_TEX_COORDS_DATA = {0, 0, 1, 0, 0, 1, 1, 1};
 
     protected FloatBuffer vertexBuffer;
     protected ShortBuffer texCoordBuffer;

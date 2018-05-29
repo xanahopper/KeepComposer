@@ -8,9 +8,8 @@ import com.gotokeep.keep.composer.RenderNode;
  * @since 2018/5/13 13:30
  */
 public abstract class MediaSource extends RenderNode {
-    public static final int TYPE_VIDEO = 0;
-    public static final int TYPE_IMAGE = 1;
-    public static final int TYPE_GENERATE = 2;
+    public static final int TYPE_DYNAMIC = 0;
+    public static final int TYPE_STATIC = 1;
 
     public static final int DURATION_INFINITE = -1;
 

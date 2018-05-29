@@ -275,7 +275,8 @@ public class MuxerRenderTarget extends RenderTarget {
 
     @Override
     public void complete() {
-        Log.d("muxer", "complete");
+        synchronized (this) {
+            Log.d("muxer", "complete");
 //        if (videoEncoder != null && !videoEncoderDone) {
 //            Log.d("muxer", "complete: video done");
 //            videoEncoder.signalEndOfInputStream();
@@ -283,9 +284,10 @@ public class MuxerRenderTarget extends RenderTarget {
 //        if (audioEncoder != null && !audioEncoderDone) {
 //            audioEncoder.signalEndOfInputStream();
 //        }
-        if (muxing) {
-            muxer.stop();
-            muxing = false;
+            if (muxing) {
+                muxer.stop();
+                muxing = false;
+            }
         }
     }
 

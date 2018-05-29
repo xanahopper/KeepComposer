@@ -6,9 +6,11 @@ import android.media.MediaFormat;
 import android.net.Uri;
 import android.opengl.GLES20;
 import android.os.Build;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.Surface;
 
+import com.gotokeep.keep.composer.RenderRequest;
 import com.gotokeep.keep.composer.gles.RenderTexture;
 import com.gotokeep.keep.composer.exception.UnsupportedFormatException;
 import com.gotokeep.keep.composer.gles.ProgramObject;
@@ -17,6 +19,8 @@ import com.gotokeep.keep.composer.util.TimeUtil;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * @author xana/cuixianming
@@ -52,7 +56,7 @@ public class VideoMediaSource extends MediaSource {
     private int sampleFlags = 0;
 
     public VideoMediaSource(String filePath) {
-        super(TYPE_VIDEO);
+        super(TYPE_DYNAMIC);
         this.filePath = filePath;
         name = Uri.parse(filePath).getLastPathSegment();
     }
@@ -113,8 +117,10 @@ public class VideoMediaSource extends MediaSource {
         }
         boolean encoded = false;
         while (!encoded && !ended && this.presentationTimeUs <= actualTimeUs) {
+            Log.d("DecoderBuffer", getName() + " request buffer" + SystemClock.elapsedRealtime());
             int inputIndex = decoder.dequeueInputBuffer(TIMEOUT_US);
             if (inputIndex >= 0) {
+                Log.d("DecoderBuffer", getName() + " getBuffer" + SystemClock.elapsedRealtime());
                 ByteBuffer buffer = MediaUtil.getInputBuffer(decoder, inputIndex);
                 int bufferSize;
 //                do {
@@ -125,17 +131,20 @@ public class VideoMediaSource extends MediaSource {
                     if (!extractor.advance() || sampleTimeUs < 0) {
                         ended = true;
                     }
-                    Log.d("VideoMediaSource", "readSampleData: sampleTimeUs = " + sampleTimeUs + ", flags = " +
-                            sampleFlags);
+                    Log.d("DecoderBuffer", "readSampleData: sampleTimeUs = " + sampleTimeUs + ", flags = " +
+                            sampleFlags + " " + SystemClock.elapsedRealtime());
 //                } while (sampleTimeUs <= actualTimeUs &&
 //                        ((sampleFlags & MediaExtractor.SAMPLE_FLAG_SYNC) == 0) &&
 //                        !ended);
                 Log.d("VideoMediaSource", "render: feed to decoder input buffer " + sampleTimeUs);
                 if (!ended) {
                     decoder.queueInputBuffer(inputIndex, 0, bufferSize, sampleTimeUs, sampleFlags);
+                } else {
+                    decoder.queueInputBuffer(inputIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
                 }
             } else {
-                Log.w("VideoMediaSource", "doRender: cannot dequeue input buffer from decoder, reason: " + inputIndex);
+                Log.w("DecoderBuffer", "doRender: cannot dequeue input buffer from decoder, reason: " + inputIndex);
+                continue;
             }
             int outputIndex = decoder.dequeueOutputBuffer(decodeInfo, TIMEOUT_US);
             if (outputIndex > 0) {
@@ -143,12 +152,17 @@ public class VideoMediaSource extends MediaSource {
                 boolean keyFrame = (decodeInfo.flags & MediaCodec.BUFFER_FLAG_SYNC_FRAME) != 0;
                 decoder.releaseOutputBuffer(outputIndex, presentationTimeUs >= actualTimeUs);
                 encoded = presentationTimeUs >= actualTimeUs;
+                Log.d("DecoderBuffer", getName() + " decode complete" + SystemClock.elapsedRealtime());
             }
         }
         if (encoded) {
-//            Log.d("VideoMediaSource", "doRender[" + name + "]: rendered a frame " + this.presentationTimeUs);
+//            Log.d("DecoderBuffer", "doRender[" + name + "]: rendered a frame " + this.presentationTimeUs);
+            Log.d("DecoderBuffer", getName() + " updateTexImage" + SystemClock.elapsedRealtime());
             decodeTexture.updateTexImage();
-            return super.render(positionUs);
+            Log.d("DecoderBuffer", getName() + " renderTo Texture2D" + SystemClock.elapsedRealtime());
+            long renderTimeUs = super.render(positionUs);
+            Log.d("DecoderBuffer", getName() + " renderDone" + SystemClock.elapsedRealtime());
+            return renderTimeUs;
         } else {
             decodeTexture.notifyNoFrame();
             renderTexture.notifyNoFrame();
@@ -210,9 +224,9 @@ public class VideoMediaSource extends MediaSource {
         extractor.selectTrack(trackIndex);
         width = format.containsKey(MediaFormat.KEY_WIDTH) ? format.getInteger(MediaFormat.KEY_WIDTH) : 0;
         height = format.containsKey(MediaFormat.KEY_HEIGHT) ? format.getInteger(MediaFormat.KEY_HEIGHT) : 0;
-        durationMs = format.containsKey(MediaFormat.KEY_DURATION) ? TimeUtil.usToMs(format.getLong(MediaFormat
-                .KEY_DURATION)) :
-                DURATION_INFINITE;
+        durationMs = format.containsKey(MediaFormat.KEY_DURATION) ? TimeUtil.usToMs(format.getLong(MediaFormat.KEY_DURATION)) : DURATION_INFINITE;
+        long intervalMs = format.containsKey(MediaFormat.KEY_I_FRAME_INTERVAL) ? TimeUtil.usToMs(format.getLong(MediaFormat.KEY_I_FRAME_INTERVAL)) : 0;
+        Log.d("VideoMediaSource", "prepareExtractorAndInfo: " + intervalMs);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             rotation = format.containsKey(MediaFormat.KEY_ROTATION) ? format.getInteger(MediaFormat.KEY_ROTATION) : 0;
         } else {
@@ -225,7 +239,6 @@ public class VideoMediaSource extends MediaSource {
         decodeTexture = new RenderTexture(RenderTexture.TEXTURE_EXTERNAL, "decodeTexture");
         decodeSurface = new Surface(decodeTexture.getSurfaceTexture());
         decoder = MediaCodec.createDecoderByType(mime);
-        Log.d("VideoMediaSource", "decoder name: " + decoder.getName());
         decoder.configure(format, decodeSurface, null, 0);
         decoder.start();
     }
@@ -242,5 +255,36 @@ public class VideoMediaSource extends MediaSource {
     @Override
     public String getName() {
         return "VideoMediaSource[" + Uri.parse(filePath).getLastPathSegment() + "]";
+    }
+
+    private static class ReadSampleThread extends Thread {
+        private MediaExtractor extractor;
+        private int trackIndex;
+        private final Object requestObj = new Object();
+        private RenderRequest renderRequest;
+        private ConcurrentLinkedQueue<ByteBuffer> sampleBufferQueue;
+        private boolean ended = false;
+
+        public ReadSampleThread(MediaExtractor extractor, int trackIndex) {
+            this.extractor = extractor;
+            this.trackIndex = trackIndex;
+            if (trackIndex < 0) {
+                throw new IllegalArgumentException("invalid track index: " + trackIndex);
+            }
+            sampleBufferQueue = new ConcurrentLinkedQueue<>();
+        }
+
+        public void sendRenderRequest(RenderRequest renderRequest) {
+            synchronized (requestObj) {
+                this.renderRequest = renderRequest;
+            }
+        }
+
+        @Override
+        public void run() {
+            while (!ended) {
+                
+            }
+        }
     }
 }
