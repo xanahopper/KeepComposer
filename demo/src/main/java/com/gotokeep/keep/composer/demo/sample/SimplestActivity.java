@@ -8,6 +8,7 @@ import android.view.TextureView;
 
 import com.gotokeep.keep.composer.MediaComposer;
 import com.gotokeep.keep.composer.MediaComposerFactory;
+import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.demo.SampleActivity;
 import com.gotokeep.keep.composer.demo.source.SourceProvider;
 import com.gotokeep.keep.composer.overlay.OverlayProvider;
@@ -21,7 +22,7 @@ import com.gotokeep.keep.composer.util.TimeUtil;
  * @version 1.0
  * @since 2018-05-16 10:09
  */
-public class SimplestActivity extends SampleActivity implements Handler.Callback, OverlayProvider, TextureView.SurfaceTextureListener {
+public class SimplestActivity extends SampleActivity implements Handler.Callback, OverlayProvider, TextureView.SurfaceTextureListener, MediaComposer.PlayEventListener {
     private MediaComposer composer;
     private Handler handler;
     private Timeline timeline;
@@ -38,6 +39,10 @@ public class SimplestActivity extends SampleActivity implements Handler.Callback
 
     @Override
     public boolean handleMessage(Message msg) {
+        if (msg.what == 3) {
+            MediaComposer.PositionInfo positionInfo = (MediaComposer.PositionInfo) msg.obj;
+            onPositionChange(composer, positionInfo.currentTimeUs, positionInfo.totalTimeUs);
+        }
         return false;
     }
 
@@ -53,10 +58,10 @@ public class SimplestActivity extends SampleActivity implements Handler.Callback
         composer.setVideoSize(640, 360);
 
         timeline = new Timeline();
-        VideoItem startItem = new VideoItem(SourceProvider.VIDEO_SRC[1]);
+        VideoItem startItem = new VideoItem(SourceProvider.VIDEO_SRC[0]);
         startItem.setStartTimeMs(0);
-        startItem.setEndTimeMs(4500);
-        startItem.setPlaySpeed(2f);
+        startItem.setEndTimeMs(16000);
+        startItem.setPlaySpeed(10f);
 //        VideoItem endItem = new VideoItem(SourceProvider.VIDEO_SRC[1]);
 //        endItem.setStartTimeMs(TimeUtil.secToMs(10));
 //        endItem.setEndTimeMs(TimeUtil.secToMs(20));
@@ -83,6 +88,41 @@ public class SimplestActivity extends SampleActivity implements Handler.Callback
 
     @Override
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+
+    }
+
+    @Override
+    public void onPreparing(MediaComposer composer, RenderNode preparingNode) {
+
+    }
+
+    @Override
+    public void onPlay(MediaComposer composer) {
+
+    }
+
+    @Override
+    public void onPause(MediaComposer composer) {
+
+    }
+
+    @Override
+    public void onPositionChange(MediaComposer composer, long presentationTimeUs, long totalTimeUs) {
+        updateInfo(TimeUtil.usToString(presentationTimeUs));
+    }
+
+    @Override
+    public void onStop(MediaComposer composer) {
+
+    }
+
+    @Override
+    public void onSeeking(MediaComposer composer, boolean seekComplete, long seekTimeMs) {
+
+    }
+
+    @Override
+    public void onError(MediaComposer composer, Exception exception) {
 
     }
 }

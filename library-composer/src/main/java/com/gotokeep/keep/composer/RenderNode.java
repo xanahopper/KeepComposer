@@ -41,7 +41,6 @@ public abstract class RenderNode {
     protected int canvasHeight;
     protected int originWidth;
     protected int originHeight;
-    protected boolean frameAvailable = false;
     protected boolean debugMode = false;
 
     private static final float[] DEFAULT_VERTEX_DATA = {

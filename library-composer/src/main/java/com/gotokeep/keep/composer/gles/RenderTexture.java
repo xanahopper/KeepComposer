@@ -187,7 +187,7 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
 //            if (frameAvailable) {
 //                Log.w(TAG, "onFrameAvailable: ", new RuntimeException("frameAvailable already set. frame dropped."));;
 //            }
-//            Log.d(TAG, String.format("[%s] onFrameAvailable", name));
+            Log.d(TAG, String.format("[%s] onFrameAvailable", name));
             frameAvailable = true;
             frameSyncObj.notifyAll();
         }

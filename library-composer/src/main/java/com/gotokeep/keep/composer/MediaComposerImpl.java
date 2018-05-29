@@ -11,6 +11,7 @@ import android.util.SparseArray;
 import android.view.TextureView;
 
 import com.gotokeep.keep.composer.source.AudioSource;
+import com.gotokeep.keep.composer.source.MediaSource;
 import com.gotokeep.keep.composer.target.MuxerRenderTarget;
 import com.gotokeep.keep.composer.target.PreviewRenderTarget;
 import com.gotokeep.keep.composer.timeline.item.AudioItem;
@@ -21,9 +22,11 @@ import com.gotokeep.keep.composer.util.MediaClock;
 import com.gotokeep.keep.composer.util.TimeUtil;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -76,7 +79,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     private PlayEventListener playEventListener;
     private ExportEventListener exportEventListener;
     private RenderTarget renderTarget;
-    private RenderNode renderRoot;
+    private RenderTree renderTree;
     private AudioSource audioSource;
     private RenderFactory renderFactory;
     private Map<MediaItem, RenderNode> renderNodeMap;
@@ -93,6 +96,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     private AtomicBoolean playing = new AtomicBoolean(false);
     private long elapsedRealtimeUs;
     private long exportTimeUs = 0;
+    private int frameRate = 25;
     private long frameIntervalUs = 0;
 
     private boolean debugMode = false;
@@ -300,7 +304,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         releaseRenderTarget();
         export = true;
         renderTarget = new MuxerRenderTarget(exportConfiguration);
-        frameIntervalUs = TimeUtil.BILLION_US / exportConfiguration.getFrameRate();
+        frameRate = exportConfiguration.getFrameRate();
         videoWidth = canvasWidth = exportConfiguration.getWidth();
         videoHeight = canvasHeight = exportConfiguration.getHeight();
         engine.setup(renderTarget.getInputSurface());
@@ -313,9 +317,11 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         if (renderTarget == null) {
             return;
         }
+        frameIntervalUs = TimeUtil.BILLION_US / frameRate;
         renderTarget.prepareVideo();
         timeline.prepare(renderFactory);
-        renderRoot = generateRenderTree(videoTimeUs);
+        renderTree = generateRenderTree(videoTimeUs);
+        renderTree.updateRenderRequest(frameIntervalUs);
         if (timeline.getAudioItem() != null) {
             AudioItem audioItem = timeline.getAudioItem();
             audioSource = new AudioSource(audioItem.getFilePath());
@@ -361,7 +367,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     }
 
     private void seekInternal(long timeMs) {
-        renderRoot = generateRenderTree(TimeUtil.msToUs(timeMs));
+        renderTree = generateRenderTree(TimeUtil.msToUs(timeMs));
         if (audioSource != null) {
             audioSource.seekTo(timeMs);
         }
@@ -408,7 +414,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     private void doRenderWork() {
         long operationStartMs = SystemClock.elapsedRealtime();
         videoTimeUs = debugMode ? debugPositionUs : getCurrentTimeUs();
-        if (renderRoot == null) {
+        if (renderTree == null || renderTree.renderRoot == null) {
 //            Log.d(TAG, "doRenderWork: RenderRoot is empty");
             if (eventHandler != null) {
                 eventHandler.sendEmptyMessage(export ? EVENT_EXPORT_COMPLETE : EVENT_PLAY_STOP);
@@ -422,6 +428,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         // do render tree
         elapsedRealtimeUs = TimeUtil.msToUs(SystemClock.elapsedRealtime());
 
+        RenderNode renderRoot = renderTree.renderRoot;
         renderRoot.setViewport(canvasWidth, canvasHeight);
         long renderTimeUs = renderRoot.acquireFrame(videoTimeUs);
 //        Log.d(TAG, "doRenderWork: " + renderTimeUs + " " + videoTimeUs);
@@ -448,8 +455,10 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
             }
         }
 //        cleanupInvalidRenderNode(videoTimeUs);
-        renderRoot = generateRenderTree(export ? exportTimeUs : videoTimeUs);
-        if (renderRoot != null) {
+        long nextTimeUs = export ? exportTimeUs : videoTimeUs;
+        renderTree = generateRenderTree(nextTimeUs);
+        renderTree.updateRenderRequest(nextTimeUs);
+        if (renderTree != null) {
             scheduleNextWork(operationStartMs, 10);
         } else {
             videoHandler.removeMessages(MSG_DO_SOME_WORK);
@@ -480,9 +489,15 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         }
     }
 
-    private RenderNode generateRenderTree(long presentationTimeUs) {
+    private RenderTree generateRenderTree(long presentationTimeUs) {
         SparseArray<List<MediaItem>> itemLayers = timeline.queryPresentationTimeItems(presentationTimeUs);
-        RenderNode root = renderRoot;
+        RenderNode root = renderTree != null ? renderTree.renderRoot : null;
+        Set<MediaSource> sourceSet = renderTree != null ? renderTree.sourceSet : null;
+        if (sourceSet != null) {
+            sourceSet.clear();
+        } else {
+            sourceSet = new HashSet<>();
+        }
         Map<MediaItem, RenderNode> nodeCache = new HashMap<>();
         for (int i = 0; i < itemLayers.size(); i++) {
             int layer = itemLayers.keyAt(i);
@@ -496,6 +511,9 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
                     renderNode = renderNodeMap.get(item);
                 }
                 if (renderNode != null) {
+                    if (renderNode instanceof MediaSource) {
+                        sourceSet.add((MediaSource) renderNode);
+                    }
                     renderNode.inputNodes.clear();
                     if (item.getBaseItem().size() > 0) {
                         for (int j = 0; j < item.getBaseItem().size(); j++) {
@@ -522,7 +540,12 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
                 }
             }
         }
-        return root;
+        if (renderTree == null) {
+            renderTree = new RenderTree();
+            renderTree.renderRoot = root;
+            renderTree.sourceSet = sourceSet;
+        }
+        return renderTree;
     }
 
     private void cleanupInvalidRenderNode(long presentationTimeUs) {
@@ -611,6 +634,19 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         if (renderTarget != null) {
             renderTarget.release();
             renderTarget = null;
+        }
+    }
+
+    private static final class RenderTree {
+        RenderNode renderRoot;
+        Set<MediaSource> sourceSet;
+
+        void updateRenderRequest(long requestTimeUs) {
+            RenderRequest request = new RenderRequest();
+            for (MediaSource source : sourceSet) {
+                request.requestRenderTimeUs = requestTimeUs + TimeUtil.msToUs(source.getStartTimeMs());
+                source.updateRenderRequest(request);
+            }
         }
     }
 }

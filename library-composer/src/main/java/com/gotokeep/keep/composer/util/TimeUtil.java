@@ -50,14 +50,19 @@ public final class TimeUtil {
         int start = 0;
         int end = keyFrames.size() - 1;
         while (start <= end) {
-            int mid = (end - start) / 2 + start;
+            int mid = (start + end) / 2;
             long value = keyFrames.get(mid);
-            if (positionUs < value) {
+            if (positionUs == value) {
+                return value;
+            } else if (positionUs < value) {
                 end = mid - 1;
             } else {
                 start = mid + 1;
             }
         }
-        return keyFrames.get(start);
+        int index = Math.min(start, end);
+        if (index < 0) index = 0;
+        else if (index > keyFrames.size() - 1) index = keyFrames.size() - 1;
+        return keyFrames.get(index);
     }
 }

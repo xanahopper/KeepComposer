@@ -4,6 +4,7 @@ import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.RenderRequest;
 
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author xana/cuixianming
@@ -23,8 +24,10 @@ public abstract class MediaSource extends RenderNode {
     long durationMs;
     float playSpeed = 1f;
     boolean ended = false;
+    protected final Object requestSyncObj = new Object();
+    protected AtomicBoolean requestUpdated = new AtomicBoolean(true);
     protected RenderRequest renderRequest;
-    protected Semaphore renderSem = new Semaphore(1);
+    protected Semaphore decodeSem = new Semaphore(1);
 
     protected MediaSource(int mediaType) {
         this.mediaType = mediaType;
@@ -36,9 +39,10 @@ public abstract class MediaSource extends RenderNode {
     }
 
     public void updateRenderRequest(RenderRequest renderRequest) {
-        synchronized (this) {
+        synchronized (requestSyncObj) {
             this.renderRequest = renderRequest;
-            renderSem.release();
+            requestUpdated.set(false);
+            decodeSem.release();
         }
     }
 

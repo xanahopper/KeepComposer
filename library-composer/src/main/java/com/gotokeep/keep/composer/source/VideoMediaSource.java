@@ -6,9 +6,6 @@ import android.media.MediaFormat;
 import android.net.Uri;
 import android.opengl.GLES20;
 import android.os.Build;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Message;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.Surface;
@@ -20,17 +17,21 @@ import com.gotokeep.keep.composer.util.MediaUtil;
 import com.gotokeep.keep.composer.util.TimeUtil;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
 /**
  * @author xana/cuixianming
  * @version 1.0
  * @since 2018/5/13 14:08
  */
-public class VideoMediaSource extends MediaSource implements Handler.Callback {
+public class VideoMediaSource extends MediaSource {
     private static final String VIDEO_MIME_START = "video/";
     private static final int TIMEOUT_US = 1000;
+
+    private static final int MSG_UPDATE_REQUEST = 0;
 
     private static final String EXTERNAL_FRAGMENT_SHADER = "" +
             "#extension GL_OES_EGL_image_external : require\n" +
@@ -53,8 +54,7 @@ public class VideoMediaSource extends MediaSource implements Handler.Callback {
     private RenderTexture decodeTexture;
     private Surface decodeSurface;
     private List<Long> keyFrames = new ArrayList<>();
-    private HandlerThread renderThread;
-    private Handler renderHandler;
+    private DecodeThread decodeThread;
 
     public VideoMediaSource(String filePath) {
         super(TYPE_DYNAMIC);
@@ -85,6 +85,7 @@ public class VideoMediaSource extends MediaSource implements Handler.Callback {
         }
         try {
             prepareDecoder();
+            prepareDecodeThread();
         } catch (IOException e) {
             throw new RuntimeException("VideoMediaSource prepareVideo failed.", e);
         }
@@ -118,45 +119,16 @@ public class VideoMediaSource extends MediaSource implements Handler.Callback {
             ended = true;
         }
         boolean encoded = false;
-
-        /* TODO
-         * sync(renderThread) {
-         *     if (decodeTexture.isAvailable()) {
-         *         decodeTexture.updateTexImage();
-         *         // do render things...
-         *     } else {
-         *         return 0;
-         *     }
-         * }
-         */
-
-//        while (!encoded && !ended && this.presentationTimeUs <= actualTimeUs) {
-//            Log.d("DecoderBuffer", getName() + " request buffer" + SystemClock.elapsedRealtime());
-//            try {
-//                decodeSem.acquire();
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//                return 0;
-//            }
-//            Log.d("DecoderBuffer", getName() + " got feed and drain output " + SystemClock.elapsedRealtime());
-//            int outputIndex = decoder.dequeueOutputBuffer(decodeInfo, TIMEOUT_US);
-//            if (outputIndex > 0) {
-//                this.presentationTimeUs = decodeInfo.presentationTimeUs;
-//                boolean keyFrame = (decodeInfo.flags & MediaCodec.BUFFER_FLAG_SYNC_FRAME) != 0;
-//                decoder.releaseOutputBuffer(outputIndex, presentationTimeUs >= actualTimeUs);
-//                encoded = presentationTimeUs >= actualTimeUs;
-//                Log.d("DecoderBuffer", getName() + " decode complete" + SystemClock.elapsedRealtime());
-//            }
-//            feedSem.release();
-//        }
+        synchronized (requestSyncObj) {
+            Log.d("DecodeThread", "try to get a frame");
+            if (decodeTexture.isFrameAvailable()) {
+                encoded = true;
+                decodeTexture.updateTexImage();
+                Log.d("DecodeThread", "got a frame");
+            }
+        }
         if (encoded) {
-//            Log.d("DecoderBuffer", "doRender[" + name + "]: rendered a frame " + this.presentationTimeUs);
-            Log.d("DecoderBuffer", getName() + " updateTexImage" + SystemClock.elapsedRealtime());
-            decodeTexture.updateTexImage();
-            Log.d("DecoderBuffer", getName() + " renderTo Texture2D" + SystemClock.elapsedRealtime());
-            long renderTimeUs = super.render(positionUs);
-            Log.d("DecoderBuffer", getName() + " renderDone" + SystemClock.elapsedRealtime());
-            return renderTimeUs;
+            return super.render(positionUs);
         } else {
             decodeTexture.notifyNoFrame();
             renderTexture.notifyNoFrame();
@@ -167,7 +139,7 @@ public class VideoMediaSource extends MediaSource implements Handler.Callback {
     @Override
     protected long doRender(ProgramObject programObject, long positionUs) {
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-        return getPresentationTimeUs() + TimeUtil.msToUs(startTimeMs);
+        return positionUs;
     }
 
     @Override
@@ -237,8 +209,8 @@ public class VideoMediaSource extends MediaSource implements Handler.Callback {
         keyFrames.clear();
         do {
             int flags = extractor.getSampleFlags();
-            if ((flags & MediaExtractor.SAMPLE_FLAG_SYNC) != 0) {
-                long time = extractor.getSampleTime();
+            long time = extractor.getSampleTime();
+            if ((flags & MediaExtractor.SAMPLE_FLAG_SYNC) != 0 && time >= 0) {
                 keyFrames.add(time);
                 Log.d("KeyFrame", "prepareKeyFrameInfo: " + time);
             }
@@ -252,6 +224,11 @@ public class VideoMediaSource extends MediaSource implements Handler.Callback {
         decoder = MediaCodec.createDecoderByType(mime);
         decoder.configure(format, decodeSurface, null, 0);
         decoder.start();
+    }
+
+    private void prepareDecodeThread() {
+        decodeThread = new DecodeThread(getName());
+        decodeThread.start();
     }
 
     @Override
@@ -268,8 +245,83 @@ public class VideoMediaSource extends MediaSource implements Handler.Callback {
         return "VideoMediaSource[" + Uri.parse(filePath).getLastPathSegment() + "]";
     }
 
-    @Override
-    public boolean handleMessage(Message msg) {
-        return false;
+    private class DecodeThread extends Thread {
+        private final String TAG = DecodeThread.class.getSimpleName();
+        private boolean ended = false;
+        private long requestTimeUs = 0L;
+        private long decodedTimeUs = 0L;
+        private long currentKeyFrame = 0L;
+
+        DecodeThread(String name) {
+            super("DecodeThread:" + name);
+        }
+
+        @Override
+        public void run() {
+            while (!ended) {
+                try {
+                    Log.d(TAG, "wait for new request");
+                    decodeSem.acquire();
+                    synchronized (requestSyncObj) {
+                        requestTimeUs = renderRequest != null ? renderRequest.requestRenderTimeUs : 0;
+                    }
+                    Log.d(TAG, "got new RenderRequest: " + requestTimeUs);
+                    long actualTimeUs = (long) ((requestTimeUs - TimeUtil.msToUs(startTimeMs)) * playSpeed);
+                    if (actualTimeUs > TimeUtil.msToUs(durationMs)) {
+                        ended = true;
+                    }
+                    Log.d(TAG, "actualTime: " + actualTimeUs);
+                    long keyFrameTime = TimeUtil.findClosesKeyFrame(keyFrames, actualTimeUs);
+                    if (keyFrameTime > currentKeyFrame) {
+                        Log.d(TAG, "seek to key frame:" + keyFrameTime);
+                        extractor.seekTo(keyFrameTime, MediaExtractor.SEEK_TO_PREVIOUS_SYNC);
+                        currentKeyFrame = keyFrameTime;
+                    }
+                    requestUpdated.set(true);
+                    while (!ended && requestUpdated.get() && decodedTimeUs < actualTimeUs) {
+                        Log.d(TAG, "DECODE BEGIN");
+                        int inputIndex;
+                        do {
+                            inputIndex = decoder.dequeueInputBuffer(0);
+                        } while (inputIndex < 0 && !isInterrupted());
+                        Log.d(TAG, "got input buffer");
+                        ByteBuffer buffer = MediaUtil.getInputBuffer(decoder, inputIndex);
+                        int bufferSize = extractor.readSampleData(buffer, 0);
+                        Log.d(TAG, "got sample data");
+                        long sampleTime = extractor.getSampleTime();
+                        int sampleFlags = extractor.getSampleFlags();
+                        if (!extractor.advance()) {
+                            Log.d(TAG, "no more sample data");
+                            ended = true;
+                        }
+                        if (sampleTime >= 0) {
+                            decoder.queueInputBuffer(inputIndex, 0, bufferSize, sampleTime, sampleFlags);
+                            Log.d(TAG, "feed sample to decoder");
+                        } else {
+                            decoder.queueInputBuffer(inputIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+                            ended = true;
+                            Log.d(TAG, "feed EOS to decoder");
+                        }
+                        int outputIndex;
+                        Log.d(TAG, "wait for decoded frame");
+                        synchronized (requestSyncObj) {
+                            Log.d(TAG, "try to get output buffer");
+                            outputIndex = decoder.dequeueOutputBuffer(decodeInfo, 0);
+                            if (outputIndex >= 0) {
+                                Log.d(TAG, "got a decoded frame");
+                                decodedTimeUs = decodeInfo.presentationTimeUs;
+//                                    boolean keyFrame = (decodeInfo.flags & MediaCodec.BUFFER_FLAG_SYNC_FRAME) != 0;
+                                decoder.releaseOutputBuffer(outputIndex, true);
+                                Log.d(TAG, "render to decodeTexture");
+                            }
+                        }
+                        Log.d(TAG, "DECODE END");
+                    }
+                } catch (InterruptedException e) {
+                    break;
+                }
+            }
+            Log.d("DecodeThread", "run: finish");
+        }
     }
 }
