@@ -1,6 +1,9 @@
 package com.gotokeep.keep.composer.source;
 
 import com.gotokeep.keep.composer.RenderNode;
+import com.gotokeep.keep.composer.RenderRequest;
+
+import java.util.concurrent.Semaphore;
 
 /**
  * @author xana/cuixianming
@@ -20,6 +23,8 @@ public abstract class MediaSource extends RenderNode {
     long durationMs;
     float playSpeed = 1f;
     boolean ended = false;
+    protected RenderRequest renderRequest;
+    protected Semaphore renderSem = new Semaphore(1);
 
     protected MediaSource(int mediaType) {
         this.mediaType = mediaType;
@@ -28,6 +33,13 @@ public abstract class MediaSource extends RenderNode {
     @Override
     public void addInputNode(RenderNode inputNode) {
 
+    }
+
+    public void updateRenderRequest(RenderRequest renderRequest) {
+        synchronized (this) {
+            this.renderRequest = renderRequest;
+            renderSem.release();
+        }
     }
 
     public boolean isEnded() {

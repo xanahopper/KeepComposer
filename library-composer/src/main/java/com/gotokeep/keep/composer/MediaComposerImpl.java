@@ -257,7 +257,9 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
 
     private void releaseInternal() {
         videoHandler.removeMessages(MSG_DO_SOME_WORK);
+        audioHandler.removeMessages(MSG_DO_AUDIO_WORK);
         videoThread.quitSafely();
+        audioThread.quitSafely();
         for (MediaItem item : renderNodeMap.keySet()) {
             Log.d(TAG, "releaseInternal: " + item.toString());
             RenderNode node = renderNodeMap.get(item);
@@ -275,8 +277,10 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     }
 
     private void setTimelineInternal(Timeline timeline) {
-        if (this.timeline != timeline) {
+        if (!playing.get()) {
             this.timeline = timeline;
+        } else {
+            throw new IllegalStateException("timeline cannot be changed during playing.");
         }
     }
 
@@ -348,7 +352,9 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         mediaClock.stop();
         videoHandler.removeMessages(MSG_DO_SOME_WORK);
         audioHandler.removeMessages(MSG_DO_AUDIO_WORK);
-        renderTarget.complete();
+        if (renderTarget != null) {
+            renderTarget.complete();
+        }
         if (eventHandler != null) {
             eventHandler.sendEmptyMessage(export ? EVENT_EXPORT_COMPLETE : EVENT_PLAY_STOP);
         }

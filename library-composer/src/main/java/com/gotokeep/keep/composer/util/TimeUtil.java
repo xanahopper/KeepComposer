@@ -2,6 +2,8 @@ package com.gotokeep.keep.composer.util;
 
 import android.annotation.SuppressLint;
 
+import java.util.List;
+
 /**
  * @author xana/cuixianming
  * @version 1.0
@@ -42,5 +44,20 @@ public final class TimeUtil {
 
     public static long usToNs(long timeUs) {
         return timeUs * 1000;
+    }
+
+    public static long findClosesKeyFrame(List<Long> keyFrames, long positionUs) {
+        int start = 0;
+        int end = keyFrames.size() - 1;
+        while (start <= end) {
+            int mid = (end - start) / 2 + start;
+            long value = keyFrames.get(mid);
+            if (positionUs < value) {
+                end = mid - 1;
+            } else {
+                start = mid + 1;
+            }
+        }
+        return keyFrames.get(start);
     }
 }
