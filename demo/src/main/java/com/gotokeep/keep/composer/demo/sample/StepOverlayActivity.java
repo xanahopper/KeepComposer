@@ -30,7 +30,7 @@ public class StepOverlayActivity extends SampleActivity implements Handler.Callb
     private Handler handler;
     private Timeline timeline;
     private long positionUs = 0;
-    private long intervalUs = TimeUtil.BILLION_US / 30;
+    private long intervalUs = TimeUtil.BILLION_US / 25;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

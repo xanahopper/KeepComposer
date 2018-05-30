@@ -278,7 +278,7 @@ public class VideoMediaSource extends MediaSource {
                         currentKeyFrame = keyFrameTime;
                     }
                     requestUpdated.set(true);
-                    while (!ended && requestUpdated.get() && decodedTimeUs < actualTimeUs) {
+                    while (!ended && requestUpdated.get() && decodedTimeUs <= actualTimeUs) {
                         Log.d(TAG, "DECODE BEGIN");
                         int inputIndex;
                         do {

@@ -321,7 +321,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         renderTarget.prepareVideo();
         timeline.prepare(renderFactory);
         renderTree = generateRenderTree(videoTimeUs);
-        renderTree.updateRenderRequest(frameIntervalUs);
+//        renderTree.updateRenderRequest(videoTimeUs);
         if (timeline.getAudioItem() != null) {
             AudioItem audioItem = timeline.getAudioItem();
             audioSource = new AudioSource(audioItem.getFilePath());
@@ -491,7 +491,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
 
     private RenderTree generateRenderTree(long presentationTimeUs) {
         SparseArray<List<MediaItem>> itemLayers = timeline.queryPresentationTimeItems(presentationTimeUs);
-        RenderNode root = renderTree != null ? renderTree.renderRoot : null;
+        RenderNode root = null;
         Set<MediaSource> sourceSet = renderTree != null ? renderTree.sourceSet : null;
         if (sourceSet != null) {
             sourceSet.clear();
@@ -542,9 +542,9 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         }
         if (renderTree == null) {
             renderTree = new RenderTree();
-            renderTree.renderRoot = root;
-            renderTree.sourceSet = sourceSet;
         }
+        renderTree.renderRoot = root;
+        renderTree.sourceSet = sourceSet;
         return renderTree;
     }
 
