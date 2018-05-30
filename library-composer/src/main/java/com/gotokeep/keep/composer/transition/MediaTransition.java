@@ -87,11 +87,11 @@ public abstract class MediaTransition extends RenderNode {
 //        if (endNode != null) {
 //            Log.d(TAG, "doRender: endNode.renderTimeUs = " + endNode.getRenderTimeUs());
 //        }
-        long startTimeUs = startNode != null ? startNode.getPresentationTimeUs() : Long.MAX_VALUE;
-        long endTimeUs = endNode != null ? endNode.getPresentationTimeUs() : Long.MAX_VALUE;
+        long startTimeUs = startNode != null ? startNode.getRenderTimeUs() : Long.MAX_VALUE;
+        long endTimeUs = endNode != null ? endNode.getRenderTimeUs() : Long.MAX_VALUE;
         long timeUs = Math.min(startTimeUs, endTimeUs);
         presentationTimeUs = timeUs != Long.MAX_VALUE ? timeUs : positionUs;
-        return presentationTimeUs + TimeUtil.msToUs(startTimeMs);
+        return positionUs;
     }
 
     @Override

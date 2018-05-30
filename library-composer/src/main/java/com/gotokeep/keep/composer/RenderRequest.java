@@ -7,4 +7,5 @@ package com.gotokeep.keep.composer;
  */
 public class RenderRequest {
     public long requestRenderTimeUs;
+    public boolean exactly;
 }

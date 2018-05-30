@@ -28,7 +28,9 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
     public static final int TEXTURE_EXTERNAL = GLES11Ext.GL_TEXTURE_EXTERNAL_OES;
 
     public boolean isFrameAvailable() {
-        return frameAvailable;
+        synchronized (frameSyncObj) {
+            return frameAvailable;
+        }
     }
 
     public void updateTexImage() {
@@ -175,9 +177,9 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
                     Log.w(TAG, "awaitFrameAvailable with interrupted, it shouldn't happen", e);
                 }
             }
-            frameAvailable = false;
+//            frameAvailable = false;
         }
-        surfaceTexture.updateTexImage();
+//        surfaceTexture.updateTexImage();
         return true;
     }
 

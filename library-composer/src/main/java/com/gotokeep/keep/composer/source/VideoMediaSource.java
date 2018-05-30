@@ -21,6 +21,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author xana/cuixianming
@@ -93,7 +94,9 @@ public class VideoMediaSource extends MediaSource {
 
     @Override
     public void onRelease() {
-
+        if (Thread.currentThread() != decodeThread && decodeThread.isAlive()) {
+            decodeThread.interrupt();
+        }
         if (extractor != null) {
             extractor.release();
             extractor = null;
@@ -103,10 +106,10 @@ public class VideoMediaSource extends MediaSource {
             decoder.release();
             decoder = null;
         }
-        if (decodeTexture != null) {
-            decodeTexture.release();
-            decodeTexture = null;
-        }
+//        if (decodeTexture != null) {
+//            decodeTexture.release();
+//            decodeTexture = null;
+//        }
         format = null;
         presentationTimeUs = 0;
     }
@@ -119,20 +122,25 @@ public class VideoMediaSource extends MediaSource {
             ended = true;
         }
         boolean encoded = false;
+//        if (renderRequest == null || renderRequest.exactly) {
+        renderTexture.awaitFrameAvailable();
+//        }
         synchronized (requestSyncObj) {
             Log.d("DecodeThread", "try to get a frame");
             if (decodeTexture.isFrameAvailable()) {
                 encoded = true;
+                presentationTimeUs = getRealTime(decodeThread.decodedTimeUs) + TimeUtil.msToUs(startTimeMs);
                 decodeTexture.updateTexImage();
                 Log.d("DecodeThread", "got a frame");
+            } else {
+                presentationTimeUs = positionUs;
             }
         }
         if (encoded) {
             return super.render(positionUs);
         } else {
             decodeTexture.notifyNoFrame();
-            renderTexture.notifyNoFrame();
-            return 0;
+            return positionUs;
         }
     }
 
@@ -231,10 +239,10 @@ public class VideoMediaSource extends MediaSource {
         decodeThread.start();
     }
 
-    @Override
-    public long getPresentationTimeUs() {
-        return getRealTime(presentationTimeUs);
-    }
+//    @Override
+//    public long getPresentationTimeUs() {
+//        return getRealTime(presentationTimeUs);
+//    }
 
     private long getRealTime(long time) {
         return (long) (time / playSpeed);
@@ -248,6 +256,8 @@ public class VideoMediaSource extends MediaSource {
     private class DecodeThread extends Thread {
         private final String TAG = DecodeThread.class.getSimpleName();
         private boolean ended = false;
+        private boolean exactly = false;
+        private boolean hasFrame = false;
         private long requestTimeUs = 0L;
         private long decodedTimeUs = 0L;
         private long currentKeyFrame = 0L;
@@ -264,9 +274,13 @@ public class VideoMediaSource extends MediaSource {
                     decodeSem.acquire();
                     synchronized (requestSyncObj) {
                         requestTimeUs = renderRequest != null ? renderRequest.requestRenderTimeUs : 0;
+                        exactly = renderRequest != null && renderRequest.exactly;
                     }
                     Log.d(TAG, "got new RenderRequest: " + requestTimeUs);
                     long actualTimeUs = (long) ((requestTimeUs - TimeUtil.msToUs(startTimeMs)) * playSpeed);
+                    if (actualTimeUs < 0) {
+                        actualTimeUs = 0;
+                    }
                     if (actualTimeUs > TimeUtil.msToUs(durationMs)) {
                         ended = true;
                     }
@@ -274,8 +288,11 @@ public class VideoMediaSource extends MediaSource {
                     long keyFrameTime = TimeUtil.findClosesKeyFrame(keyFrames, actualTimeUs);
                     if (keyFrameTime > currentKeyFrame) {
                         Log.d(TAG, "seek to key frame:" + keyFrameTime);
-                        extractor.seekTo(keyFrameTime, MediaExtractor.SEEK_TO_PREVIOUS_SYNC);
+                        extractor.seekTo(actualTimeUs, MediaExtractor.SEEK_TO_PREVIOUS_SYNC);
+                        long sampleTime = extractor.getSampleTime();
+                        Log.d(TAG, "seek result: " + sampleTime);
                         currentKeyFrame = keyFrameTime;
+                        hasFrame = false;
                     }
                     requestUpdated.set(true);
                     while (!ended && requestUpdated.get() && decodedTimeUs <= actualTimeUs) {
@@ -311,7 +328,10 @@ public class VideoMediaSource extends MediaSource {
                                 Log.d(TAG, "got a decoded frame");
                                 decodedTimeUs = decodeInfo.presentationTimeUs;
 //                                    boolean keyFrame = (decodeInfo.flags & MediaCodec.BUFFER_FLAG_SYNC_FRAME) != 0;
-                                decoder.releaseOutputBuffer(outputIndex, true);
+//                                boolean render = !exactly || decodedTimeUs >= actualTimeUs;
+                                boolean render = decodedTimeUs >= actualTimeUs || !hasFrame;
+                                decoder.releaseOutputBuffer(outputIndex, render);
+                                hasFrame = render;
                                 Log.d(TAG, "render to decodeTexture");
                             }
                         }
@@ -321,6 +341,7 @@ public class VideoMediaSource extends MediaSource {
                     break;
                 }
             }
+            onRelease();
             Log.d("DecodeThread", "run: finish");
         }
     }

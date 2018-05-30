@@ -62,7 +62,7 @@ public abstract class RenderNode {
     }
 
     public long acquireFrame(long positionUs) {
-        if (!isFrameAvailable() && positionUs >= renderTimeUs) {
+        if (positionUs >= renderTimeUs) {
             renderTimeUs = render(positionUs);
         }
         return renderTimeUs;

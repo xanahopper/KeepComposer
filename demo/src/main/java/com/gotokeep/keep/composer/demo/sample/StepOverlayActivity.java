@@ -12,12 +12,18 @@ import com.gotokeep.keep.composer.MediaComposerFactory;
 import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.demo.SampleActivity;
 import com.gotokeep.keep.composer.demo.source.SourceProvider;
+import com.gotokeep.keep.composer.filter.FilterFactory;
 import com.gotokeep.keep.composer.overlay.OverlayProvider;
+import com.gotokeep.keep.composer.timeline.item.AudioItem;
+import com.gotokeep.keep.composer.timeline.item.FilterItem;
+import com.gotokeep.keep.composer.timeline.item.ImageItem;
 import com.gotokeep.keep.composer.timeline.item.LayerItem;
 import com.gotokeep.keep.composer.timeline.Timeline;
 import com.gotokeep.keep.composer.timeline.Track;
+import com.gotokeep.keep.composer.timeline.item.TransitionItem;
 import com.gotokeep.keep.composer.timeline.item.VideoItem;
 import com.gotokeep.keep.composer.util.TimeUtil;
+import com.seu.magicfilter.filter.DemoFilterFactory;
 
 /**
  * @author xana/cuixianming
@@ -38,6 +44,7 @@ public class StepOverlayActivity extends SampleActivity implements Handler.Callb
 
         handler = new Handler(getMainLooper(), this);
         previewView.setSurfaceTextureListener(this);
+        FilterFactory.registerExternalFilterFactory(DemoFilterFactory.getInstance());
 
         previewView.setVideoSize(640, 360, 0);
         previewView.setOnClickListener(this);
@@ -75,33 +82,47 @@ public class StepOverlayActivity extends SampleActivity implements Handler.Callb
         composer.setPlayEventListener(this);
 
         timeline = new Timeline();
-        VideoItem item1 = new VideoItem(SourceProvider.VIDEO_SRC[0]);
+        ImageItem item1 = new ImageItem(SourceProvider.IMAGE_SRC[0]);
         item1.setStartTimeMs(TimeUtil.secToMs(0));
-        item1.setEndTimeMs(TimeUtil.secToMs(9));
-
-        LayerItem layerItem1 = new LayerItem(1, "");
-        layerItem1.setStartTimeMs(TimeUtil.secToMs(0));
-        layerItem1.setEndTimeMs(TimeUtil.secToMs(5));
-        layerItem1.setRotation(30f);
-        layerItem1.setOffsetX(20);
-        layerItem1.setOffsetY(30);
-        layerItem1.setScale(0.5f);
-
-        LayerItem layerItem2 = new LayerItem(1, "");
-        layerItem2.setStartTimeMs(TimeUtil.secToMs(1));
-        layerItem2.setEndTimeMs(TimeUtil.secToMs(6));
-        layerItem2.setRotation(30f);
-        layerItem2.setOffsetX(80);
-        layerItem2.setOffsetY(30);
-        layerItem2.setScale(0.5f);
-
+        item1.setEndTimeMs(TimeUtil.secToMs(3));
+        VideoItem item2 = new VideoItem(SourceProvider.VIDEO_SRC[1]);
+        item2.setStartTimeMs(TimeUtil.secToMs(3));
+        item2.setEndTimeMs(TimeUtil.secToMs(6));
+        item2.setPlaySpeed(5f);
+        VideoItem item3 = new VideoItem(SourceProvider.VIDEO_SRC[0]);
+        item3.setStartTimeMs(TimeUtil.secToMs(6));
+        item3.setEndTimeMs(TimeUtil.secToMs(9));
         Track videoTrack = new Track(true, 0);
         videoTrack.addMediaItem(item1);
-        Track overlayTrack = new Track(true, 1);
+        videoTrack.addMediaItem(item2);
+        videoTrack.addMediaItem(item3);
+        Track transitionTrack = new Track(true, 1);
+        TransitionItem transitionItem1 = new TransitionItem(item1, item2, 2000, 1);
+        TransitionItem transitionItem2 = new TransitionItem(item2, item3, 2000, 1);
+        transitionTrack.addMediaItem(transitionItem1);
+        transitionTrack.addMediaItem(transitionItem2);
+        Track overlayTrack = new Track(true, 3);
+        LayerItem layerItem = new LayerItem(2, "");
+        layerItem.setTimeRangeMs(TimeUtil.secToMs(0), TimeUtil.secToMs(4));
+        layerItem.setScale(0.5f);
+        layerItem.setRotation(45);
+        LayerItem layerItem1 = new LayerItem(2, "");
+        layerItem1.setTimeRangeMs(TimeUtil.secToMs(3), TimeUtil.secToMs(8));
+        layerItem1.setScale(0.25f);
+        layerItem1.setOffsetX(250);
+        layerItem1.setOffsetY(150);
+        overlayTrack.addMediaItem(layerItem);
         overlayTrack.addMediaItem(layerItem1);
-        overlayTrack.addMediaItem(layerItem2);
+
+        FilterItem filterItem = new FilterItem("sunset", null);
+        filterItem.setTimeRangeMs(0, TimeUtil.secToMs(8));
+        Track filterTrack = new Track(true, 2);
+        filterTrack.addMediaItem(filterItem);
         timeline.addMediaTrack(videoTrack);
+        timeline.addMediaTrack(transitionTrack);
+        timeline.addMediaTrack(filterTrack);
         timeline.addMediaTrack(overlayTrack);
+//        timeline.setAudioItem(new AudioItem(SourceProvider.AUDIO_SRC[0]));
 
         composer.setTimeline(timeline);
         composer.prepare();

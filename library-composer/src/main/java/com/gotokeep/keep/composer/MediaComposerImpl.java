@@ -457,7 +457,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
 //        cleanupInvalidRenderNode(videoTimeUs);
         long nextTimeUs = export ? exportTimeUs : videoTimeUs;
         renderTree = generateRenderTree(nextTimeUs);
-        renderTree.updateRenderRequest(nextTimeUs);
+        renderTree.updateRenderRequest(nextTimeUs, export);
         if (renderTree != null) {
             scheduleNextWork(operationStartMs, 10);
         } else {
@@ -641,10 +641,11 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         RenderNode renderRoot;
         Set<MediaSource> sourceSet;
 
-        void updateRenderRequest(long requestTimeUs) {
+        void updateRenderRequest(long requestTimeUs, boolean exactly) {
             RenderRequest request = new RenderRequest();
+            request.exactly = exactly;
+            request.requestRenderTimeUs = requestTimeUs;
             for (MediaSource source : sourceSet) {
-                request.requestRenderTimeUs = requestTimeUs + TimeUtil.msToUs(source.getStartTimeMs());
                 source.updateRenderRequest(request);
             }
         }
