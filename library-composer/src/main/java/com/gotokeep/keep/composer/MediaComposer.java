@@ -42,6 +42,8 @@ public interface MediaComposer {
 
     void release();
 
+    void setLoop(boolean loop);
+
     void setDebugMode(boolean debugMode);
 
     void doDebugRender(long positionUs);
@@ -74,6 +76,71 @@ public interface MediaComposer {
         void onExportError(MediaComposer composer, Exception exception);
     }
 
+    class SimplePlayEventListener implements PlayEventListener {
+
+        @Override
+        public void onPreparing(MediaComposer composer, RenderNode preparingNode) {
+
+        }
+
+        @Override
+        public void onPlay(MediaComposer composer) {
+
+        }
+
+        @Override
+        public void onPause(MediaComposer composer) {
+
+        }
+
+        @Override
+        public void onPositionChange(MediaComposer composer, long presentationTimeUs, long totalTimeUs) {
+
+        }
+
+        @Override
+        public void onStop(MediaComposer composer) {
+
+        }
+
+        @Override
+        public void onSeeking(MediaComposer composer, boolean seekComplete, long seekTimeMs) {
+
+        }
+
+        @Override
+        public void onError(MediaComposer composer, Exception exception) {
+
+        }
+    }
+
+    class SimpleExportEventListener implements ExportEventListener {
+
+        @Override
+        public void onPreparing(MediaComposer composer, RenderNode preparingNode) {
+
+        }
+
+        @Override
+        public void onExportStart(MediaComposer composer) {
+
+        }
+
+        @Override
+        public void onExportProgress(MediaComposer composer, long presentationTimeUs, long totalTimeUs) {
+
+        }
+
+        @Override
+        public void onExportComplete(MediaComposer composer) {
+
+        }
+
+        @Override
+        public void onExportError(MediaComposer composer, Exception exception) {
+
+        }
+    }
 
     final class PositionInfo {
         public long currentTimeUs;

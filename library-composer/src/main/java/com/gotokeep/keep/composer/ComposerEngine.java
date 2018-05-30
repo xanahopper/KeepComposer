@@ -25,9 +25,9 @@ public final class ComposerEngine {
 
     }
 
-    public void setup(SurfaceTexture outputSurfaceTexture) {
-        setup(outputSurfaceTexture != null ? new Surface(outputSurfaceTexture) : null);
-    }
+//    public void setup(SurfaceTexture outputSurfaceTexture) {
+//        setup(outputSurfaceTexture != null ? new Surface(outputSurfaceTexture) : null);
+//    }
 
     public void setup(Surface outputSurface) {
         Log.d("Composer", "setup@" + Thread.currentThread().getName());
