@@ -15,6 +15,7 @@ import com.gotokeep.keep.composer.RenderNode;
 import com.gotokeep.keep.composer.RenderTarget;
 import com.gotokeep.keep.composer.gles.ProgramObject;
 import com.gotokeep.keep.composer.source.AudioSource;
+import com.gotokeep.keep.composer.util.MediaUtil;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -135,14 +136,16 @@ public class MuxerRenderTarget extends RenderTarget {
     }
 
     private void prepareRenderProgram() {
-        programObject = new ProgramObject();
-        vertexBuffer = ByteBuffer.allocateDirect(DEFAULT_VERTEX_DATA.length * 4)
-                .order(ByteOrder.nativeOrder()).asFloatBuffer();
-        vertexBuffer.put(DEFAULT_VERTEX_DATA).position(0);
+        if (programObject == null) {
+            programObject = new ProgramObject();
+            vertexBuffer = ByteBuffer.allocateDirect(DEFAULT_VERTEX_DATA.length * 4)
+                    .order(ByteOrder.nativeOrder()).asFloatBuffer();
+            vertexBuffer.put(DEFAULT_VERTEX_DATA).position(0);
 
-        texCoordBuffer = ByteBuffer.allocateDirect(DEFAULT_TEX_COORDS_DATA.length * 2)
-                .order(ByteOrder.nativeOrder()).asShortBuffer();
-        texCoordBuffer.put(DEFAULT_TEX_COORDS_DATA).position(0);
+            texCoordBuffer = ByteBuffer.allocateDirect(DEFAULT_TEX_COORDS_DATA.length * 2)
+                    .order(ByteOrder.nativeOrder()).asShortBuffer();
+            texCoordBuffer.put(DEFAULT_TEX_COORDS_DATA).position(0);
+        }
     }
 
     private void prepareVideoEncoder() {
@@ -173,6 +176,13 @@ public class MuxerRenderTarget extends RenderTarget {
         }
     }
 
+    @Override
+    public void reset() {
+        // reset muxer
+        // reset encoder
+        // reset
+    }
+
     private void prepareMuxer() {
         if (muxer == null) {
             try {
@@ -194,7 +204,7 @@ public class MuxerRenderTarget extends RenderTarget {
                 return;
             }
             if (outputIndex >= 0) {
-                ByteBuffer outputBuffer = getOutputBuffer(videoEncoder, outputIndex);
+                ByteBuffer outputBuffer = MediaUtil.getOutputBuffer(videoEncoder, outputIndex);
                 if ((videoInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
                     videoEncoder.releaseOutputBuffer(outputIndex, false);
                     return;
@@ -222,7 +232,7 @@ public class MuxerRenderTarget extends RenderTarget {
             long presentationTime = audioInfo.presentationTimeUs;
             int inputIndex = audioEncoder.dequeueInputBuffer(TIMEOUT_US);
             if (inputIndex >= 0) {
-                ByteBuffer inputBuffer = getInputBuffer(audioEncoder, inputIndex);
+                ByteBuffer inputBuffer = MediaUtil.getInputBuffer(audioEncoder, inputIndex);
                 inputBuffer.clear();
                 if (size >= 0) {
                     inputBuffer.position(0);
@@ -246,7 +256,7 @@ public class MuxerRenderTarget extends RenderTarget {
                 return;
             }
             if (outputIndex >= 0) {
-                ByteBuffer outputBuffer = getOutputBuffer(audioEncoder, outputIndex);
+                ByteBuffer outputBuffer = MediaUtil.getOutputBuffer(audioEncoder, outputIndex);
                 if ((audioInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
                     audioEncoder.releaseOutputBuffer(outputIndex, false);
                     return;
@@ -311,22 +321,6 @@ public class MuxerRenderTarget extends RenderTarget {
             }
             muxer.release();
             muxer = null;
-        }
-    }
-
-    private ByteBuffer getInputBuffer(MediaCodec decoder, int inputIndex) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            return decoder.getInputBuffer(inputIndex);
-        } else {
-            return decoder.getInputBuffers()[inputIndex];
-        }
-    }
-
-    private ByteBuffer getOutputBuffer(MediaCodec decoder, int outputIndex) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            return decoder.getOutputBuffer(outputIndex);
-        } else {
-            return decoder.getOutputBuffers()[outputIndex];
         }
     }
 }

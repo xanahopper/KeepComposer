@@ -21,7 +21,7 @@ import com.gotokeep.keep.composer.util.TimeUtil;
  * @version 1.0
  * @since 2018-05-16 10:09
  */
-public class SimplestActivity extends SampleActivity implements Handler.Callback, OverlayProvider, TextureView.SurfaceTextureListener {
+public class SimplestActivity extends SampleActivity implements Handler.Callback, OverlayProvider {
     private MediaComposer composer;
     private Handler handler;
     private Timeline timeline;
@@ -31,23 +31,9 @@ public class SimplestActivity extends SampleActivity implements Handler.Callback
         super.onCreate(savedInstanceState);
 
         handler = new Handler(getMainLooper(), this);
-        previewView.setSurfaceTextureListener(this);
 
         previewView.setVideoSize(640, 360, 0);
-    }
 
-    @Override
-    public boolean handleMessage(Message msg) {
-        return false;
-    }
-
-    @Override
-    public String getLayerImagePath(String name) {
-        return null;
-    }
-
-    @Override
-    public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         composer = MediaComposerFactory.createMediaComposer(this, handler);
         composer.setPreview(previewView);
         composer.setVideoSize(640, 360);
@@ -57,11 +43,6 @@ public class SimplestActivity extends SampleActivity implements Handler.Callback
         startItem.setStartTimeMs(0);
         startItem.setEndTimeMs(4500);
         startItem.setPlaySpeed(5f);
-//        VideoItem endItem = new VideoItem(SourceProvider.VIDEO_SRC[1]);
-//        endItem.setStartTimeMs(TimeUtil.secToMs(10));
-//        endItem.setEndTimeMs(TimeUtil.secToMs(20));
-//        TransitionItem transitionItem = new TransitionItem(startItem, endItem, 1);
-//        transitionItem.setDurationMs(600);
         Track videoTrack = new Track(true, 0);
         videoTrack.addMediaItem(startItem);
         timeline.addMediaTrack(videoTrack);
@@ -72,17 +53,12 @@ public class SimplestActivity extends SampleActivity implements Handler.Callback
     }
 
     @Override
-    public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-
-    }
-
-    @Override
-    public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+    public boolean handleMessage(Message msg) {
         return false;
     }
 
     @Override
-    public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-
+    public String getLayerImagePath(String name) {
+        return null;
     }
 }

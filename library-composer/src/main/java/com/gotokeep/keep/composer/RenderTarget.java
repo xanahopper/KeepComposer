@@ -22,6 +22,8 @@ public abstract class RenderTarget {
 
     public abstract void prepareAudio(int sampleRate, int channelCount);
 
+    public abstract void reset();
+
     public abstract void complete();
 
     public abstract void release();

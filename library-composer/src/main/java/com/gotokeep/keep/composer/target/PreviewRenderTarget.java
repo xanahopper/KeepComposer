@@ -83,14 +83,16 @@ public class PreviewRenderTarget extends RenderTarget implements SurfaceTexture.
 
     @Override
     public void prepareVideo() {
-        programObject = new ProgramObject();
-        vertexBuffer = ByteBuffer.allocateDirect(DEFAULT_VERTEX_DATA.length * 4)
-                .order(ByteOrder.nativeOrder()).asFloatBuffer();
-        vertexBuffer.put(DEFAULT_VERTEX_DATA).position(0);
+        if (programObject == null) {
+            programObject = new ProgramObject();
+            vertexBuffer = ByteBuffer.allocateDirect(DEFAULT_VERTEX_DATA.length * 4)
+                    .order(ByteOrder.nativeOrder()).asFloatBuffer();
+            vertexBuffer.put(DEFAULT_VERTEX_DATA).position(0);
 
-        texCoordBuffer = ByteBuffer.allocateDirect(DEFAULT_TEX_COORDS_DATA.length * 2)
-                .order(ByteOrder.nativeOrder()).asShortBuffer();
-        texCoordBuffer.put(DEFAULT_TEX_COORDS_DATA).position(0);
+            texCoordBuffer = ByteBuffer.allocateDirect(DEFAULT_TEX_COORDS_DATA.length * 2)
+                    .order(ByteOrder.nativeOrder()).asShortBuffer();
+            texCoordBuffer.put(DEFAULT_TEX_COORDS_DATA).position(0);
+        }
     }
 
     @Override
@@ -101,6 +103,15 @@ public class PreviewRenderTarget extends RenderTarget implements SurfaceTexture.
                 AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT,
                 buffSize, AudioTrack.MODE_STREAM);
         audioTrack.play();
+    }
+
+    @Override
+    public void reset() {
+        if (audioTrack != null) {
+            audioTrack.stop();
+            audioTrack.release();
+            audioTrack = null;
+        }
     }
 
     @Override

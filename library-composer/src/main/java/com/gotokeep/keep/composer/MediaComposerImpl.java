@@ -50,6 +50,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     private static final int MSG_DEBUG_MODE = 15;
     private static final int MSG_DEBUG_DO_RENDER = 16;
     private static final int MSG_DO_AUDIO_WORK = 17;
+    private static final int MSG_RESET = 18;
 
     private static final int EVENT_PLAY_PREPARE = 0;
     private static final int EVENT_PLAY_PLAY = 1;
@@ -182,6 +183,12 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     }
 
     @Override
+    public void reset() {
+        stop();
+        videoHandler.sendEmptyMessage(MSG_RESET);
+    }
+
+    @Override
     public void release() {
         videoHandler.sendEmptyMessage(MSG_RELEASE);
     }
@@ -236,7 +243,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
                 setVideoSizeInternal(msg.arg1, msg.arg2);
                 return true;
             case MSG_PREPARE_ENGINE:
-                prepareEngine((SurfaceTexture) msg.obj, msg.arg1, msg.arg2);
+                prepareEngine((SurfaceTexture) msg.obj);
                 return true;
             case MSG_RELEASE:
                 releaseInternal();
@@ -282,13 +289,15 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
 
     private void setPreviewInternal(TextureView previewView) {
         releaseRenderTarget();
+        renderTarget = new PreviewRenderTarget();
         export = false;
         previewView.setSurfaceTextureListener(this);
         if (previewView.isAvailable()) {
-            renderTarget = new PreviewRenderTarget();
-            engine.setup(previewView.getSurfaceTexture());
+            prepareEngine(previewView.getSurfaceTexture());
             canvasWidth = previewView.getWidth();
             canvasHeight = previewView.getHeight();
+        } else {
+            prepareEngine(null);
         }
     }
 
@@ -355,7 +364,10 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     }
 
     private void seekInternal(long timeMs) {
-        renderRoot = generateRenderTree(TimeUtil.msToUs(timeMs));
+        long timeUs = TimeUtil.msToUs(timeMs);
+        renderRoot = generateRenderTree(timeUs);
+        renderRoot.seekTo(timeMs);
+        mediaClock.setPositionUs(timeUs);
         if (audioSource != null) {
             audioSource.seekTo(timeMs);
         }
@@ -552,18 +564,15 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-        renderTarget = new PreviewRenderTarget();
         canvasWidth = width;
         canvasHeight = height;
         if (engine != null) {
-            videoHandler.obtainMessage(MSG_PREPARE_ENGINE, width, height, surface).sendToTarget();
+            videoHandler.obtainMessage(MSG_PREPARE_ENGINE, surface).sendToTarget();
         }
     }
 
-    private void prepareEngine(SurfaceTexture surface, int width, int height) {
-        engine.release();
+    private void prepareEngine(SurfaceTexture surface) {
         engine.setup(surface);
-        engine.setViewport(width, height);
         if (export) {
             renderTarget.prepareVideo();
         }

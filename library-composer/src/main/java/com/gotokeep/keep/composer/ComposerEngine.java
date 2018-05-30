@@ -26,21 +26,48 @@ public final class ComposerEngine {
     }
 
     public void setup(SurfaceTexture outputSurfaceTexture) {
-        setup(new Surface(outputSurfaceTexture));
+        setup(outputSurfaceTexture != null ? new Surface(outputSurfaceTexture) : null);
     }
 
     public void setup(Surface outputSurface) {
         Log.d("Composer", "setup@" + Thread.currentThread().getName());
-        release();
-        eglCore = new EglCore(null, EglCore.FLAG_RECORDABLE);
-        eglSurface = eglCore.createWindowSurface(outputSurface);
+        if (eglCore == null) {
+            eglCore = new EglCore(null, EglCore.FLAG_RECORDABLE);
+        }
+        EGLSurface originSurface = eglSurface;
+        if (outputSurface != null) {
+            eglSurface = eglCore.createWindowSurface(outputSurface);
+        } else {
+            eglSurface = eglCore.createOffscreenSurface(0, 0);
+        }
         eglCore.makeCurrent(eglSurface);
+
+        if (originSurface != null && originSurface != eglSurface) {
+            eglCore.releaseSurface(originSurface);
+        }
+    }
+
+    public void setOutputSurface(SurfaceTexture outputSurfaceTexture) {
+        setOutputSurface(new Surface(outputSurfaceTexture));
+    }
+
+    private void setOutputSurface(Surface surface) {
+        if (surface != null) {
+            if (eglCore == null) {
+                setup(surface);
+            } else if (eglSurface == null) {
+                eglSurface = eglCore.createWindowSurface(surface);
+                eglCore.makeCurrent(eglSurface);
+            }
+        }
     }
 
     public void release() {
         if (eglCore != null) {
             eglCore.makeNothingCurrent();
-            eglCore.releaseSurface(eglSurface);
+            if (eglSurface != null) {
+                eglCore.releaseSurface(eglSurface);
+            }
             eglCore.release();
             eglCore = null;
             eglSurface = null;

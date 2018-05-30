@@ -38,6 +38,8 @@ public interface MediaComposer {
 
     int getVideoHeight();
 
+    void reset();
+
     void release();
 
     void setDebugMode(boolean debugMode);

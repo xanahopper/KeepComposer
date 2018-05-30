@@ -122,6 +122,12 @@ public abstract class RenderNode {
         onPreload();
     }
 
+    public void seekTo(long timeMs) {
+        for (RenderNode node : inputNodes) {
+            node.seekTo(timeMs);
+        }
+    }
+
     /**
      * after prepared, resource will be initialized in memory. And call {@link #release()} to release.
      */
