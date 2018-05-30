@@ -5,7 +5,6 @@ import android.media.MediaCodec;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
-import android.os.Process;
 import android.os.SystemClock;
 import android.util.Log;
 import android.util.SparseArray;
@@ -15,10 +14,10 @@ import android.view.TextureView;
 import com.gotokeep.keep.composer.source.AudioSource;
 import com.gotokeep.keep.composer.target.MuxerRenderTarget;
 import com.gotokeep.keep.composer.target.PreviewRenderTarget;
-import com.gotokeep.keep.composer.timeline.item.AudioItem;
 import com.gotokeep.keep.composer.timeline.MediaItem;
 import com.gotokeep.keep.composer.timeline.RenderFactory;
 import com.gotokeep.keep.composer.timeline.Timeline;
+import com.gotokeep.keep.composer.timeline.item.AudioItem;
 import com.gotokeep.keep.composer.util.MediaClock;
 import com.gotokeep.keep.composer.util.TimeUtil;
 
@@ -72,11 +71,12 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
 
     private HandlerThread composerThread;
     private Handler handler;
-//    private HandlerThread videoThread;
+    //    private HandlerThread videoThread;
 //    private HandlerThread audioThread;
 //    private Handler videoHandler;
 //    private Handler audioHandler;
     private Handler eventHandler;
+    private boolean released = false;
 
     private Surface surface;
     private boolean ownsSurface;
@@ -205,6 +205,13 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     @Override
     public synchronized void release() {
         handler.sendEmptyMessage(MSG_RELEASE);
+        while (!released) {
+            try {
+                wait(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     @Override
@@ -214,12 +221,12 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
 
     @Override
     public void setDebugMode(boolean debugMode) {
-        videoHandler.obtainMessage(MSG_DEBUG_MODE, debugMode).sendToTarget();
+        handler.obtainMessage(MSG_DEBUG_MODE, debugMode).sendToTarget();
     }
 
     @Override
     public void doDebugRender(long positionUs) {
-        videoHandler.obtainMessage(MSG_DEBUG_DO_RENDER, positionUs).sendToTarget();
+        handler.obtainMessage(MSG_DEBUG_DO_RENDER, positionUs).sendToTarget();
     }
 
     @Override
@@ -285,8 +292,8 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     }
 
     private void releaseInternal() {
-        videoHandler.removeMessages(MSG_DO_SOME_WORK);
-        videoThread.quitSafely();
+        handler.removeCallbacksAndMessages(null);
+        composerThread.quitSafely();
         for (MediaItem item : renderNodeMap.keySet()) {
             Log.d(TAG, "releaseInternal: " + item.toString());
             RenderNode node = renderNodeMap.get(item);
@@ -301,6 +308,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
             engine.release();
             engine = null;
         }
+        released = true;
     }
 
     private void setTimelineInternal(Timeline timeline) {
@@ -374,8 +382,8 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         Log.d(TAG, "playInternal");
         playing.set(true);
         mediaClock.start();
-        videoHandler.sendEmptyMessage(MSG_DO_SOME_WORK);
-        audioHandler.sendEmptyMessage(MSG_DO_AUDIO_WORK);
+        handler.sendEmptyMessage(MSG_DO_SOME_WORK);
+        handler.sendEmptyMessage(MSG_DO_AUDIO_WORK);
         if (eventHandler != null) {
             eventHandler.sendEmptyMessage(export ? EVENT_EXPORT_START : EVENT_PLAY_PLAY);
         }
@@ -392,8 +400,8 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     private void stopInternal() {
         playing.set(false);
         mediaClock.stop();
-        videoHandler.removeMessages(MSG_DO_SOME_WORK);
-        audioHandler.removeMessages(MSG_DO_AUDIO_WORK);
+        handler.removeMessages(MSG_DO_SOME_WORK);
+        handler.removeMessages(MSG_DO_AUDIO_WORK);
         renderTarget.complete();
         if (eventHandler != null) {
             eventHandler.sendEmptyMessage(export ? EVENT_EXPORT_COMPLETE : EVENT_PLAY_STOP);
@@ -444,7 +452,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
             return;
         }
         if (playing.get()) {
-            audioHandler.sendEmptyMessage(MSG_DO_AUDIO_WORK);
+            handler.sendEmptyMessage(MSG_DO_AUDIO_WORK);
         }
     }
 
@@ -495,7 +503,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         if (renderRoot != null) {
             scheduleNextWork(operationStartMs, 10);
         } else {
-            videoHandler.removeMessages(MSG_DO_SOME_WORK);
+            handler.removeMessages(MSG_DO_SOME_WORK);
         }
     }
 
@@ -510,7 +518,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     }
 
     private void scheduleNextWork(long operationTimeMs, long intervalTimeMs) {
-        videoHandler.removeMessages(MSG_DO_SOME_WORK);
+        handler.removeMessages(MSG_DO_SOME_WORK);
         if (debugMode) {
             return;
         }
@@ -578,26 +586,6 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
             }
         }
     }
-
-//    private RenderNode maintainRenderTree(RenderNode root, long presentationTimeUs) {
-//        if (root != null) {
-//            for (int i = 0; i < root.inputNodes.size(); i++) {
-//                int key = root.inputNodes.keyAt(i);
-//                RenderNode node = root.inputNodes.valueAt(i);
-//                node = maintainRenderTree(node, presentationTimeUs);
-//                if (node != null) {
-//                    root.inputNodes.put(key, node);
-//                } else {
-//                    root.inputNodes.remove(key);
-//                }
-//            }
-//            if (!root.isInRange(TimeUtil.usToMs(presentationTimeUs)) ||
-//                    root.getMainInputNode(presentationTimeUs) == null) {
-//                root = root.getMainInputNode(presentationTimeUs);
-//            }
-//        }
-//        return root;
-//    }
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
