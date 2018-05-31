@@ -82,7 +82,7 @@ public class ExportPatternAllScriptActivity extends SampleActivity implements Ha
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-        composer = MediaComposerFactory.createMediaComposer(this, handler);
+        composer = MediaComposerFactory.createMediaComposer(this, this, handler);
         composer.setPreview(previewView);
         composer.setVideoSize(EXPORT_WIDTH, EXPORT_HEIGHT);
         composer.setPlayEventListener(this);

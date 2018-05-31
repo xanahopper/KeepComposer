@@ -1,5 +1,6 @@
 package com.gotokeep.keep.composer.demo.sample;
 
+import android.graphics.Color;
 import android.graphics.SurfaceTexture;
 import android.os.Bundle;
 import android.os.Handler;
@@ -21,6 +22,7 @@ import com.gotokeep.keep.composer.timeline.item.ImageItem;
 import com.gotokeep.keep.composer.timeline.item.LayerItem;
 import com.gotokeep.keep.composer.timeline.Timeline;
 import com.gotokeep.keep.composer.timeline.Track;
+import com.gotokeep.keep.composer.timeline.item.TextItem;
 import com.gotokeep.keep.composer.timeline.item.TransitionItem;
 import com.gotokeep.keep.composer.timeline.item.VideoItem;
 import com.gotokeep.keep.composer.util.TimeUtil;
@@ -60,7 +62,7 @@ public class TransitionExportActivity extends SampleActivity implements Handler.
     }
 
     private void startExport() {
-        composer = MediaComposerFactory.createMediaComposer(this, handler);
+        composer = MediaComposerFactory.createMediaComposer(this, this, handler);
         composer.setVideoSize(EXPORT_WIDTH, EXPORT_HEIGHT);
         composer.setPlayEventListener(this);
 
@@ -94,8 +96,14 @@ public class TransitionExportActivity extends SampleActivity implements Handler.
         layerItem1.setScale(0.25f);
         layerItem1.setOffsetX(250);
         layerItem1.setOffsetY(150);
+        TextItem textItem = new TextItem(2, "我的运动时刻");
+        textItem.setTimeRangeMs(0, TimeUtil.secToMs(2));
+        textItem.setPosition("center");
+        textItem.setTextSize(64);
+        textItem.setTextColor(Color.WHITE);
         overlayTrack.addMediaItem(layerItem);
         overlayTrack.addMediaItem(layerItem1);
+        overlayTrack.addMediaItem(textItem);
 
         FilterItem filterItem = new FilterItem("sunset", null);
         filterItem.setTimeRangeMs(0, TimeUtil.secToMs(8));

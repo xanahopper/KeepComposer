@@ -64,7 +64,7 @@ public class SimpleOverlayActivity extends SampleActivity implements Handler.Cal
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-        composer = MediaComposerFactory.createMediaComposer(this, handler);
+        composer = MediaComposerFactory.createMediaComposer(this, this, handler);
         composer.setPreview(previewView);
         composer.setVideoSize(640, 360);
         composer.setPlayEventListener(this);

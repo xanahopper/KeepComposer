@@ -1,10 +1,8 @@
 package com.gotokeep.keep.composer.demo.sample;
 
-import android.graphics.SurfaceTexture;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.view.TextureView;
 
 import com.gotokeep.keep.composer.MediaComposer;
 import com.gotokeep.keep.composer.MediaComposerFactory;
@@ -14,7 +12,6 @@ import com.gotokeep.keep.composer.overlay.OverlayProvider;
 import com.gotokeep.keep.composer.timeline.Timeline;
 import com.gotokeep.keep.composer.timeline.Track;
 import com.gotokeep.keep.composer.timeline.item.VideoItem;
-import com.gotokeep.keep.composer.util.TimeUtil;
 
 /**
  * @author xana/cuixianming
@@ -34,7 +31,7 @@ public class SimplestActivity extends SampleActivity implements Handler.Callback
 
         previewView.setVideoSize(640, 360, 0);
 
-        composer = MediaComposerFactory.createMediaComposer(this, handler);
+        composer = MediaComposerFactory.createMediaComposer(this, this, handler);
         composer.setPreview(previewView);
         composer.setVideoSize(640, 360);
 

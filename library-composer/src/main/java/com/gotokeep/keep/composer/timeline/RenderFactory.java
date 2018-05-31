@@ -1,5 +1,6 @@
 package com.gotokeep.keep.composer.timeline;
 
+import android.content.Context;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -9,6 +10,7 @@ import com.gotokeep.keep.composer.filter.FilterFactory;
 import com.gotokeep.keep.composer.overlay.LayerOverlay;
 import com.gotokeep.keep.composer.overlay.MediaOverlay;
 import com.gotokeep.keep.composer.overlay.OverlayProvider;
+import com.gotokeep.keep.composer.overlay.SubtitleOverlay;
 import com.gotokeep.keep.composer.overlay.WatermarkOverlay;
 import com.gotokeep.keep.composer.source.ImageMediaSource;
 import com.gotokeep.keep.composer.source.VideoMediaSource;
@@ -16,6 +18,7 @@ import com.gotokeep.keep.composer.timeline.item.AudioItem;
 import com.gotokeep.keep.composer.timeline.item.FilterItem;
 import com.gotokeep.keep.composer.timeline.item.ImageItem;
 import com.gotokeep.keep.composer.timeline.item.LayerItem;
+import com.gotokeep.keep.composer.timeline.item.TextItem;
 import com.gotokeep.keep.composer.timeline.item.TransitionItem;
 import com.gotokeep.keep.composer.timeline.item.VideoItem;
 import com.gotokeep.keep.composer.timeline.item.WatermarkItem;
@@ -40,8 +43,10 @@ public class RenderFactory {
             RenderCreator<? extends MediaItem, ? extends RenderNode>> renderCreatorMap = new HashMap<>();
     private Map<MediaItem, RenderNode> renderNodeCache = new HashMap<>();
     private OverlayProvider overlayProvider;
+    private Context context;
 
-    public RenderFactory(OverlayProvider overlayProvider) {
+    public RenderFactory(Context context, OverlayProvider overlayProvider) {
+        this.context = context;
         this.overlayProvider = overlayProvider;
         registerRenderType(VideoItem.class, item -> {
             VideoMediaSource source = new VideoMediaSource(item.getFilePath());
@@ -51,8 +56,13 @@ public class RenderFactory {
         registerRenderType(ImageItem.class, item -> new ImageMediaSource(item.getFilePath()));
         registerRenderType(TransitionItem.class, item -> MediaTransitionFactory.getTransition(item.getName(), item.getDurationMs()));
         registerRenderType(LayerItem.class, item -> {
-            String filePath = TextUtils.isEmpty(item.getUrl()) ? overlayProvider.getLayerImagePath(item.getName()) : item.getUrl();
+            String filePath = (TextUtils.isEmpty(item.getUrl()) && overlayProvider != null) ? overlayProvider.getLayerImagePath(item.getName()) : item.getUrl();
             MediaOverlay overlay = new LayerOverlay(filePath);
+            overlay.initWithMediaItem(item);
+            return overlay;
+        });
+        registerRenderType(TextItem.class, item -> {
+            MediaOverlay overlay = new SubtitleOverlay(context);
             overlay.initWithMediaItem(item);
             return overlay;
         });

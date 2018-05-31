@@ -1,6 +1,5 @@
 package com.gotokeep.keep.composer.demo.sample;
 
-import android.content.Intent;
 import android.graphics.SurfaceTexture;
 import android.os.Bundle;
 import android.os.Handler;
@@ -18,13 +17,6 @@ import com.gotokeep.keep.composer.demo.source.SourceProvider;
 import com.gotokeep.keep.composer.filter.FilterFactory;
 import com.gotokeep.keep.composer.overlay.OverlayProvider;
 import com.gotokeep.keep.composer.timeline.Timeline;
-import com.gotokeep.keep.composer.timeline.Track;
-import com.gotokeep.keep.composer.timeline.item.AudioItem;
-import com.gotokeep.keep.composer.timeline.item.FilterItem;
-import com.gotokeep.keep.composer.timeline.item.ImageItem;
-import com.gotokeep.keep.composer.timeline.item.LayerItem;
-import com.gotokeep.keep.composer.timeline.item.TransitionItem;
-import com.gotokeep.keep.composer.timeline.item.VideoItem;
 import com.gotokeep.keep.composer.util.TimeUtil;
 import com.gotokeep.keep.director.KeepDirector;
 import com.gotokeep.keep.director.VideoFragment;
@@ -87,7 +79,7 @@ public class PatternAllScriptActivity extends SampleActivity implements Handler.
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-        composer = MediaComposerFactory.createMediaComposer(this, handler);
+        composer = MediaComposerFactory.createMediaComposer(this, this, handler);
         composer.setPreview(previewView);
         composer.setVideoSize(640, 360);
         composer.setPlayEventListener(this);

@@ -1,6 +1,7 @@
 package com.gotokeep.keep.composer.demo.sample;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.SurfaceTexture;
 import android.os.Bundle;
 import android.os.Handler;
@@ -21,6 +22,7 @@ import com.gotokeep.keep.composer.timeline.item.ImageItem;
 import com.gotokeep.keep.composer.timeline.item.LayerItem;
 import com.gotokeep.keep.composer.timeline.Timeline;
 import com.gotokeep.keep.composer.timeline.Track;
+import com.gotokeep.keep.composer.timeline.item.TextItem;
 import com.gotokeep.keep.composer.timeline.item.TransitionItem;
 import com.gotokeep.keep.composer.timeline.item.VideoItem;
 import com.gotokeep.keep.composer.util.TimeUtil;
@@ -36,6 +38,8 @@ public class SimpleTransitionActivity extends SampleActivity implements Handler.
     private Handler handler;
     private Timeline timeline;
     private boolean gotoNext = false;
+    private static final int EXPORT_WIDTH = 960;
+    private static final int EXPORT_HEIGHT = 540;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,7 +48,7 @@ public class SimpleTransitionActivity extends SampleActivity implements Handler.
         handler = new Handler(getMainLooper(), this);
         previewView.setSurfaceTextureListener(this);
 
-        previewView.setVideoSize(640, 360, 0);
+        previewView.setVideoSize(EXPORT_WIDTH, EXPORT_HEIGHT, 0);
         FilterFactory.registerExternalFilterFactory(DemoFilterFactory.getInstance());
         if (getIntent().hasExtra("gotoNext")) {
             Log.d("Composer", "onCreate: " + getIntent().getStringExtra("gotoNext"));
@@ -78,9 +82,9 @@ public class SimpleTransitionActivity extends SampleActivity implements Handler.
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-        composer = MediaComposerFactory.createMediaComposer(this, handler);
+        composer = MediaComposerFactory.createMediaComposer(this, this, handler);
         composer.setPreview(previewView);
-        composer.setVideoSize(640, 360);
+        composer.setVideoSize(EXPORT_WIDTH, EXPORT_HEIGHT);
         composer.setPlayEventListener(this);
 
         timeline = new Timeline();
@@ -114,8 +118,15 @@ public class SimpleTransitionActivity extends SampleActivity implements Handler.
             layerItem1.setScale(0.25f);
             layerItem1.setOffsetX(250);
             layerItem1.setOffsetY(150);
+            TextItem textItem = new TextItem(2, "我的运动时刻");
+            textItem.setTimeRangeMs(0, TimeUtil.secToMs(6));
+            textItem.setPosition("center");
+            textItem.setTextSize(64);
+            textItem.setTextColor(Color.WHITE);
+            textItem.setShadowColor(0x7F444444);
             overlayTrack.addMediaItem(layerItem);
             overlayTrack.addMediaItem(layerItem1);
+            overlayTrack.addMediaItem(textItem);
 
             FilterItem filterItem = new FilterItem("sunset", null);
             filterItem.setTimeRangeMs(0, TimeUtil.secToMs(8));
