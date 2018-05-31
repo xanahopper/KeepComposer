@@ -145,8 +145,8 @@ public class PatternAll extends BasePattern {
             }
         } else {
             speed = (float) MediaUtil.getDuration(resourceManager.getCacheFilePath(video.getFile())) / durationMs;
-            if (speed > 3f) {
-                speed = 3f;
+            if (speed > 2f) {
+                speed = 2f;
             }
         }
         return speed;

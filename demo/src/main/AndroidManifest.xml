@@ -70,7 +70,8 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
-        <activity android:name=".sample.StepOverlayActivity"
+        <activity
+            android:name=".sample.StepOverlayActivity"
             android:icon="@drawable/ic_debug_step"
             android:label="MediaComposer Step Overlay">
             <intent-filter>
@@ -79,7 +80,8 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
-        <activity android:name=".sample.TransitionExportActivity"
+        <activity
+            android:name=".sample.TransitionExportActivity"
             android:icon="@drawable/ic_export"
             android:label="MediaComposer Export Transition">
             <intent-filter>
@@ -88,7 +90,8 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
-        <activity android:name=".sample.ImageFilterActivity"
+        <activity
+            android:name=".sample.ImageFilterActivity"
             android:icon="@drawable/ic_filter"
             android:label="MediaComposer Image Filter">
             <intent-filter>
@@ -97,7 +100,8 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
-        <activity android:name=".sample.PatternAllScriptActivity"
+        <activity
+            android:name=".sample.PatternAllScriptActivity"
             android:icon="@drawable/ic_movie_filter"
             android:label="Director Pattern All">
             <intent-filter>
@@ -106,15 +110,17 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
-        <activity android:name=".sample.ExportPatternAllScriptActivity"
-                  android:icon="@drawable/ic_export"
-                  android:label="Director Pattern All Export">
+        <activity
+            android:name=".sample.ExportPatternAllScriptActivity"
+            android:icon="@drawable/ic_export"
+            android:label="Director Pattern All Export">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
+        <activity android:name=".sample.DecodeSpeedThread"></activity>
     </application>
 
 </manifest>
