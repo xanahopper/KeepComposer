@@ -43,4 +43,12 @@ public final class TimeUtil {
     public static long usToNs(long timeUs) {
         return timeUs * 1000;
     }
+
+    public static long nsToMs(long timeNs) {
+        return Math.round((float) timeNs / 1000000L);
+    }
+
+    public static long nsToUs(long timeUs) {
+        return Math.round((float) timeUs / 1000);
+    }
 }

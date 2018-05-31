@@ -145,14 +145,16 @@ public class VideoMediaSource extends MediaSource {
 //                        ((sampleFlags & MediaExtractor.SAMPLE_FLAG_SYNC) == 0) &&
 //                        !ended);
                 Log.d("VideoMediaSource", "render: feed to decoder input buffer " + sampleTimeUs);
-                if (!ended) {
+                if (ended) {
+                    decoder.queueInputBuffer(inputIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+                } else {
                     decoder.queueInputBuffer(inputIndex, 0, bufferSize, sampleTimeUs, sampleFlags);
                 }
             } else {
                 Log.w("VideoMediaSource", "doRender: cannot dequeue input buffer from decoder, reason: " + inputIndex);
             }
             int outputIndex = decoder.dequeueOutputBuffer(decodeInfo, TIMEOUT_US);
-            if (outputIndex > 0) {
+            if (outputIndex >= 0) {
                 this.presentationTimeUs = decodeInfo.presentationTimeUs;
                 boolean keyFrame = (decodeInfo.flags & MediaCodec.BUFFER_FLAG_SYNC_FRAME) != 0;
                 decoder.releaseOutputBuffer(outputIndex, presentationTimeUs >= actualTimeUs);
