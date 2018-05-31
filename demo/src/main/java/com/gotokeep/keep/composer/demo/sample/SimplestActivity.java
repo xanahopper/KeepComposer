@@ -4,14 +4,14 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 
-import com.gotokeep.keep.composer.MediaComposer;
-import com.gotokeep.keep.composer.MediaComposerFactory;
+import com.gotokeep.keep.social.composer.MediaComposer;
+import com.gotokeep.keep.social.composer.MediaComposerFactory;
 import com.gotokeep.keep.composer.demo.SampleActivity;
 import com.gotokeep.keep.composer.demo.source.SourceProvider;
-import com.gotokeep.keep.composer.overlay.OverlayProvider;
-import com.gotokeep.keep.composer.timeline.Timeline;
-import com.gotokeep.keep.composer.timeline.Track;
-import com.gotokeep.keep.composer.timeline.item.VideoItem;
+import com.gotokeep.keep.social.composer.overlay.OverlayProvider;
+import com.gotokeep.keep.social.composer.timeline.Timeline;
+import com.gotokeep.keep.social.composer.timeline.Track;
+import com.gotokeep.keep.social.composer.timeline.item.VideoItem;
 
 /**
  * @author xana/cuixianming

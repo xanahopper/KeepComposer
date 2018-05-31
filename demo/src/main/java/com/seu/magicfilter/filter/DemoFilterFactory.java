@@ -1,7 +1,7 @@
 package com.seu.magicfilter.filter;
 
-import com.gotokeep.keep.composer.filter.ExternalFilter;
-import com.gotokeep.keep.composer.filter.ExternalFilterFactory;
+import com.gotokeep.keep.social.composer.filter.ExternalFilter;
+import com.gotokeep.keep.social.composer.filter.ExternalFilterFactory;
 import com.seu.magicfilter.filter.advanced.MagicBlackCatFilter;
 import com.seu.magicfilter.filter.advanced.MagicSunsetFilter;
 import com.seu.magicfilter.filter.base.gpuimage.GPUImageFilter;

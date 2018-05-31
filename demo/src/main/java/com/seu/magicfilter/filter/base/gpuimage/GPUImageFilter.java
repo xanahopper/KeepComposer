@@ -19,7 +19,7 @@ package com.seu.magicfilter.filter.base.gpuimage;
 import android.graphics.PointF;
 import android.opengl.GLES20;
 
-import com.gotokeep.keep.composer.filter.ExternalFilter;
+import com.gotokeep.keep.social.composer.filter.ExternalFilter;
 import com.seu.magicfilter.utils.OpenGlUtils;
 import com.seu.magicfilter.utils.Rotation;
 import com.seu.magicfilter.utils.TextureRotationUtil;

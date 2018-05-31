@@ -6,16 +6,16 @@ import android.os.Handler;
 import android.os.Message;
 import android.view.TextureView;
 
-import com.gotokeep.keep.composer.MediaComposer;
-import com.gotokeep.keep.composer.MediaComposerFactory;
+import com.gotokeep.keep.social.composer.MediaComposer;
+import com.gotokeep.keep.social.composer.MediaComposerFactory;
 import com.gotokeep.keep.composer.demo.SampleActivity;
 import com.gotokeep.keep.composer.demo.source.SourceProvider;
-import com.gotokeep.keep.composer.overlay.OverlayProvider;
-import com.gotokeep.keep.composer.timeline.item.AudioItem;
-import com.gotokeep.keep.composer.timeline.item.ImageItem;
-import com.gotokeep.keep.composer.timeline.Timeline;
-import com.gotokeep.keep.composer.timeline.Track;
-import com.gotokeep.keep.composer.util.TimeUtil;
+import com.gotokeep.keep.social.composer.overlay.OverlayProvider;
+import com.gotokeep.keep.social.composer.timeline.item.AudioItem;
+import com.gotokeep.keep.social.composer.timeline.item.ImageItem;
+import com.gotokeep.keep.social.composer.timeline.Timeline;
+import com.gotokeep.keep.social.composer.timeline.Track;
+import com.gotokeep.keep.social.composer.util.TimeUtil;
 
 /**
  * @author xana/cuixianming

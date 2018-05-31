@@ -1,7 +1,7 @@
 package com.gotokeep.keep.composer;
 
-import com.gotokeep.keep.composer.timeline.item.LayerItem;
-import com.gotokeep.keep.composer.timeline.MediaItem;
+import com.gotokeep.keep.social.composer.timeline.item.LayerItem;
+import com.gotokeep.keep.social.composer.timeline.MediaItem;
 
 import org.junit.Test;
 

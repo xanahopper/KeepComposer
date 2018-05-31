@@ -1,7 +1,6 @@
 package com.gotokeep.keep.composer.demo;
 
 import android.Manifest;
-import android.app.Application;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -25,8 +24,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.gotokeep.keep.director.ResourceManager;
-import com.liulishuo.filedownloader.FileDownloader;
+import com.gotokeep.keep.social.director.ResourceManager;
 import com.seu.magicfilter.utils.MagicParams;
 
 import java.util.ArrayList;
