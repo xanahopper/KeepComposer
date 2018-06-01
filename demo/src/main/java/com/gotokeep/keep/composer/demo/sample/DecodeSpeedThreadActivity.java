@@ -38,12 +38,14 @@ public class DecodeSpeedThreadActivity extends AppCompatActivity implements Hand
     private static final String TAG = "DecodeSpeedTest";
 
     private Handler handler;
-    private DecodeThread decodeThread;
+    private DecodeThread decodeThreads[] = new DecodeThread[2];
     private List<FrameInfo> frameInfos = new ArrayList<>();
 
     private TextureView previewView;
     private RecyclerView recyclerView;
     private SurfaceTexture surfaceTexture;
+    private EglCore eglCore;
+    private EGLSurface eglSurface;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +55,12 @@ public class DecodeSpeedThreadActivity extends AppCompatActivity implements Hand
 
         previewView = findViewById(R.id.preview_view);
         previewView.setSurfaceTextureListener(this);
+
+        initContext();
+    }
+
+    private void initContext() {
+        eglCore = new EglCore(null, EglCore.FLAG_RECORDABLE);
     }
 
     @Override
@@ -72,10 +80,14 @@ public class DecodeSpeedThreadActivity extends AppCompatActivity implements Hand
     }
 
     private void startDecode() {
-        if (decodeThread == null && surfaceTexture != null) {
-            frameInfos.clear();
-            decodeThread = new DecodeThread();
-            decodeThread.start();
+        for (int i = 0; i < decodeThreads.length; i++) {
+            DecodeThread thread = decodeThreads[i];
+            if (thread == null && surfaceTexture != null) {
+                frameInfos.clear();
+                thread = new DecodeThread(i, handler);
+                decodeThreads[i] = thread;
+                thread.start();
+            }
         }
     }
 
@@ -93,7 +105,9 @@ public class DecodeSpeedThreadActivity extends AppCompatActivity implements Hand
                 return true;
             case MSG_DECODE_COMPLETE:
                 try {
-                    decodeThread.join();
+                    for (DecodeThread thread : decodeThreads) {
+                        thread.join();
+                    }
                 } catch (InterruptedException e) {
                     //
                 }
@@ -106,6 +120,8 @@ public class DecodeSpeedThreadActivity extends AppCompatActivity implements Hand
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         this.surfaceTexture = surface;
+        eglSurface = eglCore.createWindowSurface(new Surface(surfaceTexture));
+        eglCore.makeCurrent(eglSurface);
     }
 
     @Override
@@ -115,6 +131,13 @@ public class DecodeSpeedThreadActivity extends AppCompatActivity implements Hand
 
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+        if (eglCore != null) {
+            eglCore.makeNothingCurrent();
+            if (eglSurface != null) {
+                eglCore.releaseSurface(eglSurface);
+            }
+            eglCore.release();
+        }
         return false;
     }
 
@@ -152,19 +175,24 @@ public class DecodeSpeedThreadActivity extends AppCompatActivity implements Hand
         }
     }
 
-    private class DecodeThread extends Thread {
+    private static class DecodeThread extends Thread {
         private MediaExtractor extractor;
         private int trackIndex = -1;
         private MediaFormat format;
         private MediaCodec decoder;
         private MediaCodec.BufferInfo decodeInfo;
         private Surface outputSurface;
-        private EglCore eglCore;
-        private EGLSurface eglSurface;
         private RenderTexture renderTexture;
         private boolean ended = false;
 
         private TimeRange initTime = new TimeRange();
+        private String sourcePath;
+        private Handler handler;
+
+        DecodeThread(int sourceIndex, Handler eventHandler) {
+            sourcePath = SourceProvider.VIDEO_SRC[sourceIndex];
+            handler = eventHandler;
+        }
 
         @Override
         public void run() {
@@ -193,17 +221,14 @@ public class DecodeSpeedThreadActivity extends AppCompatActivity implements Hand
         }
 
         private void prepareContext() {
-            eglCore = new EglCore(null, EglCore.FLAG_RECORDABLE);
             renderTexture = new RenderTexture(RenderTexture.TEXTURE_EXTERNAL, "DecodeTexture");
             outputSurface = new Surface(renderTexture.getSurfaceTexture());
-            eglSurface = eglCore.createWindowSurface(new Surface(surfaceTexture));
-            eglCore.makeCurrent(eglSurface);
         }
 
         private void prepareExtractor() throws InterruptedException {
             extractor = new MediaExtractor();
             try {
-                extractor.setDataSource(SourceProvider.VIDEO_SRC[0]);
+                extractor.setDataSource(sourcePath);
                 for (int i = 0; i < extractor.getTrackCount(); i++) {
                     format = extractor.getTrackFormat(i);
                     String mime = format.getString(MediaFormat.KEY_MIME);
@@ -269,8 +294,8 @@ public class DecodeSpeedThreadActivity extends AppCompatActivity implements Hand
                 info.decode.endTime = SystemClock.elapsedRealtimeNanos();
                 if (renderTexture.isFrameAvailable()) {
                     info.updateTexImage.startTime = SystemClock.elapsedRealtimeNanos();
-                    renderTexture.updateTexImage();
-                    drawTexture(renderTexture);
+//                    renderTexture.updateTexImage();
+//                    drawTexture(renderTexture);
                     info.updateTexImage.endTime = SystemClock.elapsedRealtimeNanos();
                 }
             }
@@ -296,19 +321,12 @@ public class DecodeSpeedThreadActivity extends AppCompatActivity implements Hand
         }
 
         private void releaseContext() {
-            if (eglCore != null) {
-                eglCore.makeNothingCurrent();
-                if (outputSurface != null) {
-                    outputSurface.release();
-                    outputSurface = null;
-                }
-                if (eglSurface != null) {
-                    eglCore.releaseSurface(eglSurface);
-                }
-                if (renderTexture != null) {
-                    renderTexture.release();
-                }
-                eglCore.release();
+            if (outputSurface != null) {
+                outputSurface.release();
+                outputSurface = null;
+            }
+            if (renderTexture != null) {
+                renderTexture.release();
             }
         }
     }

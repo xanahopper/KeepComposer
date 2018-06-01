@@ -32,9 +32,9 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
     }
 
     public void updateTexImage() {
-        surfaceTexture.updateTexImage();
         synchronized (frameSyncObj) {
             frameAvailable = false;
+            surfaceTexture.updateTexImage();
         }
     }
 
