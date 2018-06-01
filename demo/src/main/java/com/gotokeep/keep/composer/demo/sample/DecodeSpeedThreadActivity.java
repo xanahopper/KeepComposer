@@ -1,51 +1,66 @@
 package com.gotokeep.keep.composer.demo.sample;
 
+import android.graphics.Color;
 import android.graphics.SurfaceTexture;
-import android.media.MediaCodec;
-import android.media.MediaExtractor;
-import android.media.MediaFormat;
-import android.opengl.EGLSurface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.os.SystemClock;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.Surface;
 import android.view.TextureView;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.gotokeep.keep.composer.demo.R;
-import com.gotokeep.keep.composer.demo.source.SourceProvider;
-import com.gotokeep.keep.social.composer.gles.EglCore;
-import com.gotokeep.keep.social.composer.gles.RenderTexture;
-import com.gotokeep.keep.social.composer.util.MediaUtil;
+import com.gotokeep.keep.composer.demo.decode.DecodeThread;
+import com.gotokeep.keep.composer.demo.decode.FrameInfo;
+import com.gotokeep.keep.composer.demo.decode.RenderThread;
+import com.gotokeep.keep.composer.demo.decode.TimeRange;
 import com.gotokeep.keep.social.composer.util.TimeUtil;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import lecho.lib.hellocharts.gesture.ContainerScrollType;
+import lecho.lib.hellocharts.gesture.ZoomType;
+import lecho.lib.hellocharts.model.Axis;
+import lecho.lib.hellocharts.model.Line;
+import lecho.lib.hellocharts.model.LineChartData;
+import lecho.lib.hellocharts.model.PointValue;
+import lecho.lib.hellocharts.view.LineChartView;
 
 public class DecodeSpeedThreadActivity extends AppCompatActivity implements Handler.Callback, TextureView
         .SurfaceTextureListener {
 
-    private static final int MSG_INIT_TIME = 184;
-    private static final int MSG_DECODE_FRAME = 206;
-    private static final int MSG_DECODE_COMPLETE = 933;
     private static final String TAG = "DecodeSpeedTest";
 
+    private static final int LINE_COLORS[] = {
+            Color.MAGENTA, Color.RED
+    };
     private Handler handler;
     private DecodeThread decodeThreads[] = new DecodeThread[2];
+    private AtomicInteger decodeCount = new AtomicInteger(0);
+    private RenderThread renderThread;
     private List<FrameInfo> frameInfos = new ArrayList<>();
+    private FrameInfoAdapter adapter;
 
     private TextureView previewView;
     private RecyclerView recyclerView;
     private SurfaceTexture surfaceTexture;
-    private EglCore eglCore;
-    private EGLSurface eglSurface;
+    private Runnable updateRunnable = new UpdateRunnable();
+    private Object contextSyncObj = new Object();
+
+    private LineChartView chart;
+    private List<List<PointValue>> decodeTime = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,11 +71,18 @@ public class DecodeSpeedThreadActivity extends AppCompatActivity implements Hand
         previewView = findViewById(R.id.preview_view);
         previewView.setSurfaceTextureListener(this);
 
-        initContext();
-    }
+        adapter = new FrameInfoAdapter();
+        adapter.frameInfos = frameInfos;
+        recyclerView = findViewById(R.id.recycler_view);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(adapter);
 
-    private void initContext() {
-        eglCore = new EglCore(null, EglCore.FLAG_RECORDABLE);
+        chart = findViewById(R.id.chart);
+        chart.setInteractive(true);
+        chart.setZoomType(ZoomType.HORIZONTAL);
+        chart.setContainerScrollEnabled(true, ContainerScrollType.HORIZONTAL);
+        chart.setContainerScrollEnabled(false, ContainerScrollType.VERTICAL);
+
     }
 
     @Override
@@ -80,48 +102,76 @@ public class DecodeSpeedThreadActivity extends AppCompatActivity implements Hand
     }
 
     private void startDecode() {
+        renderThread = new RenderThread(handler, surfaceTexture);
         for (int i = 0; i < decodeThreads.length; i++) {
             DecodeThread thread = decodeThreads[i];
             if (thread == null && surfaceTexture != null) {
-                frameInfos.clear();
                 thread = new DecodeThread(i, handler);
                 decodeThreads[i] = thread;
                 thread.start();
+                frameInfos.add(new FrameInfo());
+                decodeTime.add(new ArrayList<>());
+                decodeCount.getAndIncrement();
             }
         }
+        adapter.notifyDataSetChanged();
+        updateRunnable.run();
     }
 
     @Override
     public boolean handleMessage(Message msg) {
         switch (msg.what) {
-            case MSG_INIT_TIME:
+            case DecodeThread.MSG_INIT_TIME:
                 TimeRange initTime = (TimeRange) msg.obj;
-                Log.d(TAG, "initTime: " + initTime);
                 return true;
-            case MSG_DECODE_FRAME:
+            case DecodeThread.MSG_DECODE_FRAME:
                 FrameInfo frameInfo = (FrameInfo) msg.obj;
-                frameInfos.add(frameInfo);
-                Log.d(TAG, "decodeInfo: " + frameInfo);
+                int index = frameInfo.sourceIndex;
+                DecodeThread decodeThread = decodeThreads[index];
+                renderThread.renderDecodedTexture(decodeThread, frameInfo);
                 return true;
-            case MSG_DECODE_COMPLETE:
-                try {
-                    for (DecodeThread thread : decodeThreads) {
-                        thread.join();
+            case RenderThread.MSG_RENDER_COMPLETE:
+                frameInfo = (FrameInfo) msg.obj;
+                updateInfo(frameInfo);
+                return true;
+            case DecodeThread.MSG_DECODE_COMPLETE:
+                int count = decodeCount.decrementAndGet();
+                if (count <= 0) {
+                    recyclerView.removeCallbacks(updateRunnable);
+                    LineChartData data = new LineChartData();
+                    List<Line> lines = new ArrayList<>();
+                    for (int i = 0; i < decodeThreads.length; i++) {
+                        Line line = new Line(decodeTime.get(i)).setColor(LINE_COLORS[i]).setHasPoints(false);
+                        lines.add(line);
                     }
-                } catch (InterruptedException e) {
-                    //
+                    data.setLines(lines);
+                    data.setAxisXBottom(Axis.generateAxisFromRange(0, 5000, 100));
+                    data.setAxisYLeft(Axis.generateAxisFromRange(0, 20000, 2000));
+                    chart.setLineChartData(data);
+                    try {
+                        for (DecodeThread thread : decodeThreads) {
+                            thread.join();
+                        }
+                    } catch (InterruptedException e) {
+                        //
+                    }
+                    Log.d(TAG, "========= COMPLETE ========");
                 }
-                Log.d(TAG, "========= COMPLETE ========");
                 return true;
         }
         return false;
     }
 
+    private void updateInfo(FrameInfo frameInfo) {
+        int index = frameInfo.sourceIndex;
+        frameInfos.set(index, frameInfo);
+        decodeTime.get(index).add(new PointValue(frameInfo.frame, TimeUtil.nsToUs(frameInfo.decode.duration())));
+    }
+
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         this.surfaceTexture = surface;
-        eglSurface = eglCore.createWindowSurface(new Surface(surfaceTexture));
-        eglCore.makeCurrent(eglSurface);
+        startDecode();
     }
 
     @Override
@@ -131,13 +181,7 @@ public class DecodeSpeedThreadActivity extends AppCompatActivity implements Hand
 
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-        if (eglCore != null) {
-            eglCore.makeNothingCurrent();
-            if (eglSurface != null) {
-                eglCore.releaseSurface(eglSurface);
-            }
-            eglCore.release();
-        }
+        recyclerView.removeCallbacks(updateRunnable);
         return false;
     }
 
@@ -146,187 +190,63 @@ public class DecodeSpeedThreadActivity extends AppCompatActivity implements Hand
 
     }
 
-    private static class TimeRange {
-        long startTime;
-        long endTime;
+    private static class FrameInfoViewHolder extends RecyclerView.ViewHolder {
+        TextView sourceIndex;
+        TextView presentationTime;
+        ImageView imgDecoded;
+        TextView inputTime;
+        TextView readTime;
+        TextView decodeTime;
+        TextView renderTime;
 
-        @Override
-        public String toString() {
-            return "TimeRange(" + TimeUtil.nsToUs(endTime - startTime) + ")";
+        public FrameInfoViewHolder(View itemView) {
+            super(itemView);
+            sourceIndex = itemView.findViewById(R.id.source_index);
+            presentationTime = itemView.findViewById(R.id.pts_text);
+            imgDecoded = itemView.findViewById(R.id.img_decoded);
+            inputTime = itemView.findViewById(R.id.input_text);
+            readTime = itemView.findViewById(R.id.read_text);
+            decodeTime = itemView.findViewById(R.id.decode_text);
+            renderTime = itemView.findViewById(R.id.render_text);
         }
     }
 
-    private static class FrameInfo {
-        long presentationTimeUs;
-        TimeRange inputBuffer = new TimeRange();
-        TimeRange readSample = new TimeRange();
-        TimeRange decode = new TimeRange();
-        TimeRange updateTexImage = new TimeRange();
+    private static class FrameInfoAdapter extends RecyclerView.Adapter<FrameInfoViewHolder> {
+
+        List<FrameInfo> frameInfos;
+
+        @NonNull
+        @Override
+        public FrameInfoViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+            return new FrameInfoViewHolder(inflater.inflate(R.layout.item_frame_info, parent, false));
+        }
 
         @Override
-        public String toString() {
-            return "FrameInfo{\n " +
-                    "presentationTimeUs=" + TimeUtil.usToString(presentationTimeUs) +
-                    ",\n inputBuffer=" + inputBuffer +
-                    ",\n readSample=" + readSample +
-                    ",\n decode=" + decode +
-                    ",\n updateTexImage=" + updateTexImage +
-                    '}';
+        public void onBindViewHolder(@NonNull FrameInfoViewHolder holder, int position) {
+            FrameInfo info = frameInfos.get(position);
+            holder.sourceIndex.setText(String.valueOf(info.sourceIndex));
+            holder.presentationTime.setText(TimeUtil.usToString(info.presentationTimeUs));
+            holder.imgDecoded.setImageResource(info.decoded ? R.drawable.ic_check : R.drawable.ic_clear);
+            holder.inputTime.setText(info.inputBuffer.toString());
+            holder.readTime.setText(info.readSample.toString());
+            holder.decodeTime.setText(info.decode.toString());
+            holder.renderTime.setText(info.updateTexImage.toString());
+        }
+
+        @Override
+        public int getItemCount() {
+            return frameInfos != null ? frameInfos.size() : 0;
         }
     }
 
-    private static class DecodeThread extends Thread {
-        private MediaExtractor extractor;
-        private int trackIndex = -1;
-        private MediaFormat format;
-        private MediaCodec decoder;
-        private MediaCodec.BufferInfo decodeInfo;
-        private Surface outputSurface;
-        private RenderTexture renderTexture;
-        private boolean ended = false;
-
-        private TimeRange initTime = new TimeRange();
-        private String sourcePath;
-        private Handler handler;
-
-        DecodeThread(int sourceIndex, Handler eventHandler) {
-            sourcePath = SourceProvider.VIDEO_SRC[sourceIndex];
-            handler = eventHandler;
-        }
+    private class UpdateRunnable implements Runnable {
 
         @Override
         public void run() {
-            try {
-                prepareContext();
-                prepareExtractor();
-                initTime.startTime = SystemClock.elapsedRealtimeNanos();
-                prepareDecoder();
-                initTime.endTime = SystemClock.elapsedRealtimeNanos();
-                handler.obtainMessage(MSG_INIT_TIME, initTime).sendToTarget();
-                FrameInfo info;
-                do {
-                    info = doDecode();
-                    if (info != null) {
-                        handler.obtainMessage(MSG_DECODE_FRAME, info).sendToTarget();
-                    }
-                } while (!ended);
-                handler.sendEmptyMessage(MSG_DECODE_COMPLETE);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } finally {
-                releaseDecoder();
-                releaseExtractor();
-                releaseContext();
-            }
-        }
-
-        private void prepareContext() {
-            renderTexture = new RenderTexture(RenderTexture.TEXTURE_EXTERNAL, "DecodeTexture");
-            outputSurface = new Surface(renderTexture.getSurfaceTexture());
-        }
-
-        private void prepareExtractor() throws InterruptedException {
-            extractor = new MediaExtractor();
-            try {
-                extractor.setDataSource(sourcePath);
-                for (int i = 0; i < extractor.getTrackCount(); i++) {
-                    format = extractor.getTrackFormat(i);
-                    String mime = format.getString(MediaFormat.KEY_MIME);
-                    if (mime.startsWith("video/")) {
-                        trackIndex = i;
-                        break;
-                    }
-                }
-                if (trackIndex == -1) {
-                    throw new IOException();
-                }
-                extractor.selectTrack(trackIndex);
-            } catch (IOException e) {
-                throw new InterruptedException();
-            }
-        }
-
-        private void prepareDecoder() throws InterruptedException {
-            String mime = format.getString(MediaFormat.KEY_MIME);
-            try {
-                decoder = MediaCodec.createDecoderByType(mime);
-                decodeInfo = new MediaCodec.BufferInfo();
-                decoder.configure(format, outputSurface, null, 0);
-                decoder.start();
-            } catch (IOException e) {
-                throw new InterruptedException();
-            }
-        }
-
-        private FrameInfo doDecode() {
-            FrameInfo info = new FrameInfo();
-            boolean decoded = false;
-            while (!ended && !decoded) {
-                int inputIndex;
-                int bufferSize;
-                int sampleFlags;
-                info.inputBuffer.startTime = SystemClock.elapsedRealtimeNanos();
-                inputIndex = decoder.dequeueInputBuffer(0);
-                if (inputIndex >= 0) {
-                    ByteBuffer buffer = MediaUtil.getInputBuffer(decoder, inputIndex);
-                    info.readSample.startTime = info.inputBuffer.endTime = SystemClock.elapsedRealtimeNanos();
-                    bufferSize = extractor.readSampleData(buffer, 0);
-                    long sampleTime = extractor.getSampleTime();
-                    sampleFlags = extractor.getSampleFlags();
-                    if (!extractor.advance() || sampleTime < 0) {
-                        ended = true;
-                    }
-                    info.decode.startTime = info.readSample.endTime = SystemClock.elapsedRealtimeNanos();
-                    info.presentationTimeUs = -1;
-                    if (ended) {
-                        decoder.queueInputBuffer(inputIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
-                    } else {
-                        decoder.queueInputBuffer(inputIndex, 0, bufferSize, sampleTime, sampleFlags);
-                        int outputIndex = decoder.dequeueOutputBuffer(decodeInfo, 0);
-                        if (outputIndex >= 0) {
-                            info.presentationTimeUs = decodeInfo.presentationTimeUs;
-                            decoder.releaseOutputBuffer(outputIndex, true);
-                            decoded = true;
-                        }
-                    }
-                }
-
-                info.decode.endTime = SystemClock.elapsedRealtimeNanos();
-                if (renderTexture.isFrameAvailable()) {
-                    info.updateTexImage.startTime = SystemClock.elapsedRealtimeNanos();
-//                    renderTexture.updateTexImage();
-//                    drawTexture(renderTexture);
-                    info.updateTexImage.endTime = SystemClock.elapsedRealtimeNanos();
-                }
-            }
-            return info;
-        }
-
-        private void drawTexture(RenderTexture renderTexture) {
-
-        }
-
-        private void releaseDecoder() {
-            if (decoder != null) {
-                decoder.release();
-                decoder = null;
-            }
-        }
-
-        private void releaseExtractor() {
-            if (extractor != null) {
-                extractor.release();
-                extractor = null;
-            }
-        }
-
-        private void releaseContext() {
-            if (outputSurface != null) {
-                outputSurface.release();
-                outputSurface = null;
-            }
-            if (renderTexture != null) {
-                renderTexture.release();
+            if (adapter != null) {
+                adapter.notifyDataSetChanged();
+                recyclerView.postOnAnimationDelayed(this, 1000);
             }
         }
     }

@@ -345,6 +345,10 @@ public final class EglCore {
         return mGlVersion;
     }
 
+    public EGLContext getmEGLContext() {
+        return mEGLContext;
+    }
+
     /**
      * Writes the current display, context, and surface to the log.
      */
