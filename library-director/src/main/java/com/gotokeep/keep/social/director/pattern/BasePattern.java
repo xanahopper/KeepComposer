@@ -33,7 +33,7 @@ public abstract class BasePattern {
     public void verifyAllResource(List<String> resourceList) {
         for (String resource : resourceList) {
             if (!resourceManager.isResourceCached(resource)) {
-                resourceManager.cacheFiile(resource);
+                resourceManager.cacheFile(resource);
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.gotokeep.keep.social.director;
 
 import android.content.Context;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
@@ -11,8 +12,15 @@ import com.liulishuo.filedownloader.FileDownloadSampleListener;
 import com.liulishuo.filedownloader.FileDownloader;
 
 import java.io.File;
+import java.lang.ref.WeakReference;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * 下载、缓存与替换本地文件的资源管理器
@@ -24,6 +32,7 @@ import java.security.NoSuchAlgorithmException;
 public final class ResourceManager extends FileDownloadSampleListener {
     private Context context;
     private File cacheDir = null;
+    private List<WeakReference<ResourceListener>> listeners = new LinkedList<>();
 
     private ResourceManager(Context context) {
         this.context = context;
@@ -51,6 +60,25 @@ public final class ResourceManager extends FileDownloadSampleListener {
         }
     }
 
+    public void addResourceListener(ResourceListener listener) {
+        for (WeakReference<ResourceListener> ref : listeners) {
+            if (ref.get() == listener) {
+                return;
+            }
+        }
+        listeners.add(new WeakReference<>(listener));
+    }
+
+    public void removeResourceListener(ResourceListener listener) {
+        Iterator<WeakReference<ResourceListener>> iterator = listeners.iterator();
+        while (iterator.hasNext()) {
+            WeakReference<ResourceListener> ref = iterator.next();
+            if (ref.get() == listener || ref.get() == null) {
+                iterator.remove();
+            }
+        }
+    }
+
     public static boolean isLocalFile(String path) {
         return path != null && (path.startsWith("/") || path.startsWith("file:/"));
     }
@@ -68,7 +96,7 @@ public final class ResourceManager extends FileDownloadSampleListener {
         return file.exists();
     }
 
-    public void cacheFiile(String url) {
+    public void cacheFile(String url) {
         if (isLocalFile(url)) {
             return;
         }
@@ -109,13 +137,29 @@ public final class ResourceManager extends FileDownloadSampleListener {
 
     @Override
     protected void completed(BaseDownloadTask task) {
-        Toast.makeText(context, task.getUrl() + "下载完毕", Toast.LENGTH_SHORT).show();
-        Log.d("Director", "completed: " + task.getUrl());
+        for (WeakReference<ResourceListener> ref : listeners) {
+            if (ref.get() != null) {
+                ref.get().onCacheSuccess(task.getUrl(), task.getTargetFilePath());
+            }
+        }
+//        Toast.makeText(context, task.getUrl() + "下载完毕", Toast.LENGTH_SHORT).show();
+//        Log.d("Director", "completed: " + task.getUrl());
     }
 
     @Override
     protected void error(BaseDownloadTask task, Throwable e) {
-        Toast.makeText(context, task.getUrl() + "下载错误", Toast.LENGTH_SHORT).show();
-        Log.e("Director", "error: " + task.getUrl(), e);
+        for (WeakReference<ResourceListener> ref : listeners) {
+            if (ref.get() != null) {
+                ref.get().onCacheFailed(task.getUrl());
+            }
+        }
+//        Toast.makeText(context, task.getUrl() + "下载错误", Toast.LENGTH_SHORT).show();
+//        Log.e("Director", "error: " + task.getUrl(), e);
+    }
+
+    interface ResourceListener {
+        void onCacheSuccess(String url, String cachePath);
+
+        void onCacheFailed(String url);
     }
 }

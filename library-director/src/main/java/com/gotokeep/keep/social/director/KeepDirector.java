@@ -1,6 +1,8 @@
 package com.gotokeep.keep.social.director;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 
 import com.google.gson.Gson;
@@ -24,7 +26,7 @@ import java.util.Map;
  * @version 1.0
  * @since 2018-05-18 11:36
  */
-public final class KeepDirector {
+public final class KeepDirector implements ResourceManager.ResourceListener {
     public static final String PATTERN_ALL = "all";
     public static final String PATTERN_ALL_ODD = "allOdd";
     public static final String PATTERN_ALL_EVEN = "allEven";
@@ -37,16 +39,37 @@ public final class KeepDirector {
     private ResourceManager resourceManager;
     private DirectorScript script;
     private Gson gson;
+    private EventListener listener;
+    private List<String> resourceList = new ArrayList<>();
+    private Map<String, Boolean> resourceVerification = new HashMap<>();
+    private Handler eventHandler;
 
     public KeepDirector(Context context) {
         gson = new Gson();
         resourceManager = ResourceManager.getInstance(context);
+        resourceManager.addResourceListener(this);
         SelectPatternFactory.setup(context);
+        eventHandler = new Handler(Looper.getMainLooper());
+    }
+
+    public KeepDirector(Context context, EventListener listener) {
+        this(context);
+        setListener(listener);
     }
 
     public KeepDirector(Context context, String scriptText) {
         this(context);
         setScriptText(scriptText);
+    }
+
+    public KeepDirector(Context context, String scriptText, EventListener listener) {
+        this(context);
+        setListener(listener);
+        setScriptText(scriptText);
+    }
+
+    public void release() {
+        resourceManager.removeResourceListener(this);
     }
 
     public void setScriptText(String scriptText) {
@@ -57,6 +80,10 @@ public final class KeepDirector {
         return script;
     }
 
+    public void setListener(EventListener listener) {
+        this.listener = listener;
+    }
+
     /**
      * 验证并准备此脚本（即下载脚本中所有资源）
      * @return 是否已经准备就绪
@@ -65,7 +92,9 @@ public final class KeepDirector {
         if (script == null || script.getMeta() == null) {
             return false;
         }
-        List<String> resourceList = new ArrayList<>();
+        resourceList.clear();
+        resourceVerification.clear();
+
         if (!TextUtils.isEmpty(script.getCover())) {
             resourceList.add(script.getCover());
         }
@@ -95,7 +124,10 @@ public final class KeepDirector {
         for (String resource : resourceList) {
             if (!TextUtils.isEmpty(resource) && !resourceManager.isResourceCached(resource)) {
                 verified = false;
-                resourceManager.cacheFiile(resource);
+                resourceManager.cacheFile(resource);
+                resourceVerification.put(resource, null);
+            } else {
+                resourceVerification.put(resource, true);
             }
         }
         return verified;
@@ -113,6 +145,37 @@ public final class KeepDirector {
         }
 
         return pattern.selectVideos(videoSources, script);
+    }
+
+    @Override
+    public void onCacheSuccess(String url, String cachePath) {
+        updateVerifiedResource(url, true);
+    }
+
+    @Override
+    public void onCacheFailed(String url) {
+        updateVerifiedResource(url, false);
+    }
+
+    private void updateVerifiedResource(String url, boolean result) {
+        if (resourceVerification.containsKey(url)) {
+            resourceVerification.put(url, result);
+        }
+        if (result) {
+            boolean verified = true;
+            for (Boolean r : resourceVerification.values()) {
+                verified &= (r != null ? r : false);
+            }
+            if (verified) {
+                if (listener != null) {
+                    eventHandler.post(() -> listener.onScriptResourceVerifyCompleted());
+                }
+            }
+        } else {
+            if (listener != null) {
+                eventHandler.post(() -> listener.onScriptResourceVerifyFailed(url));
+            }
+        }
     }
 
     static class SelectPatternFactory {
@@ -140,5 +203,11 @@ public final class KeepDirector {
             }
             return pattern;
         }
+    }
+
+    public interface EventListener {
+        void onScriptResourceVerifyCompleted();
+
+        void onScriptResourceVerifyFailed(String failedResUrl);
     }
 }
