@@ -53,7 +53,7 @@ public class ImageFilterActivity extends SampleActivity implements Handler.Callb
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-        composer = MediaComposerFactory.createMediaComposer(this, this, handler);
+        composer = MediaComposerFactory.createMediaComposer(this, this);
         composer.setPreview(previewView);
         composer.setVideoSize(640, 360);
 

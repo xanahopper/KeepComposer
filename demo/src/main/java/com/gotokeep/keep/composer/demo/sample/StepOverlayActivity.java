@@ -10,7 +10,6 @@ import android.view.View;
 
 import com.gotokeep.keep.social.composer.MediaComposer;
 import com.gotokeep.keep.social.composer.MediaComposerFactory;
-import com.gotokeep.keep.social.composer.RenderNode;
 import com.gotokeep.keep.composer.demo.SampleActivity;
 import com.gotokeep.keep.composer.demo.source.SourceProvider;
 import com.gotokeep.keep.social.composer.overlay.OverlayProvider;
@@ -73,7 +72,7 @@ public class StepOverlayActivity extends SampleActivity implements Handler.Callb
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-        composer = MediaComposerFactory.createMediaComposer(this, this, handler);
+        composer = MediaComposerFactory.createMediaComposer(this, this);
         composer.setPreview(previewView);
         composer.setVideoSize(640, 360);
         composer.setPlayEventListener(this);
@@ -145,7 +144,7 @@ public class StepOverlayActivity extends SampleActivity implements Handler.Callb
     }
 
     @Override
-    public void onPreparing(MediaComposer composer, RenderNode preparingNode) {
+    public void onPreparing(MediaComposer composer) {
 
     }
 

@@ -71,7 +71,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     private HandlerThread audioThread;
     private Handler videoHandler;
     private Handler audioHandler;
-    private Handler eventHandler;
+    private EventDispatcher eventDispatcher;
 
     private Timeline timeline;
     private PlayEventListener playEventListener;
@@ -114,7 +114,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         this.audioThread.start();
         this.audioHandler = new Handler(audioThread.getLooper(), this);
 
-        this.eventHandler = eventHandler;
+        this.eventDispatcher = new EventDispatcher(eventHandler);
     }
 
     @Override
@@ -328,9 +328,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
             audioSource.prepare();
             renderTarget.prepareAudio(audioSource.getSampleRate(), audioSource.getChannelCount());
         }
-        if (eventHandler != null) {
-            eventHandler.sendEmptyMessage(export ? EVENT_EXPORT_PREPARE : EVENT_PLAY_PREPARE);
-        }
+        eventDispatcher.onPreparing(this);
     }
 
     private void playInternal() {
@@ -339,16 +337,18 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         mediaClock.start();
         videoHandler.sendEmptyMessage(MSG_DO_SOME_WORK);
         audioHandler.sendEmptyMessage(MSG_DO_AUDIO_WORK);
-        if (eventHandler != null) {
-            eventHandler.sendEmptyMessage(export ? EVENT_EXPORT_START : EVENT_PLAY_PLAY);
+        if (export) {
+            eventDispatcher.onExportStart(this);
+        } else {
+            eventDispatcher.onPlay(this);
         }
     }
 
     private void pauseInternal() {
         mediaClock.stop();
         playing.set(false);
-        if (eventHandler != null && !export) {
-            eventHandler.sendEmptyMessage(EVENT_PLAY_PAUSE);
+        if (!export) {
+            eventDispatcher.onPause(this);
         }
     }
 
@@ -358,8 +358,10 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         videoHandler.removeMessages(MSG_DO_SOME_WORK);
         audioHandler.removeMessages(MSG_DO_AUDIO_WORK);
         renderTarget.complete();
-        if (eventHandler != null) {
-            eventHandler.sendEmptyMessage(export ? EVENT_EXPORT_COMPLETE : EVENT_PLAY_STOP);
+        if (export) {
+            eventDispatcher.onExportComplete(this);
+        } else {
+            eventDispatcher.onStop(this);
         }
     }
 
@@ -371,8 +373,8 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         if (audioSource != null) {
             audioSource.seekTo(timeMs);
         }
-        if (eventHandler != null && !export) {
-            eventHandler.obtainMessage(EVENT_PLAY_SEEKING, timeMs).sendToTarget();
+        if (!export) {
+            eventDispatcher.onSeeking(this, true, timeMs);
         }
     }
 
@@ -385,10 +387,12 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
 
     private void setPlayListenerInternal(PlayEventListener listener) {
         playEventListener = listener;
+        eventDispatcher.setPlayEventListener(listener);
     }
 
     private void setExportListenerInternal(ExportEventListener listener) {
         exportEventListener = listener;
+        eventDispatcher.setExportEventListener(listener);
     }
 
     private void doAudioWork() {
@@ -415,9 +419,10 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         long operationStartMs = SystemClock.elapsedRealtime();
         videoTimeUs = debugMode ? debugPositionUs : getCurrentTimeUs();
         if (renderRoot == null) {
-//            Log.d(TAG, "doRenderWork: RenderRoot is empty");
-            if (eventHandler != null) {
-                eventHandler.sendEmptyMessage(export ? EVENT_EXPORT_COMPLETE : EVENT_PLAY_STOP);
+            if (export) {
+                eventDispatcher.onExportComplete(this);
+            } else {
+                eventDispatcher.onStop(this);
             }
             return;
         }
@@ -440,9 +445,10 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
                     engine.setPresentationTime(TimeUtil.usToNs(renderTimeUs));
                 }
                 renderTarget.updateFrame(renderRoot, videoTimeUs, engine);
-                if (eventHandler != null) {
-                    eventHandler.obtainMessage(export ? EVENT_EXPORT_PROGRESS : EVENT_PLAY_POSITION_CHANGE,
-                            new PositionInfo(videoTimeUs, timeline.getEndTimeMs())).sendToTarget();
+                if (export) {
+                    eventDispatcher.onExportProgress(this, videoTimeUs, timeline.getEndTimeMs());
+                } else {
+                    eventDispatcher.onPositionChange(this, videoTimeUs, timeline.getEndTimeMs());
                 }
             }
             if (export) {
@@ -542,26 +548,6 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         }
     }
 
-//    private RenderNode maintainRenderTree(RenderNode root, long presentationTimeUs) {
-//        if (root != null) {
-//            for (int i = 0; i < root.inputNodes.size(); i++) {
-//                int key = root.inputNodes.keyAt(i);
-//                RenderNode node = root.inputNodes.valueAt(i);
-//                node = maintainRenderTree(node, presentationTimeUs);
-//                if (node != null) {
-//                    root.inputNodes.put(key, node);
-//                } else {
-//                    root.inputNodes.remove(key);
-//                }
-//            }
-//            if (!root.isInRange(TimeUtil.usToMs(presentationTimeUs)) ||
-//                    root.getMainInputNode(presentationTimeUs) == null) {
-//                root = root.getMainInputNode(presentationTimeUs);
-//            }
-//        }
-//        return root;
-//    }
-
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         canvasWidth = width;
@@ -602,18 +588,118 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
 
     @Override
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-//        releaseRenderTarget();
-//        renderTarget = new PreviewRenderTarget();
-//        if (engine != null) {
-//            engine.release();
-//            engine.setup(surface);
-//        }
     }
 
     private void releaseRenderTarget() {
         if (renderTarget != null) {
             renderTarget.release();
             renderTarget = null;
+        }
+    }
+
+    private static class EventDispatcher implements PlayEventListener, ExportEventListener {
+        private Handler handler;
+        private PlayEventListener playEventListener;
+        private ExportEventListener exportEventListener;
+
+        public EventDispatcher(Handler handler) {
+            this.handler = handler;
+        }
+
+        public void setPlayEventListener(PlayEventListener playEventListener) {
+            this.playEventListener = playEventListener;
+        }
+
+        public void setExportEventListener(ExportEventListener exportEventListener) {
+            this.exportEventListener = exportEventListener;
+        }
+
+        public PlayEventListener getPlayEventListener() {
+            return playEventListener;
+        }
+
+        public ExportEventListener getExportEventListener() {
+            return exportEventListener;
+        }
+
+        @Override
+        public void onPreparing(MediaComposer composer) {
+            if (playEventListener != null) {
+                handler.post(() -> playEventListener.onPreparing(composer));
+            }
+            if (exportEventListener != null) {
+                handler.post(() -> exportEventListener.onPreparing(composer));
+            }
+        }
+
+        @Override
+        public void onExportStart(MediaComposer composer) {
+            if (exportEventListener != null) {
+                handler.post(() -> exportEventListener.onExportStart(composer));
+            }
+        }
+
+        @Override
+        public void onExportProgress(MediaComposer composer, long presentationTimeUs, long totalTimeUs) {
+            if (exportEventListener != null) {
+                handler.post(() -> exportEventListener.onExportProgress(composer, presentationTimeUs, totalTimeUs));
+            }
+        }
+
+        @Override
+        public void onExportComplete(MediaComposer composer) {
+            if (exportEventListener != null) {
+                handler.post(() -> exportEventListener.onExportComplete(composer));
+            }
+        }
+
+        @Override
+        public void onExportError(MediaComposer composer, Exception exception) {
+            if (exportEventListener != null) {
+                handler.post(() -> exportEventListener.onExportError(composer, exception));
+            }
+        }
+
+        @Override
+        public void onPlay(MediaComposer composer) {
+            if (playEventListener != null) {
+                handler.post(() -> playEventListener.onPlay(composer));
+            }
+        }
+
+        @Override
+        public void onPause(MediaComposer composer) {
+            if (playEventListener != null) {
+                handler.post(() -> playEventListener.onPause(composer));
+            }
+        }
+
+        @Override
+        public void onPositionChange(MediaComposer composer, long presentationTimeUs, long totalTimeUs) {
+            if (playEventListener != null) {
+                handler.post(() -> playEventListener.onPositionChange(composer, presentationTimeUs, totalTimeUs));
+            }
+        }
+
+        @Override
+        public void onStop(MediaComposer composer) {
+            if (playEventListener != null) {
+                handler.post(() -> playEventListener.onStop(composer));
+            }
+        }
+
+        @Override
+        public void onSeeking(MediaComposer composer, boolean seekComplete, long seekTimeMs) {
+            if (playEventListener != null) {
+                handler.post(() -> playEventListener.onSeeking(composer, seekComplete, seekTimeMs));
+            }
+        }
+
+        @Override
+        public void onError(MediaComposer composer, Exception exception) {
+            if (playEventListener != null) {
+                handler.post(() -> playEventListener.onError(composer, exception));
+            }
         }
     }
 }

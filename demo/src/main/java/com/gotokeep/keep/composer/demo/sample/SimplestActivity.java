@@ -31,7 +31,7 @@ public class SimplestActivity extends SampleActivity implements Handler.Callback
 
         previewView.setVideoSize(640, 360, 0);
 
-        composer = MediaComposerFactory.createMediaComposer(this, this, handler);
+        composer = MediaComposerFactory.createMediaComposer(this, this);
         composer.setPreview(previewView);
         composer.setVideoSize(640, 360);
 

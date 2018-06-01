@@ -47,7 +47,7 @@ public interface MediaComposer {
     void doDebugRender(long positionUs);
 
     interface PlayEventListener {
-        void onPreparing(MediaComposer composer, RenderNode preparingNode);
+        void onPreparing(MediaComposer composer);
 
         void onPlay(MediaComposer composer);
 
@@ -63,7 +63,7 @@ public interface MediaComposer {
     }
 
     interface ExportEventListener {
-        void onPreparing(MediaComposer composer, RenderNode preparingNode);
+        void onPreparing(MediaComposer composer);
 
         void onExportStart(MediaComposer composer);
 

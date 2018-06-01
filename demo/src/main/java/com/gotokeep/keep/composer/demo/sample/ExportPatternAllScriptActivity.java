@@ -11,7 +11,6 @@ import android.widget.Toast;
 import com.gotokeep.keep.social.composer.ExportConfiguration;
 import com.gotokeep.keep.social.composer.MediaComposer;
 import com.gotokeep.keep.social.composer.MediaComposerFactory;
-import com.gotokeep.keep.social.composer.RenderNode;
 import com.gotokeep.keep.composer.demo.R;
 import com.gotokeep.keep.composer.demo.SampleActivity;
 import com.gotokeep.keep.composer.demo.source.SourceProvider;
@@ -82,7 +81,7 @@ public class ExportPatternAllScriptActivity extends SampleActivity implements Ha
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-        composer = MediaComposerFactory.createMediaComposer(this, this, handler);
+        composer = MediaComposerFactory.createMediaComposer(this, this);
         composer.setPreview(previewView);
         composer.setVideoSize(EXPORT_WIDTH, EXPORT_HEIGHT);
         composer.setPlayEventListener(this);
@@ -136,7 +135,7 @@ public class ExportPatternAllScriptActivity extends SampleActivity implements Ha
     }
 
     @Override
-    public void onPreparing(MediaComposer composer, RenderNode preparingNode) {
+    public void onPreparing(MediaComposer composer) {
 
     }
 
