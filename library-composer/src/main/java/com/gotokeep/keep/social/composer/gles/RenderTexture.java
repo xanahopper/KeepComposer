@@ -7,6 +7,7 @@ import android.opengl.GLES20;
 import android.opengl.Matrix;
 import android.support.annotation.IntDef;
 import android.util.Log;
+import android.view.Surface;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -48,6 +49,7 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
     private int textureTarget = 0;
     private int textureId = 0;
     private SurfaceTexture surfaceTexture;
+    private Surface surface;
     private boolean released = false;
     private final Object frameSyncObj = new Object();
     private float transitionMatrix[] = new float[16];
@@ -236,8 +238,17 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
         return textureId;
     }
 
-    public SurfaceTexture getSurfaceTexture() {
+    public synchronized SurfaceTexture getSurfaceTexture() {
         return surfaceTexture;
+    }
+
+    public Surface getSurface() {
+        synchronized (this) {
+            if (surface == null && surfaceTexture != null) {
+                surface = new Surface(surfaceTexture);
+            }
+        }
+        return surface;
     }
 
     public Bitmap saveFrame(int width, int height) {
@@ -271,14 +282,6 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
             }
         }
         return null;
-    }
-
-    public void checkGlError(String op) {
-//        int error;
-//        while ((error = GLES20.glGetError()) != GLES20.GL_NO_ERROR) {
-//            Log.e(TAG, op + ": glError " + error);
-////            throw new RuntimeException(op + ": glError " + error);
-//        }
     }
 
     private String getTargetName(int textureTarget) {

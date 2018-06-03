@@ -11,6 +11,7 @@ import android.support.v4.util.Pools;
 public class ComposerRequest {
     private static Pools.Pool<ComposerRequest> pool = new Pools.SynchronizedPool<>(32);
 
+    public String requestSourcePath;
     public long requestTimeMs;
     public long requestDecodeTimeUs;
 
@@ -26,6 +27,13 @@ public class ComposerRequest {
     public static ComposerRequest obtain(long requestDecodeTimeUs) {
         ComposerRequest request = obtain();
         request.requestDecodeTimeUs = requestDecodeTimeUs;
+        return request;
+    }
+
+    public static ComposerRequest obtain(String requestSourcePath, long requestDecodeTimeUs) {
+        ComposerRequest request = obtain();
+        request.requestDecodeTimeUs = requestDecodeTimeUs;
+        request.requestSourcePath = requestSourcePath;
         return request;
     }
 
