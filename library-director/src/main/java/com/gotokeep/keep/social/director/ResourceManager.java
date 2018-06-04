@@ -142,8 +142,6 @@ public final class ResourceManager extends FileDownloadSampleListener {
                 ref.get().onCacheSuccess(task.getUrl(), task.getTargetFilePath());
             }
         }
-//        Toast.makeText(context, task.getUrl() + "下载完毕", Toast.LENGTH_SHORT).show();
-//        Log.d("Director", "completed: " + task.getUrl());
     }
 
     @Override
@@ -153,8 +151,6 @@ public final class ResourceManager extends FileDownloadSampleListener {
                 ref.get().onCacheFailed(task.getUrl());
             }
         }
-//        Toast.makeText(context, task.getUrl() + "下载错误", Toast.LENGTH_SHORT).show();
-//        Log.e("Director", "error: " + task.getUrl(), e);
     }
 
     interface ResourceListener {

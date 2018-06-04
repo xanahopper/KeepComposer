@@ -14,6 +14,7 @@ public final class MetaInfo {
     private int maxFragment;
     private Filter filter;
     private List<Overlay> overlay;
+    private Resource title;
     private String music;
 
     public String getPattern() {
@@ -70,6 +71,14 @@ public final class MetaInfo {
 
     public void setMusic(String music) {
         this.music = music;
+    }
+
+    public Resource getTitle() {
+        return title;
+    }
+
+    public void setTitle(Resource title) {
+        this.title = title;
     }
 
     @Override

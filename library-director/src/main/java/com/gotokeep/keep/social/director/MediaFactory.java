@@ -1,9 +1,13 @@
 package com.gotokeep.keep.social.director;
 
+import android.graphics.Color;
+
+import com.gotokeep.keep.data.model.director.Resource;
 import com.gotokeep.keep.social.composer.timeline.MediaItem;
 import com.gotokeep.keep.social.composer.timeline.item.FilterItem;
 import com.gotokeep.keep.social.composer.timeline.item.ImageItem;
 import com.gotokeep.keep.social.composer.timeline.item.LayerItem;
+import com.gotokeep.keep.social.composer.timeline.item.TextItem;
 import com.gotokeep.keep.social.composer.timeline.item.TransitionItem;
 import com.gotokeep.keep.social.composer.timeline.item.VideoItem;
 import com.gotokeep.keep.social.composer.timeline.item.WatermarkItem;
@@ -26,9 +30,15 @@ public final class MediaFactory {
     protected static Map<Class<? extends MediaData>, MediaItemCreator<? extends MediaData, ? extends MediaItem>>
         creatorMap = new HashMap<>();
 
+    protected static Map<String, ResourceMediaCreator<? extends MediaItem>> resourceCreatorMap = new HashMap<>();
+
     public static <M extends MediaData, T extends MediaItem> void
         registerCreator(Class<M> dataType, MediaItemCreator<M, T> creator) {
         creatorMap.put(dataType, creator);
+    }
+
+    public static <T extends MediaItem> void registerCreator(String typeName, ResourceMediaCreator<T> creator) {
+        resourceCreatorMap.put(typeName, creator);
     }
 
     static {
@@ -61,8 +71,30 @@ public final class MediaFactory {
                 return new WatermarkItem(0);
             }
         });
+
+        registerCreator("title", (resourceManager, resource, mediaType) -> {
+            TextItem textItem = new TextItem(0, resource.getValue());
+            textItem.setPosition("center");
+            textItem.setTextSize(64);
+            textItem.setTextColor(Color.WHITE);
+            textItem.setShadowColor(0x7F444444);
+            return textItem;
+        });
     }
 
+    @SuppressWarnings("unchecked")
+    public static <M extends Resource, T extends MediaItem> T
+    createResourceItem(ResourceManager resourceManager, M resource, Class<T> mediaType) {
+        if (resource == null || mediaType == null) {
+            return null;
+        }
+        ResourceMediaCreator<T> creator = (ResourceMediaCreator<T>) resourceCreatorMap.get(resource.getType());
+        if (creator != null) {
+            return creator.createMediaItem(resourceManager, resource, mediaType);
+        } else {
+            return null;
+        }
+    }
     @SuppressWarnings("unchecked")
     public static <M extends MediaData, T extends MediaItem> T
     createMediaItem(ResourceManager resourceManager, M mediaData) {
@@ -93,5 +125,9 @@ public final class MediaFactory {
 
     public interface MediaItemCreator<M extends MediaData, T extends MediaItem> {
         T createMediaItem(ResourceManager resourceManager, M mediaData);
+    }
+
+    public interface ResourceMediaCreator<T extends MediaItem> {
+        T createMediaItem(ResourceManager resourceManager, Resource resource, Class<T> mediaType);
     }
 }

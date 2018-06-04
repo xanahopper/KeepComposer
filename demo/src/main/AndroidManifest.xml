@@ -115,6 +115,15 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
+        <activity android:name=".sample.TimelineChangeActivity"
+                  android:icon="@drawable/ic_timeline_black_24dp"
+                  android:label="Composer Timeline Change">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

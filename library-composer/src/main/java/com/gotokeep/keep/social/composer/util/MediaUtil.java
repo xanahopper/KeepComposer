@@ -9,6 +9,7 @@ import android.os.Build;
 import android.text.TextUtils;
 import android.webkit.MimeTypeMap;
 
+import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
@@ -74,9 +75,26 @@ public class MediaUtil {
 
     public static long getDuration(String filepath) {
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
-        retriever.setDataSource(filepath);
-        String duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
-        return TextUtils.isEmpty(duration) ? 0 : Long.parseLong(duration);
+        if (!TextUtils.isEmpty(filepath) || !new File(filepath).exists()) {
+            return 0;
+        }
+        try {
+            retriever.setDataSource(filepath);
+            String duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+            retriever.release();
+            return TextUtils.isEmpty(duration) ? 0 : Long.parseLong(duration);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    public static int[] getVideoSize(String filePath) {
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        retriever.setDataSource(filePath);
+        String width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);
+        String height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT);
+        retriever.release();
+        return new int[] {Integer.valueOf(width), Integer.valueOf(height)};
     }
 
     public static String getMime(String source) {

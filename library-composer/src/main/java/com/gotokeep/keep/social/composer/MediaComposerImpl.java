@@ -13,10 +13,10 @@ import android.view.TextureView;
 import com.gotokeep.keep.social.composer.source.AudioSource;
 import com.gotokeep.keep.social.composer.target.MuxerRenderTarget;
 import com.gotokeep.keep.social.composer.target.PreviewRenderTarget;
-import com.gotokeep.keep.social.composer.timeline.item.AudioItem;
 import com.gotokeep.keep.social.composer.timeline.MediaItem;
 import com.gotokeep.keep.social.composer.timeline.RenderFactory;
 import com.gotokeep.keep.social.composer.timeline.Timeline;
+import com.gotokeep.keep.social.composer.timeline.item.AudioItem;
 import com.gotokeep.keep.social.composer.util.MediaClock;
 import com.gotokeep.keep.social.composer.util.TimeUtil;
 
@@ -276,7 +276,9 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         for (MediaItem item : renderNodeMap.keySet()) {
             Log.d(TAG, "releaseInternal: " + item.toString());
             RenderNode node = renderNodeMap.get(item);
-            node.release();
+            if (node != null) {
+                node.release();
+            }
         }
         renderNodeMap.clear();
         if (renderTarget != null) {
@@ -291,6 +293,9 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
 
     private void setTimelineInternal(Timeline timeline) {
         if (this.timeline != timeline) {
+            if (playing.get()) {
+                throw new IllegalStateException("MediaComposer must be stopped when set timeline");
+            }
             this.timeline = timeline;
         }
     }
@@ -465,6 +470,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
 
         renderRoot.setViewport(canvasWidth, canvasHeight);
         long renderTimeUs = renderRoot.acquireFrame(videoTimeUs);
+
 //        Log.d(TAG, "doRenderWork: " + renderTimeUs + " " + videoTimeUs);
         if (renderTarget != null) {
             if (renderTimeUs >= videoTimeUs) {
@@ -535,8 +541,10 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
                 RenderNode renderNode;
                 if (!renderNodeMap.containsKey(item)) {
                     renderNode = renderFactory.createRenderNode(item);
-                    renderNode.seekTo(TimeUtil.usToMs(presentationTimeUs));
                     renderNodeMap.put(item, renderNode);
+                    if (renderNode != null) {
+                        renderNode.seekTo(TimeUtil.usToMs(presentationTimeUs));
+                    }
                 } else {
                     renderNode = renderNodeMap.get(item);
                 }

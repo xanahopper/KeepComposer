@@ -8,7 +8,7 @@ package com.gotokeep.keep.data.model.director;
  */
 public class DirectorScript{
     private String type;
-    private int version;
+    private String version;
     private String id;
     private String name;
     private String label;
@@ -24,11 +24,11 @@ public class DirectorScript{
         this.type = type;
     }
 
-    public int getVersion() {
+    public String getVersion() {
         return version;
     }
 
-    public void setVersion(int version) {
+    public void setVersion(String version) {
         this.version = version;
     }
 
@@ -84,7 +84,7 @@ public class DirectorScript{
     public String toString() {
         return "DirectorScript{" +
                 "type='" + type + '\'' +
-                ", version=" + version +
+                ", version='" + version + '\'' +
                 ", id='" + id + '\'' +
                 ", name='" + name + '\'' +
                 ", label='" + label + '\'' +
