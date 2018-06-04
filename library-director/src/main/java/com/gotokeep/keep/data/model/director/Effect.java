@@ -1,4 +1,4 @@
-package com.gotokeep.keep.social.director.data;
+package com.gotokeep.keep.data.model.director;
 
 import java.util.ArrayList;
 import java.util.List;

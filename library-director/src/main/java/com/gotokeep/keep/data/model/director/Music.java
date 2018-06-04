@@ -1,4 +1,4 @@
-package com.gotokeep.keep.social.director.data;
+package com.gotokeep.keep.data.model.director;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,13 +6,13 @@ import java.util.List;
 /**
  * @author xana/cuixianming
  * @version 1.0
- * @since 2018-05-18 11:39
+ * @since 2018-05-18 11:38
  */
-public final class LayerOverlay implements MediaData {
+public final class Music implements MediaData {
     private String id;
     private String url;
 
-    public LayerOverlay(String id, String url) {
+    public Music(String id, String url) {
         this.id = id;
         this.url = url;
     }
@@ -35,7 +35,7 @@ public final class LayerOverlay implements MediaData {
 
     @Override
     public String toString() {
-        return "LayerOverlay{" +
+        return "Music{" +
                 "id='" + id + '\'' +
                 ", url='" + url + '\'' +
                 '}';
@@ -43,8 +43,6 @@ public final class LayerOverlay implements MediaData {
 
     @Override
     public List<String> getResources() {
-        List<String> result = new ArrayList<>();
-        result.add(url);
-        return result;
+        return new ArrayList<>();
     }
 }

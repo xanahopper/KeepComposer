@@ -5,7 +5,7 @@ import android.support.annotation.NonNull;
 import com.gotokeep.keep.social.composer.timeline.Timeline;
 import com.gotokeep.keep.social.director.ResourceManager;
 import com.gotokeep.keep.social.director.VideoFragment;
-import com.gotokeep.keep.social.director.data.DirectorScript;
+import com.gotokeep.keep.data.model.director.DirectorScript;
 import com.gotokeep.keep.social.director.exception.UnsuitableException;
 
 import java.util.List;

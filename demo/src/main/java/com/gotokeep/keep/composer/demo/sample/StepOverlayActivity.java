@@ -43,7 +43,7 @@ public class StepOverlayActivity extends SampleActivity implements Handler.Callb
         handler = new Handler(getMainLooper(), this);
         previewView.setSurfaceTextureListener(this);
 
-        previewView.setVideoSize(640, 360, 0);
+        previewView.setVideoSize(960, 540, 0);
         previewView.setOnClickListener(this);
     }
 
@@ -75,7 +75,7 @@ public class StepOverlayActivity extends SampleActivity implements Handler.Callb
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         composer = MediaComposerFactory.createMediaComposer(this, this);
         composer.setPreview(previewView);
-        composer.setVideoSize(640, 360);
+        composer.setVideoSize(960, 540);
         composer.setPlayEventListener(this);
 
         timeline = new SourceTimeline();

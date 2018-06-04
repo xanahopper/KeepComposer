@@ -7,11 +7,11 @@ import android.text.TextUtils;
 
 import com.google.gson.Gson;
 import com.gotokeep.keep.social.composer.timeline.Timeline;
-import com.gotokeep.keep.social.director.data.Chapter;
-import com.gotokeep.keep.social.director.data.ChapterSet;
-import com.gotokeep.keep.social.director.data.DirectorScript;
-import com.gotokeep.keep.social.director.data.MetaInfo;
-import com.gotokeep.keep.social.director.data.Overlay;
+import com.gotokeep.keep.data.model.director.Chapter;
+import com.gotokeep.keep.data.model.director.ChapterSet;
+import com.gotokeep.keep.data.model.director.DirectorScript;
+import com.gotokeep.keep.data.model.director.MetaInfo;
+import com.gotokeep.keep.data.model.director.Overlay;
 import com.gotokeep.keep.social.director.exception.UnsuitableException;
 import com.gotokeep.keep.social.director.pattern.BasePattern;
 import com.gotokeep.keep.social.director.pattern.PatternAll;

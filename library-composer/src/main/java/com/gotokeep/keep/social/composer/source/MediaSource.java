@@ -1,6 +1,8 @@
 package com.gotokeep.keep.social.composer.source;
 
 import com.gotokeep.keep.social.composer.RenderNode;
+import com.gotokeep.keep.social.composer.ScaleType;
+import com.gotokeep.keep.social.composer.util.ScaleUtil;
 
 /**
  * @author xana/cuixianming
@@ -21,6 +23,9 @@ public abstract class MediaSource extends RenderNode {
     long durationMs;
     float playSpeed = 1f;
     boolean ended = false;
+    ScaleType scaleType = ScaleType.CENTER_INSIDE;
+    float scaleMatrix[] = new float[16];
+    float transformMatrix[] = new float[16];
 
     protected MediaSource(int mediaType) {
         this.mediaType = mediaType;
@@ -61,5 +66,24 @@ public abstract class MediaSource extends RenderNode {
 
     public long getDurationMs() {
         return durationMs;
+    }
+
+    public ScaleType getScaleType() {
+        return scaleType;
+    }
+
+    public void setScaleType(ScaleType scaleType) {
+        this.scaleType = scaleType;
+        updateScaleMatrix();
+    }
+
+    @Override
+    public void setViewport(int width, int height) {
+        super.setViewport(width, height);
+        updateScaleMatrix();
+    }
+
+    protected void updateScaleMatrix() {
+        ScaleUtil.getScaleMatrix(scaleType, scaleMatrix, originWidth, originHeight, width, height);
     }
 }

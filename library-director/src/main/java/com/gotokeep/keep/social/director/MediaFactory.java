@@ -8,11 +8,11 @@ import com.gotokeep.keep.social.composer.timeline.item.TransitionItem;
 import com.gotokeep.keep.social.composer.timeline.item.VideoItem;
 import com.gotokeep.keep.social.composer.timeline.item.WatermarkItem;
 import com.gotokeep.keep.social.composer.util.MediaUtil;
-import com.gotokeep.keep.social.director.data.Chapter;
-import com.gotokeep.keep.social.director.data.Filter;
-import com.gotokeep.keep.social.director.data.MediaData;
-import com.gotokeep.keep.social.director.data.Overlay;
-import com.gotokeep.keep.social.director.data.Transition;
+import com.gotokeep.keep.data.model.director.Chapter;
+import com.gotokeep.keep.data.model.director.Filter;
+import com.gotokeep.keep.data.model.director.MediaData;
+import com.gotokeep.keep.data.model.director.Overlay;
+import com.gotokeep.keep.data.model.director.Transition;
 
 import java.util.HashMap;
 import java.util.Map;

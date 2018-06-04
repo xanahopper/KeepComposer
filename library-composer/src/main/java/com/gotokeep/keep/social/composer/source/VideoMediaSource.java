@@ -5,14 +5,16 @@ import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.net.Uri;
 import android.opengl.GLES20;
+import android.opengl.Matrix;
 import android.os.Build;
 import android.util.Log;
 import android.view.Surface;
 
-import com.gotokeep.keep.social.composer.gles.RenderTexture;
 import com.gotokeep.keep.social.composer.exception.UnsupportedFormatException;
 import com.gotokeep.keep.social.composer.gles.ProgramObject;
+import com.gotokeep.keep.social.composer.gles.RenderTexture;
 import com.gotokeep.keep.social.composer.util.MediaUtil;
+import com.gotokeep.keep.social.composer.util.ScaleUtil;
 import com.gotokeep.keep.social.composer.util.TimeUtil;
 
 import java.io.IOException;
@@ -136,15 +138,15 @@ public class VideoMediaSource extends MediaSource {
                 ByteBuffer buffer = MediaUtil.getInputBuffer(decoder, inputIndex);
                 int bufferSize;
 //                do {
-                    buffer.clear();
-                    bufferSize = extractor.readSampleData(buffer, 0);
-                    sampleTimeUs = extractor.getSampleTime();
-                    sampleFlags = extractor.getSampleFlags();
-                    if (!extractor.advance() || sampleTimeUs < 0) {
-                        ended = true;
-                    }
-                    Log.d("VideoMediaSource", "readSampleData: sampleTimeUs = " + sampleTimeUs + ", flags = " +
-                            sampleFlags);
+                buffer.clear();
+                bufferSize = extractor.readSampleData(buffer, 0);
+                sampleTimeUs = extractor.getSampleTime();
+                sampleFlags = extractor.getSampleFlags();
+                if (!extractor.advance() || sampleTimeUs < 0) {
+                    ended = true;
+                }
+                Log.d("VideoMediaSource", "readSampleData: sampleTimeUs = " + sampleTimeUs + ", flags = " +
+                        sampleFlags);
 //                } while (sampleTimeUs <= actualTimeUs &&
 //                        ((sampleFlags & MediaExtractor.SAMPLE_FLAG_SYNC) == 0) &&
 //                        !ended);
@@ -190,22 +192,24 @@ public class VideoMediaSource extends MediaSource {
     @Override
     protected void bindRenderTextures() {
         decodeTexture.bind(0);
-      //checkGlError("bindDecodeTexture");
+        //checkGlError("bindDecodeTexture");
     }
 
     @Override
     protected void unbindRenderTextures() {
         decodeTexture.unbind(0);
-      //checkGlError("unbindDecodeTexture");
+        //checkGlError("unbindDecodeTexture");
     }
 
     @Override
     protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs) {
+        float matrix[] = decodeTexture.getTransitionMatrix();
+        Matrix.multiplyMM(transformMatrix, 0, matrix, 0, scaleMatrix, 0);
         GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
-                1, false, decodeTexture.getTransitionMatrix(), 0);
-      //checkGlError("updateDecodeTextureTransformMatrix");
+                1, false, transformMatrix, 0);
+        //checkGlError("updateDecodeTextureTransformMatrix");
         GLES20.glUniform1i(programObject.getUniformLocation(ProgramObject.UNIFORM_TEXTURE), 0);
-      //checkGlError("updateDecodeTextureId");
+        //checkGlError("updateDecodeTextureId");
 
     }
 
@@ -238,6 +242,12 @@ public class VideoMediaSource extends MediaSource {
         } else {
             rotation = MediaUtil.getRotation(filePath);
         }
+        if (rotation % 180 == 90) {
+            int w = height;
+            height = width;
+            width = w;
+        }
+        updateScaleMatrix();
         presentationTimeUs = 0;
     }
 

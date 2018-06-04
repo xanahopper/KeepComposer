@@ -8,6 +8,7 @@ import com.gotokeep.keep.social.composer.MediaComposer;
 import com.gotokeep.keep.social.composer.MediaComposerFactory;
 import com.gotokeep.keep.composer.demo.SampleActivity;
 import com.gotokeep.keep.composer.demo.source.SourceProvider;
+import com.gotokeep.keep.social.composer.ScaleType;
 import com.gotokeep.keep.social.composer.overlay.OverlayProvider;
 import com.gotokeep.keep.social.composer.timeline.ClippingTimeline;
 import com.gotokeep.keep.social.composer.timeline.SourceTimeline;
@@ -38,9 +39,10 @@ public class SimplestActivity extends SampleActivity implements Handler.Callback
         composer.setVideoSize(640, 360);
 
         timeline = new SourceTimeline();
-        VideoItem startItem = new VideoItem(SourceProvider.VIDEO_SRC[1]);
+        VideoItem startItem = new VideoItem(SourceProvider.VIDEO_FRAGMENT[0]);
         startItem.setStartTimeMs(0);
         startItem.setEndTimeMs(3000);
+//        startItem.setScaleType(ScaleType.FIT_CENTER);
 //        startItem.setPlaySpeed(5f);
         Track videoTrack = new Track(true, 0);
         videoTrack.addMediaItem(startItem);

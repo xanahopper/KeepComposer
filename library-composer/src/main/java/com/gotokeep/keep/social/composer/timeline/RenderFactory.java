@@ -51,9 +51,14 @@ public class RenderFactory {
         registerRenderType(VideoItem.class, item -> {
             VideoMediaSource source = new VideoMediaSource(item.getFilePath());
             source.setPlaySpeed(item.getPlaySpeed());
+            source.setScaleType(item.getScaleType());
             return source;
         });
-        registerRenderType(ImageItem.class, item -> new ImageMediaSource(item.getFilePath()));
+        registerRenderType(ImageItem.class, item -> {
+            ImageMediaSource source = new ImageMediaSource(item.getFilePath());
+            source.setScaleType(item.getScaleType());
+            return source;
+        });
         registerRenderType(TransitionItem.class, item -> MediaTransitionFactory.getTransition(item.getName(), item.getDurationMs()));
         registerRenderType(LayerItem.class, item -> {
             String filePath = (TextUtils.isEmpty(item.getUrl()) && overlayProvider != null) ? overlayProvider.getLayerImagePath(item.getName()) : item.getUrl();

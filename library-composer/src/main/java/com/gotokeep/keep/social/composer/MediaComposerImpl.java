@@ -258,8 +258,10 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
                 debugMode = (boolean) msg.obj;
                 return true;
             case MSG_DEBUG_DO_RENDER:
-                debugPositionUs = (long) msg.obj;
-                doRenderWork();
+                if (debugMode) {
+                    debugPositionUs = (long) msg.obj;
+                    doRenderWork();
+                }
                 return true;
             case MSG_DO_AUDIO_WORK:
                 doAudioWork();

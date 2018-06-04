@@ -15,12 +15,12 @@ import com.gotokeep.keep.social.composer.util.MediaUtil;
 import com.gotokeep.keep.social.director.MediaFactory;
 import com.gotokeep.keep.social.director.ResourceManager;
 import com.gotokeep.keep.social.director.VideoFragment;
-import com.gotokeep.keep.social.director.data.ChapterSet;
-import com.gotokeep.keep.social.director.data.DefaultConfig;
-import com.gotokeep.keep.social.director.data.DirectorScript;
-import com.gotokeep.keep.social.director.data.MetaInfo;
-import com.gotokeep.keep.social.director.data.Overlay;
-import com.gotokeep.keep.social.director.data.Transition;
+import com.gotokeep.keep.data.model.director.ChapterSet;
+import com.gotokeep.keep.data.model.director.DefaultConfig;
+import com.gotokeep.keep.data.model.director.DirectorScript;
+import com.gotokeep.keep.data.model.director.MetaInfo;
+import com.gotokeep.keep.data.model.director.Overlay;
+import com.gotokeep.keep.data.model.director.Transition;
 import com.gotokeep.keep.social.director.exception.UnsuitableException;
 
 import java.util.ArrayList;

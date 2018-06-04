@@ -2,6 +2,7 @@ package com.gotokeep.keep.social.composer.timeline;
 
 import android.util.SparseArray;
 
+import com.gotokeep.keep.social.composer.ScaleType;
 import com.gotokeep.keep.social.composer.util.TimeUtil;
 
 import java.util.Comparator;
@@ -25,6 +26,7 @@ public abstract class MediaItem implements Comparable<MediaItem> {
     protected SparseArray<MediaItem> baseItem = new SparseArray<>();
     protected int type;
     protected int layer;
+    protected ScaleType scaleType = ScaleType.CENTER_INSIDE;
 
     public MediaItem(int type, int layer, MediaItem baseItem) {
         this.type = type;
@@ -98,5 +100,13 @@ public abstract class MediaItem implements Comparable<MediaItem> {
     public boolean isRangeOverlap(MediaItem mediaItem) {
         return (startTimeMs < mediaItem.endTimeMs && endTimeMs > mediaItem.startTimeMs) ||
                 (endTimeMs > mediaItem.startTimeMs && startTimeMs < mediaItem.endTimeMs);
+    }
+
+    public ScaleType getScaleType() {
+        return scaleType;
+    }
+
+    public void setScaleType(ScaleType scaleType) {
+        this.scaleType = scaleType;
     }
 }
