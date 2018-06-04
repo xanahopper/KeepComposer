@@ -48,6 +48,10 @@ public class RenderFactory {
     public RenderFactory(Context context, OverlayProvider overlayProvider) {
         this.context = context;
         this.overlayProvider = overlayProvider;
+        registerDefaultRenderTypes(context);
+    }
+
+    private void registerDefaultRenderTypes(Context context) {
         registerRenderType(VideoItem.class, item -> {
             VideoMediaSource source = new VideoMediaSource(item.getFilePath());
             source.setPlaySpeed(item.getPlaySpeed());

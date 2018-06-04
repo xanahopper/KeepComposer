@@ -1,6 +1,7 @@
 package com.gotokeep.keep.social.director;
 
 import android.graphics.Color;
+import android.text.TextUtils;
 
 import com.gotokeep.keep.data.model.director.Resource;
 import com.gotokeep.keep.social.composer.timeline.MediaItem;
@@ -17,6 +18,7 @@ import com.gotokeep.keep.data.model.director.Filter;
 import com.gotokeep.keep.data.model.director.MediaData;
 import com.gotokeep.keep.data.model.director.Overlay;
 import com.gotokeep.keep.data.model.director.Transition;
+import com.gotokeep.keep.social.composer.util.TimeUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -78,7 +80,19 @@ public final class MediaFactory {
             textItem.setTextSize(64);
             textItem.setTextColor(Color.WHITE);
             textItem.setShadowColor(0x7F444444);
+            textItem.setTimeRangeMs(0, TimeUtil.secToMs(2));
             return textItem;
+        });
+
+        registerCreator("layer", (resourceManager, resource, mediaType) -> {
+            if (TextUtils.isEmpty(resource.getType()) || "layer".equals(resource.getType())) {
+                LayerItem layerItem = new LayerItem(0, resource.getName());
+                layerItem.setTimeRangeMs(0, TimeUtil.secToMs(2));
+                layerItem.setPosition("center");
+                return layerItem;
+            } else {
+                return null;
+            }
         });
     }
 

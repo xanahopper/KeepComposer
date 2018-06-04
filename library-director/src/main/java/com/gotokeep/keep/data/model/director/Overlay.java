@@ -15,7 +15,7 @@ public final class Overlay implements MediaData {
     private float rotation;
     private int offsetX;
     private int offsetY;
-    private String position;
+    private String position = "center";
 
     private LayerOverlay layer;
     private WatermarkOverlay watermark;

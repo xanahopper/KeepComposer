@@ -9,6 +9,7 @@ import com.gotokeep.keep.social.composer.timeline.item.FilterItem;
 import com.gotokeep.keep.social.composer.timeline.item.OverlayItem;
 import com.gotokeep.keep.social.composer.timeline.Timeline;
 import com.gotokeep.keep.social.composer.timeline.Track;
+import com.gotokeep.keep.social.composer.timeline.item.TextItem;
 import com.gotokeep.keep.social.composer.timeline.item.TransitionItem;
 import com.gotokeep.keep.social.composer.timeline.item.VideoItem;
 import com.gotokeep.keep.social.composer.util.MediaUtil;
@@ -60,7 +61,10 @@ public class PatternAll extends BasePattern {
         VideoItem footer = null;
         List<VideoItem> chapters = new ArrayList<>();
         List<OverlayItem> globalOverlays = new ArrayList<>();
-
+        if (meta.getTitle() != null) {
+            TextItem titleItem = MediaFactory.createResourceItem(resourceManager, meta.getTitle(), TextItem.class);
+            globalOverlays.add(titleItem);
+        }
         FilterItem globalFilter = MediaFactory.createMediaItem(resourceManager, meta.getFilter());
         if (globalFilter != null) {
             globalFilter.setTimeRangeMs(0, totalDurationMs);
