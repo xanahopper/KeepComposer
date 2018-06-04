@@ -3,6 +3,7 @@ package com.gotokeep.keep.social.director.pattern;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
+import com.gotokeep.keep.social.composer.timeline.SourceTimeline;
 import com.gotokeep.keep.social.composer.timeline.item.AudioItem;
 import com.gotokeep.keep.social.composer.timeline.item.FilterItem;
 import com.gotokeep.keep.social.composer.timeline.item.OverlayItem;
@@ -50,7 +51,7 @@ public class PatternAll extends BasePattern {
         long sourceDurationMs = meta.getDuration();
         long totalDurationMs = sourceDurationMs;
 
-        Timeline timeline = new Timeline();
+        Timeline timeline = new SourceTimeline();
         Track sourceTrack = new Track(true, 0);
         Track transitionTrack = new Track(true, 1);
         Track filterTrack = new Track(true, 2);

@@ -9,6 +9,15 @@ public final class TimeRange {
     public long startTimeMs;
     public long endTimeMs;
 
+    public TimeRange() {
+        this(0, 0);
+    }
+
+    public TimeRange(long startTimeMs, long endTimeMs) {
+        this.startTimeMs = startTimeMs;
+        this.endTimeMs = endTimeMs;
+    }
+
     public long durationMs() {
         return endTimeMs - startTimeMs;
     }

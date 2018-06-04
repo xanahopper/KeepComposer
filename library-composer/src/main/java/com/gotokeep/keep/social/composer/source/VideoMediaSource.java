@@ -109,7 +109,8 @@ public class VideoMediaSource extends MediaSource {
         long seekTime = (long) (TimeUtil.msToUs(timeMs - startTimeMs) * playSpeed);
         if (seekTime < 0) seekTime = 0;
         else if (seekTime > TimeUtil.msToUs(durationMs)) return;
-        renderTimeUs = presentationTimeUs = seekTime;
+        presentationTimeUs = seekTime;
+        renderTimeUs = getPresentationTimeUs() + TimeUtil.msToUs(startTimeMs);
         if (isPrepared()) {
             if (extractor != null) {
                 extractor.seekTo(presentationTimeUs, MediaExtractor.SEEK_TO_PREVIOUS_SYNC);

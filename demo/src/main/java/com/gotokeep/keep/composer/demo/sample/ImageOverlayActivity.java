@@ -11,6 +11,7 @@ import com.gotokeep.keep.social.composer.MediaComposerFactory;
 import com.gotokeep.keep.composer.demo.SampleActivity;
 import com.gotokeep.keep.composer.demo.source.SourceProvider;
 import com.gotokeep.keep.social.composer.overlay.OverlayProvider;
+import com.gotokeep.keep.social.composer.timeline.SourceTimeline;
 import com.gotokeep.keep.social.composer.timeline.item.AudioItem;
 import com.gotokeep.keep.social.composer.timeline.item.ImageItem;
 import com.gotokeep.keep.social.composer.timeline.item.LayerItem;
@@ -69,7 +70,7 @@ public class ImageOverlayActivity extends SampleActivity implements Handler.Call
         composer.setVideoSize(640, 360);
         composer.setPlayEventListener(this);
 
-        timeline = new Timeline();
+        timeline = new SourceTimeline();
         ImageItem item1 = new ImageItem(SourceProvider.IMAGE_SRC[0]);
         item1.setStartTimeMs(TimeUtil.secToMs(0));
         item1.setEndTimeMs(TimeUtil.secToMs(7));

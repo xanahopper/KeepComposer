@@ -11,6 +11,7 @@ import com.gotokeep.keep.social.composer.MediaComposerFactory;
 import com.gotokeep.keep.composer.demo.SampleActivity;
 import com.gotokeep.keep.composer.demo.source.SourceProvider;
 import com.gotokeep.keep.social.composer.overlay.OverlayProvider;
+import com.gotokeep.keep.social.composer.timeline.SourceTimeline;
 import com.gotokeep.keep.social.composer.timeline.item.LayerItem;
 import com.gotokeep.keep.social.composer.timeline.Timeline;
 import com.gotokeep.keep.social.composer.timeline.Track;
@@ -68,7 +69,7 @@ public class SimpleOverlayActivity extends SampleActivity implements Handler.Cal
         composer.setVideoSize(640, 360);
         composer.setPlayEventListener(this);
 
-        timeline = new Timeline();
+        timeline = new SourceTimeline();
         VideoItem item1 = new VideoItem(SourceProvider.VIDEO_SRC[0]);
         item1.setStartTimeMs(TimeUtil.secToMs(0));
         item1.setEndTimeMs(TimeUtil.secToMs(9));

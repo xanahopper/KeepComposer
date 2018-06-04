@@ -15,6 +15,8 @@ import com.gotokeep.keep.composer.demo.SampleActivity;
 import com.gotokeep.keep.composer.demo.source.SourceProvider;
 import com.gotokeep.keep.social.composer.filter.FilterFactory;
 import com.gotokeep.keep.social.composer.overlay.OverlayProvider;
+import com.gotokeep.keep.social.composer.timeline.ClippingTimeline;
+import com.gotokeep.keep.social.composer.timeline.SourceTimeline;
 import com.gotokeep.keep.social.composer.timeline.item.AudioItem;
 import com.gotokeep.keep.social.composer.timeline.item.FilterItem;
 import com.gotokeep.keep.social.composer.timeline.item.ImageItem;
@@ -86,7 +88,7 @@ public class SimpleTransitionActivity extends SampleActivity implements Handler.
         composer.setVideoSize(EXPORT_WIDTH, EXPORT_HEIGHT);
         composer.setPlayEventListener(this);
 
-        timeline = new Timeline();
+        timeline = new SourceTimeline();
         if (!gotoNext) {
             ImageItem item1 = new ImageItem(SourceProvider.IMAGE_SRC[0]);
             item1.setStartTimeMs(TimeUtil.secToMs(0));
@@ -136,31 +138,9 @@ public class SimpleTransitionActivity extends SampleActivity implements Handler.
             timeline.addMediaTrack(filterTrack);
             timeline.addMediaTrack(overlayTrack);
             timeline.setAudioItem(new AudioItem(SourceProvider.AUDIO_SRC[0]));
-        } else {
-            VideoItem item1 = new VideoItem(SourceProvider.VIDEO_SRC[1]);
-            item1.setStartTimeMs(0);
-            item1.setEndTimeMs(200);
-            ImageItem item2 = new ImageItem(SourceProvider.IMAGE_SRC[0]);
-            item2.setStartTimeMs(200);
-            item2.setEndTimeMs(400);
-            item2.setPlaySpeed(2f);
-            Track videoTrack = new Track(true, 0);
-            videoTrack.addMediaItem(item1);
-            videoTrack.addMediaItem(item2);
-            Track transitionTrack = new Track(true, 1);
-            TransitionItem transitionItem1 = new TransitionItem(item1, item2, 200, 1);
-            transitionTrack.addMediaItem(transitionItem1);
-            timeline.addMediaTrack(videoTrack);
-            timeline.addMediaTrack(transitionTrack);
-            previewView.postDelayed(() -> {
-                if (gotoNext) {
-                    Intent intent = new Intent(this, SimpleOverlayActivity.class);
-                    this.startActivity(intent);
-                    finish();
-                }
-            }, 200);
         }
 
+        timeline = new ClippingTimeline(timeline, 2000, timeline.getEndTimeMs());
         composer.setTimeline(timeline);
         composer.setRepeatMode(MediaComposer.REPEAT_LOOP_INFINITE);
         composer.prepare();

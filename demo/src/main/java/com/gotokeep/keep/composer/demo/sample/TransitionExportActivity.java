@@ -15,6 +15,8 @@ import com.gotokeep.keep.composer.demo.SampleActivity;
 import com.gotokeep.keep.composer.demo.source.SourceProvider;
 import com.gotokeep.keep.social.composer.filter.FilterFactory;
 import com.gotokeep.keep.social.composer.overlay.OverlayProvider;
+import com.gotokeep.keep.social.composer.timeline.ClippingTimeline;
+import com.gotokeep.keep.social.composer.timeline.SourceTimeline;
 import com.gotokeep.keep.social.composer.timeline.item.AudioItem;
 import com.gotokeep.keep.social.composer.timeline.item.FilterItem;
 import com.gotokeep.keep.social.composer.timeline.item.ImageItem;
@@ -32,7 +34,7 @@ import com.seu.magicfilter.filter.DemoFilterFactory;
  * @version 1.0
  * @since 2018-05-16 10:09
  */
-public class TransitionExportActivity extends SampleActivity implements Handler.Callback, OverlayProvider, TextureView.SurfaceTextureListener, MediaComposer.PlayEventListener {
+public class TransitionExportActivity extends SampleActivity implements Handler.Callback, OverlayProvider, TextureView.SurfaceTextureListener, MediaComposer.PlayEventListener, MediaComposer.ExportEventListener {
     private MediaComposer composer;
     private Handler handler;
     private Timeline timeline;
@@ -65,7 +67,7 @@ public class TransitionExportActivity extends SampleActivity implements Handler.
         composer.setVideoSize(EXPORT_WIDTH, EXPORT_HEIGHT);
         composer.setPlayEventListener(this);
 
-        timeline = new Timeline();
+        timeline = new SourceTimeline();
         ImageItem item1 = new ImageItem(SourceProvider.IMAGE_SRC[0]);
         item1.setStartTimeMs(TimeUtil.secToMs(0));
         item1.setEndTimeMs(TimeUtil.secToMs(3));
@@ -114,8 +116,9 @@ public class TransitionExportActivity extends SampleActivity implements Handler.
         timeline.addMediaTrack(overlayTrack);
         timeline.setAudioItem(new AudioItem(SourceProvider.AUDIO_SRC[0]));
 
-
+        timeline = new ClippingTimeline(timeline, 2000, timeline.getEndTimeMs());
         composer.setTimeline(timeline);
+        composer.setExportEventListener(this);
         ExportConfiguration configuration = ExportConfiguration.newBuilder()
                 .setVideoSize(EXPORT_WIDTH, EXPORT_HEIGHT)
                 .setFrameRate(25)
@@ -164,6 +167,26 @@ public class TransitionExportActivity extends SampleActivity implements Handler.
 
     @Override
     public void onPreparing(MediaComposer composer) {
+
+    }
+
+    @Override
+    public void onExportStart(MediaComposer composer) {
+
+    }
+
+    @Override
+    public void onExportProgress(MediaComposer composer, long presentationTimeUs, long totalTimeUs) {
+        onPositionChange(composer, presentationTimeUs, totalTimeUs);
+    }
+
+    @Override
+    public void onExportComplete(MediaComposer composer) {
+
+    }
+
+    @Override
+    public void onExportError(MediaComposer composer, Exception exception) {
 
     }
 

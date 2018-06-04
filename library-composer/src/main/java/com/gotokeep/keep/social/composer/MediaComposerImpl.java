@@ -326,14 +326,20 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         }
         renderTarget.prepareVideo();
         timeline.prepare(renderFactory);
+        long timeUs = TimeUtil.msToUs(timeline.getStartTimeMs());
+        videoTimeUs = audioTimeUs = timeUs;
         renderRoot = generateRenderTree(videoTimeUs);
+
+        mediaClock.setPositionUs(timeUs);
+        audioTimeUs = videoTimeUs = timeUs;
         if (timeline.getAudioItem() != null) {
             AudioItem audioItem = timeline.getAudioItem();
             audioSource = new AudioSource(audioItem.getFilePath());
-            audioSource.setTimeRange(0, audioItem.getEndTimeMs());
+            audioSource.setTimeRange(0, Math.min(audioItem.getEndTimeMs(), timeline.getDurationMs()));
             audioSource.prepare();
             renderTarget.prepareAudio(audioSource.getSampleRate(), audioSource.getChannelCount());
         }
+        seekInternal(timeline.getStartTimeMs());
         eventDispatcher.onPreparing(this);
     }
 
@@ -363,7 +369,9 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         mediaClock.stop();
         videoHandler.removeMessages(MSG_DO_SOME_WORK);
         audioHandler.removeMessages(MSG_DO_AUDIO_WORK);
-        renderTarget.complete();
+        if (renderTarget != null) {
+            renderTarget.complete();
+        }
         if (export) {
             eventDispatcher.onExportComplete(this);
         } else {
@@ -383,9 +391,11 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         mediaClock.setPositionUs(timeUs);
         audioTimeUs = videoTimeUs = timeUs;
         if (audioSource != null) {
-            audioSource.seekTo(timeUs);
-            audioHandler.removeMessages(MSG_DO_AUDIO_WORK);
-            audioHandler.sendEmptyMessage(MSG_DO_AUDIO_WORK);
+            audioSource.seekTo(timeUs - TimeUtil.msToUs(timeline.getStartTimeMs()));
+            if (playing.get()) {
+                audioHandler.removeMessages(MSG_DO_AUDIO_WORK);
+                audioHandler.sendEmptyMessage(MSG_DO_AUDIO_WORK);
+            }
         }
         if (!export) {
             eventDispatcher.onSeeking(this, true, timeMs);
@@ -445,7 +455,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
                 stop();
                 return;
             } else if (repeatMode == REPEAT_LOOP_INFINITE) {
-                seekInternal(0);
+                seekInternal(timeline.getStartTimeMs());
             }
         }
         // do render tree
@@ -460,13 +470,15 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
                 // render result to RenderTarget
                 videoTimeUs = renderTimeUs;
                 if (export) {
-                    engine.setPresentationTime(TimeUtil.usToNs(renderTimeUs));
+                    engine.setPresentationTime(TimeUtil.usToNs(renderTimeUs - TimeUtil.msToUs(timeline.getStartTimeMs())));
                 }
                 renderTarget.updateFrame(renderRoot, videoTimeUs, engine);
                 if (export) {
-                    eventDispatcher.onExportProgress(this, videoTimeUs, timeline.getEndTimeMs());
+                    eventDispatcher.onExportProgress(this, videoTimeUs -
+                            TimeUtil.msToUs(timeline.getStartTimeMs()), timeline.getDurationMs());
                 } else {
-                    eventDispatcher.onPositionChange(this, videoTimeUs, timeline.getEndTimeMs());
+                    eventDispatcher.onPositionChange(this, videoTimeUs -
+                            TimeUtil.msToUs(timeline.getStartTimeMs()), timeline.getDurationMs());
                 }
             }
             if (export) {
@@ -521,6 +533,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
                 RenderNode renderNode;
                 if (!renderNodeMap.containsKey(item)) {
                     renderNode = renderFactory.createRenderNode(item);
+                    renderNode.seekTo(TimeUtil.usToMs(presentationTimeUs));
                     renderNodeMap.put(item, renderNode);
                 } else {
                     renderNode = renderNodeMap.get(item);

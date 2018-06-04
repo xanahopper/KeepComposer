@@ -12,6 +12,7 @@ import com.gotokeep.keep.composer.demo.SampleActivity;
 import com.gotokeep.keep.composer.demo.source.SourceProvider;
 import com.gotokeep.keep.social.composer.filter.FilterFactory;
 import com.gotokeep.keep.social.composer.overlay.OverlayProvider;
+import com.gotokeep.keep.social.composer.timeline.SourceTimeline;
 import com.gotokeep.keep.social.composer.timeline.item.AudioItem;
 import com.gotokeep.keep.social.composer.timeline.item.FilterItem;
 import com.gotokeep.keep.social.composer.timeline.item.ImageItem;
@@ -57,7 +58,7 @@ public class ImageFilterActivity extends SampleActivity implements Handler.Callb
         composer.setPreview(previewView);
         composer.setVideoSize(640, 360);
 
-        timeline = new Timeline();
+        timeline = new SourceTimeline();
         ImageItem startItem = new ImageItem(SourceProvider.IMAGE_SRC[0]);
         startItem.setStartTimeMs(0);
         startItem.setEndTimeMs(TimeUtil.secToMs(10));

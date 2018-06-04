@@ -305,18 +305,30 @@ public class MuxerRenderTarget extends RenderTarget {
             programObject = null;
         }
         if (videoEncoder != null) {
-            videoEncoder.stop();
+            try {
+                videoEncoder.stop();
+            } catch (IllegalStateException e) {
+                // ignore
+            }
             videoEncoder.release();
             videoEncoder = null;
         }
         if (audioEncoder != null) {
-            audioEncoder.stop();
+            try {
+                audioEncoder.stop();
+            } catch (IllegalStateException e) {
+                // ignore
+            }
             audioEncoder.release();
             audioEncoder = null;
         }
         if (muxer != null) {
             if (muxing) {
-                muxer.stop();
+                try {
+                    muxer.stop();
+                } catch (RuntimeException e) {
+                    Log.e("Muxer", "stop muxer failed: ", e);
+                }
             }
             muxer.release();
             muxer = null;

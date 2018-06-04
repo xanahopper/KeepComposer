@@ -9,6 +9,8 @@ import com.gotokeep.keep.social.composer.MediaComposerFactory;
 import com.gotokeep.keep.composer.demo.SampleActivity;
 import com.gotokeep.keep.composer.demo.source.SourceProvider;
 import com.gotokeep.keep.social.composer.overlay.OverlayProvider;
+import com.gotokeep.keep.social.composer.timeline.ClippingTimeline;
+import com.gotokeep.keep.social.composer.timeline.SourceTimeline;
 import com.gotokeep.keep.social.composer.timeline.Timeline;
 import com.gotokeep.keep.social.composer.timeline.Track;
 import com.gotokeep.keep.social.composer.timeline.item.VideoItem;
@@ -35,15 +37,16 @@ public class SimplestActivity extends SampleActivity implements Handler.Callback
         composer.setPreview(previewView);
         composer.setVideoSize(640, 360);
 
-        timeline = new Timeline();
+        timeline = new SourceTimeline();
         VideoItem startItem = new VideoItem(SourceProvider.VIDEO_SRC[1]);
         startItem.setStartTimeMs(0);
-        startItem.setEndTimeMs(4500);
-        startItem.setPlaySpeed(5f);
+        startItem.setEndTimeMs(3000);
+//        startItem.setPlaySpeed(5f);
         Track videoTrack = new Track(true, 0);
         videoTrack.addMediaItem(startItem);
         timeline.addMediaTrack(videoTrack);
 
+        timeline = new ClippingTimeline(timeline, 1000, timeline.getEndTimeMs());
         composer.setTimeline(timeline);
         composer.setRepeatMode(MediaComposer.REPEAT_LOOP_INFINITE);
         composer.prepare();
