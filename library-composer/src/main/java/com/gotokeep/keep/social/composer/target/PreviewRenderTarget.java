@@ -117,7 +117,13 @@ public class PreviewRenderTarget extends RenderTarget implements SurfaceTexture.
     @Override
     public void complete() {
         if (audioTrack != null) {
-            audioTrack.stop();
+            try {
+                audioTrack.stop();
+            } catch (IllegalStateException e) {
+                // ignore
+            } finally {
+                audioTrack = null;
+            }
         }
     }
 

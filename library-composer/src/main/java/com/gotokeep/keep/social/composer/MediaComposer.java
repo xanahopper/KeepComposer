@@ -12,6 +12,10 @@ import com.gotokeep.keep.social.composer.timeline.Timeline;
  * @since 2018/5/13 13:29
  */
 public interface MediaComposer {
+
+    int REPEAT_NONE = 0;
+    int REPEAT_LOOP_INFINITE = 1;
+
     void setTimeline(Timeline timeline);
 
     void setPreview(TextureView previewView);
@@ -41,6 +45,8 @@ public interface MediaComposer {
     void reset();
 
     void release();
+
+    void setRepeatMode(int repeatMode);
 
     void setDebugMode(boolean debugMode);
 

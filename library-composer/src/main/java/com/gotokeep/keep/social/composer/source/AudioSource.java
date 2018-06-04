@@ -59,7 +59,14 @@ public final class AudioSource {
 
     public void seekTo(long positionUs) {
         if (audioExtractor != null) {
-            audioExtractor.seekTo(positionUs, MediaExtractor.SEEK_TO_CLOSEST_SYNC);
+            audioExtractor.seekTo(positionUs, MediaExtractor.SEEK_TO_PREVIOUS_SYNC);
+        }
+        if (audioDecoder != null) {
+            audioDecoder.flush();
+        }
+        presentationTimeUs = renderTimeUs = positionUs;
+        if (positionUs >= TimeUtil.msToUs(startTimeMs) && positionUs <= TimeUtil.msToUs(endTimeMs)) {
+            ended = false;
         }
     }
 

@@ -109,10 +109,13 @@ public class VideoMediaSource extends MediaSource {
         long seekTime = (long) (TimeUtil.msToUs(timeMs - startTimeMs) * playSpeed);
         if (seekTime < 0) seekTime = 0;
         else if (seekTime > TimeUtil.msToUs(durationMs)) return;
-        presentationTimeUs = seekTime;
+        renderTimeUs = presentationTimeUs = seekTime;
         if (isPrepared()) {
             if (extractor != null) {
                 extractor.seekTo(presentationTimeUs, MediaExtractor.SEEK_TO_PREVIOUS_SYNC);
+            }
+            if (decoder != null) {
+                decoder.flush();
             }
             ended = false;
         }
@@ -147,6 +150,8 @@ public class VideoMediaSource extends MediaSource {
                 Log.d("VideoMediaSource", "render: feed to decoder input buffer " + sampleTimeUs);
                 if (!ended) {
                     decoder.queueInputBuffer(inputIndex, 0, bufferSize, sampleTimeUs, sampleFlags);
+                } else {
+                    decoder.queueInputBuffer(inputIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
                 }
             } else {
                 Log.w("VideoMediaSource", "doRender: cannot dequeue input buffer from decoder, reason: " + inputIndex);

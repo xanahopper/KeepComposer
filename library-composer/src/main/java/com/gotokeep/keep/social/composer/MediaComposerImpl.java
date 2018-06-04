@@ -95,6 +95,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     private long elapsedRealtimeUs;
     private long exportTimeUs = 0;
     private long frameIntervalUs = 0;
+    private int repeatMode = REPEAT_NONE;
 
     private boolean debugMode = false;
     private long debugPositionUs = 0;
@@ -191,6 +192,11 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     @Override
     public void release() {
         videoHandler.sendEmptyMessage(MSG_RELEASE);
+    }
+
+    @Override
+    public void setRepeatMode(int repeatMode) {
+        this.repeatMode = repeatMode;
     }
 
     @Override
@@ -367,11 +373,19 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
 
     private void seekInternal(long timeMs) {
         long timeUs = TimeUtil.msToUs(timeMs);
+        for (RenderNode node : renderNodeMap.values()) {
+            if (node != null) {
+                node.seekTo(timeMs);
+            }
+        }
         renderRoot = generateRenderTree(timeUs);
-        renderRoot.seekTo(timeMs);
+//        renderRoot.seekTo(timeMs);
         mediaClock.setPositionUs(timeUs);
+        audioTimeUs = videoTimeUs = timeUs;
         if (audioSource != null) {
-            audioSource.seekTo(timeMs);
+            audioSource.seekTo(timeUs);
+            audioHandler.removeMessages(MSG_DO_AUDIO_WORK);
+            audioHandler.sendEmptyMessage(MSG_DO_AUDIO_WORK);
         }
         if (!export) {
             eventDispatcher.onSeeking(this, true, timeMs);
@@ -427,8 +441,12 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
             return;
         }
         if (videoTimeUs > TimeUtil.msToUs(timeline.getEndTimeMs())) {
-            stop();
-            return;
+            if (repeatMode == REPEAT_NONE) {
+                stop();
+                return;
+            } else if (repeatMode == REPEAT_LOOP_INFINITE) {
+                seekInternal(0);
+            }
         }
         // do render tree
         elapsedRealtimeUs = TimeUtil.msToUs(SystemClock.elapsedRealtime());

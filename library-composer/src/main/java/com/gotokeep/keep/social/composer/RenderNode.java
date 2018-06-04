@@ -126,6 +126,7 @@ public abstract class RenderNode {
         for (RenderNode node : inputNodes) {
             node.seekTo(timeMs);
         }
+        presentationTimeUs = renderTimeUs = TimeUtil.msToUs(timeMs);
     }
 
     /**

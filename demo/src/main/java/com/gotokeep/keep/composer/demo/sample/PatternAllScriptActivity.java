@@ -101,6 +101,7 @@ public class PatternAllScriptActivity extends SampleActivity implements Handler.
             }
 
             composer.setTimeline(timeline);
+            composer.setRepeatMode(MediaComposer.REPEAT_LOOP_INFINITE);
             composer.prepare();
             composer.play();
         } else {
