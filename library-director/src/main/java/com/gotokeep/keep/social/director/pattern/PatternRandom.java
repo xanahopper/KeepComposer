@@ -1,9 +1,9 @@
 package com.gotokeep.keep.social.director.pattern;
 
-import android.app.Fragment;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
+import com.gotokeep.keep.data.model.director.Chapter;
 import com.gotokeep.keep.data.model.director.ChapterSet;
 import com.gotokeep.keep.data.model.director.DefaultConfig;
 import com.gotokeep.keep.data.model.director.DirectorScript;
@@ -24,6 +24,7 @@ import com.gotokeep.keep.social.director.ResourceManager;
 import com.gotokeep.keep.social.director.VideoFragment;
 import com.gotokeep.keep.social.director.exception.UnsuitableException;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,10 +33,10 @@ import java.util.Map;
 /**
  * @author xana/cuixianming
  * @version 1.0
- * @since 2018-05-18 14:20
+ * @since 2018-06-05 17:10
  */
-public class PatternAll extends BasePattern {
-    public PatternAll(ResourceManager resourceManager) {
+class PatternRandom extends BasePattern {
+    public PatternRandom(ResourceManager resourceManager) {
         super(resourceManager);
     }
 
@@ -85,24 +86,65 @@ public class PatternAll extends BasePattern {
         ChapterSet chapterSet = script.getChapter();
         Map<String, Float> playSpeed = Collections.emptyMap();
 
+        long sourceDurationMs = 0;
+        for (VideoFragment fragment : videoSources) {
+            fragment.setDurationMs(MediaUtil.getDuration(fragment.getFile()));
+            sourceDurationMs += fragment.getDurationMs();
+        }
+
+        long lastEndTimeMs = 0;
         if (chapterSet != null) {
             DefaultConfig config = chapterSet.getDefaultConfig();
             globalTransition = config.getTransition();
             if (config.getPlaySpeed() != null) {
                 playSpeed = config.getPlaySpeed();
             }
-        }
-        long sourceDurationMs = 0;
-        for (VideoFragment fragment : videoSources) {
-            fragment.setDurationMs(MediaUtil.getDuration(fragment.getFile()));
-            sourceDurationMs += fragment.getDurationMs();
-        }
-        long durationMs = 0;
-        if (sourceDurationMs > totalDurationMs) {
-            durationMs = sourceDurationMs / videoSources.size();
+            int chapterCount = chapterSet.getData() != null ? chapterSet.getData().size() : 0;
+            int chapterIndex = 0;
+            List<Chapter> chapterList = chapterSet.getData();
+            while (chapterIndex < chapterCount) {
+                Collections.shuffle(videoSources);
+                int sourceIndex = 0;
+                while (sourceIndex < videoSources.size()) {
+                    Chapter chapter = chapterList.get(chapterIndex);
+                    if (Chapter.TYPE_CHAPTER.equals(chapter.getType())) {
+                        VideoFragment video = videoSources.get(sourceIndex);
+                        VideoItem videoItem = MediaFactory.createMediaItem(resourceManager, chapter, VideoItem.class);
+                        long startTimeMs = lastEndTimeMs;
+                        long endTimeMs = lastEndTimeMs + chapter.getDuration();
+                        lastEndTimeMs = endTimeMs;
+                        videoItem.setTimeRangeMs(startTimeMs, endTimeMs);
+                    } else if (Chapter.TYPE_FOOTAGE.equals(chapter.getType())) {
+                        VideoItem videoItem = new VideoItem()
+                    }
+                }
+                for (VideoFragment video : videoSources) {
+                    VideoItem chapter = new VideoItem(resourceManager.getCacheFilePath(video.getFile()));
+                    Chapter c = chapterList.get(chapterIndex);
+                    long startTimeMs = lastEndTimeMs;
+                    long endTimeMs = lastEndTimeMs + c.getDuration();
+                    lastEndTimeMs = endTimeMs;
+                    chapter.setTimeRangeMs(startTimeMs, endTimeMs);
+
+                    if (globalTransition != null) {
+                        if (i > 0) {
+                            startTimeMs -= globalTransition.getDuration() / 2;
+                        }
+                        if (i < videoSources.size() - 1) {
+                            endTimeMs += globalTransition.getDuration() / 2;
+                        }
+                    }
+
+                    chapters.add(chapter);
+                    chapterIndex += 1;
+                    if (chapterIndex >= chapterCount) {
+                        break;
+                    }
+                }
+            }
         }
 
-        long lastEndTimeMs = 0;
+        long durationMs = 0;
         for (int i = 0; i < videoSources.size(); i++) {
             VideoFragment video = videoSources.get(i);
             VideoItem chapter = new VideoItem(resourceManager.getCacheFilePath(video.getFile()));
@@ -136,24 +178,7 @@ public class PatternAll extends BasePattern {
         if (globalAudio != null) {
             timeline.setAudioItem(globalAudio);
         }
-        return timeline;
-    }
 
-    private float getPlaySpeed(VideoFragment video, Map<String, Float> playSpeed, long durationMs) {
-        float speed = 1f;
-        if (video.getTag() != null) {
-            for (String tag : video.getTag()) {
-                if (playSpeed.containsKey(tag)) {
-                    speed = playSpeed.get(tag);
-                    break;
-                }
-            }
-        } else {
-            speed = (float) MediaUtil.getDuration(resourceManager.getCacheFilePath(video.getFile())) / durationMs;
-            if (speed > 3f) {
-                speed = 3f;
-            }
-        }
-        return speed;
+        return null;
     }
 }

@@ -439,7 +439,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         }
         MediaCodec.BufferInfo info = audioSource.getAudioInfo();
         if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-            return;
+            audioSource.seekTo(0);
         }
         if (playing.get()) {
             audioHandler.sendEmptyMessage(MSG_DO_AUDIO_WORK);
