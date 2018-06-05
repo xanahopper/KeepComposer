@@ -3,7 +3,11 @@ package com.gotokeep.keep.social.director;
 import android.graphics.Color;
 import android.text.TextUtils;
 
+import com.gotokeep.keep.data.model.director.Chapter;
+import com.gotokeep.keep.data.model.director.Filter;
+import com.gotokeep.keep.data.model.director.MediaData;
 import com.gotokeep.keep.data.model.director.Resource;
+import com.gotokeep.keep.data.model.director.Transition;
 import com.gotokeep.keep.social.composer.timeline.MediaItem;
 import com.gotokeep.keep.social.composer.timeline.item.FilterItem;
 import com.gotokeep.keep.social.composer.timeline.item.ImageItem;
@@ -11,13 +15,7 @@ import com.gotokeep.keep.social.composer.timeline.item.LayerItem;
 import com.gotokeep.keep.social.composer.timeline.item.TextItem;
 import com.gotokeep.keep.social.composer.timeline.item.TransitionItem;
 import com.gotokeep.keep.social.composer.timeline.item.VideoItem;
-import com.gotokeep.keep.social.composer.timeline.item.WatermarkItem;
 import com.gotokeep.keep.social.composer.util.MediaUtil;
-import com.gotokeep.keep.data.model.director.Chapter;
-import com.gotokeep.keep.data.model.director.Filter;
-import com.gotokeep.keep.data.model.director.MediaData;
-import com.gotokeep.keep.data.model.director.Overlay;
-import com.gotokeep.keep.data.model.director.Transition;
 import com.gotokeep.keep.social.composer.util.TimeUtil;
 
 import java.util.HashMap;
@@ -30,12 +28,12 @@ import java.util.Map;
  */
 public final class MediaFactory {
     protected static Map<Class<? extends MediaData>, MediaItemCreator<? extends MediaData, ? extends MediaItem>>
-        creatorMap = new HashMap<>();
+            creatorMap = new HashMap<>();
 
     protected static Map<String, ResourceMediaCreator<? extends MediaItem>> resourceCreatorMap = new HashMap<>();
 
     public static <M extends MediaData, T extends MediaItem> void
-        registerCreator(Class<M> dataType, MediaItemCreator<M, T> creator) {
+    registerCreator(Class<M> dataType, MediaItemCreator<M, T> creator) {
         creatorMap.put(dataType, creator);
     }
 
@@ -45,46 +43,58 @@ public final class MediaFactory {
 
     static {
         registerCreator(Chapter.class, (manager, item) -> {
-            String mime = MediaUtil.getMime(item.getSource());
-            if (mime.startsWith("image/")) {
-                return new ImageItem(manager.getCacheFilePath(item.getSource()));
-            } else if (mime.startsWith("video/")) {
-                return new VideoItem(manager.getCacheFilePath(item.getSource()));
-            } else {
+            if (TextUtils.isEmpty(item.getSource())) {
                 return null;
             }
+            String mime = MediaUtil.getMime(item.getSource());
+            MediaItem chapterItem = null;
+            if (mime.startsWith("image/")) {
+                chapterItem = new ImageItem(manager.getCacheFilePath(item.getSource()));
+                item.setDuration(TimeUtil.secToMs(2));
+            } else if (mime.startsWith("video/")) {
+                chapterItem = new VideoItem(manager.getCacheFilePath(item.getSource()));
+                item.setDuration(MediaUtil.getDuration(manager.getCacheFilePath(item.getSource())));
+            }
+            return chapterItem;
         });
 
         registerCreator(Filter.class, (manager, item) -> new FilterItem(item.getName(), item.getParams()));
 
         registerCreator(Transition.class, (manager, item) -> new TransitionItem(null, null, item.getDuration(), 0));
 
-        registerCreator(Overlay.class, (manager, item) -> {
-            if (item.getLayer() != null) {
-                LayerItem layerItem = new LayerItem(manager.getCacheFilePath(item.getLayer().getUrl()));
-                layerItem.setTimeRangeMs(item.getStartTime(), item.getEndTime());
-                layerItem.setScale(item.getScale());
-                layerItem.setOffsetX(item.getOffsetX());
-                layerItem.setOffsetY(item.getOffsetY());
-                layerItem.setRotation(item.getRotation());
-                layerItem.setPosition(item.getPosition());
-                return layerItem;
+//        registerCreator(Overlay.class, new MediaItemCreator<Overlay, OverlayItem>() {
+//            @Override
+//            public OverlayItem createMediaItem(ResourceManager manager, Overlay item) {
+//                if (item.getLayer() != null) {
+//                    LayerItem layerItem = new LayerItem(manager.getCacheFilePath(item.getLayer().getUrl()));
+//                    layerItem.setTimeRangeMs(item.getStartTime(), item.getEndTime());
+//                    layerItem.setScale(item.getScale());
+//                    layerItem.setOffsetX(item.getOffsetX());
+//                    layerItem.setOffsetY(item.getOffsetY());
+//                    layerItem.setRotation(item.getRotation());
+//                    layerItem.setPosition(item.getPosition());
+//                    return layerItem;
+//                } else {
+//                    return new WatermarkItem(0);
+//                }
+//            }
+//        });
+
+        registerCreator("title", (resourceManager, resource, mediaType) -> {
+            if (TextUtils.isEmpty(resource.getType()) || "title".equals(resource.getType())) {
+                TextItem textItem = new TextItem(0, resource.getValue());
+                textItem.setPosition("center");
+                textItem.setTextSize(64);
+                textItem.setTextColor(Color.WHITE);
+                textItem.setShadowColor(0x7F444444);
+                textItem.setTimeRangeMs(0, TimeUtil.secToMs(2));
+                return textItem;
             } else {
-                return new WatermarkItem(0);
+                return null;
             }
         });
 
-        registerCreator("title", (resourceManager, resource, mediaType) -> {
-            TextItem textItem = new TextItem(0, resource.getValue());
-            textItem.setPosition("center");
-            textItem.setTextSize(64);
-            textItem.setTextColor(Color.WHITE);
-            textItem.setShadowColor(0x7F444444);
-            textItem.setTimeRangeMs(0, TimeUtil.secToMs(2));
-            return textItem;
-        });
-
-        registerCreator("layer", (resourceManager, resource, mediaType) -> {
+        registerCreator("header", (resourceManager, resource, mediaType) -> {
             if (TextUtils.isEmpty(resource.getType()) || "layer".equals(resource.getType())) {
                 LayerItem layerItem = new LayerItem(0, resource.getName());
                 layerItem.setTimeRangeMs(0, TimeUtil.secToMs(2));
@@ -98,17 +108,18 @@ public final class MediaFactory {
 
     @SuppressWarnings("unchecked")
     public static <M extends Resource, T extends MediaItem> T
-    createResourceItem(ResourceManager resourceManager, M resource, Class<T> mediaType) {
+    createResourceItem(ResourceManager resourceManager, String type, M resource, Class<T> mediaType) {
         if (resource == null || mediaType == null) {
             return null;
         }
-        ResourceMediaCreator<T> creator = (ResourceMediaCreator<T>) resourceCreatorMap.get(resource.getType());
+        ResourceMediaCreator<T> creator = (ResourceMediaCreator<T>) resourceCreatorMap.get(type);
         if (creator != null) {
             return creator.createMediaItem(resourceManager, resource, mediaType);
         } else {
             return null;
         }
     }
+
     @SuppressWarnings("unchecked")
     public static <M extends MediaData, T extends MediaItem> T
     createMediaItem(ResourceManager resourceManager, M mediaData) {

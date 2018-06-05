@@ -48,7 +48,7 @@ public class SimplestActivity extends SampleActivity implements Handler.Callback
         videoTrack.addMediaItem(startItem);
         timeline.addMediaTrack(videoTrack);
 
-        timeline = new ClippingTimeline(timeline, 1000, timeline.getEndTimeMs());
+//        timeline = new ClippingTimeline(timeline, 1000, timeline.getEndTimeMs());
         composer.setTimeline(timeline);
         composer.setRepeatMode(MediaComposer.REPEAT_LOOP_INFINITE);
         composer.prepare();

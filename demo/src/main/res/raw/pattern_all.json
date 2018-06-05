@@ -1,43 +1,41 @@
-
 {
   "type": "template",
-  "version": 1,
-  "id": "[唯一 ID]",
-  "name": "[模板名称]",
-  "strategy": "all",
+  "version": "5.15.5",
+  "name": "动作展示",
+  "cover": "https://static1.keepcdn.com/2018/06/01/1527850082582_128x128.png",
   "meta": {
     "pattern": "all",
-    "duration": 30000,
+    "duration": "60000",
     "filter": {
       "name": "sunset"
     },
-    "overlay": [
-      {
-        "startTime": 0,
-        "endTime": 2000,
-        "position": "center",
-        "scale": 0.5,
-        "layer": {
-          "url": "https://staticweb.keepcdn.com/show/images/homepage/slogan-cfd33df7dd.png",
-          "width": 200,
-          "height": 200
-        }
-      }
-    ],
-    "music": "http://7xt05i.com1.z0.glb.clouddn.com/%E5%8F%8C%E8%8A%82%E6%A3%8D.mp3",
-    "minFragment": 2,
-    "maxFragment": 30
+    "music": "https://static1.keepcdn.com/2018/06/01/1527850141065.mp3",
+    "minFragment": "1",
+    "maxFragment": "30",
+    "title": {
+      "id": "5b14ecf129b8a305982f7493",
+      "name": " 习近平",
+      "value": "测试",
+      "version": "5.15.4",
+      "type": "title"
+    }
+  },
+  "footer": {
+    "type": "footage",
+    "source": null,
+    "duration": 0
   },
   "chapter": {
     "default": {
       "playSpeed": {
-        "action": 3,
-        "rest": 1
+        "default": 3,
+        "action": 1
       },
       "transition": {
-        "name": "fade",
-        "duration": 400
+        "name": "叠化",
+        "duration": 600
       }
-    }
+    },
+    "data": []
   }
 }

@@ -3,12 +3,17 @@ package com.gotokeep.keep.social.director.pattern;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
+import com.gotokeep.keep.data.model.director.ChapterSet;
+import com.gotokeep.keep.data.model.director.DefaultConfig;
+import com.gotokeep.keep.data.model.director.DirectorScript;
+import com.gotokeep.keep.data.model.director.MetaInfo;
+import com.gotokeep.keep.data.model.director.Transition;
 import com.gotokeep.keep.social.composer.timeline.SourceTimeline;
+import com.gotokeep.keep.social.composer.timeline.Timeline;
+import com.gotokeep.keep.social.composer.timeline.Track;
 import com.gotokeep.keep.social.composer.timeline.item.AudioItem;
 import com.gotokeep.keep.social.composer.timeline.item.FilterItem;
 import com.gotokeep.keep.social.composer.timeline.item.OverlayItem;
-import com.gotokeep.keep.social.composer.timeline.Timeline;
-import com.gotokeep.keep.social.composer.timeline.Track;
 import com.gotokeep.keep.social.composer.timeline.item.TextItem;
 import com.gotokeep.keep.social.composer.timeline.item.TransitionItem;
 import com.gotokeep.keep.social.composer.timeline.item.VideoItem;
@@ -16,12 +21,6 @@ import com.gotokeep.keep.social.composer.util.MediaUtil;
 import com.gotokeep.keep.social.director.MediaFactory;
 import com.gotokeep.keep.social.director.ResourceManager;
 import com.gotokeep.keep.social.director.VideoFragment;
-import com.gotokeep.keep.data.model.director.ChapterSet;
-import com.gotokeep.keep.data.model.director.DefaultConfig;
-import com.gotokeep.keep.data.model.director.DirectorScript;
-import com.gotokeep.keep.data.model.director.MetaInfo;
-import com.gotokeep.keep.data.model.director.Overlay;
-import com.gotokeep.keep.data.model.director.Transition;
 import com.gotokeep.keep.social.director.exception.UnsuitableException;
 
 import java.util.ArrayList;
@@ -57,25 +56,27 @@ public class PatternAll extends BasePattern {
         Track transitionTrack = new Track(true, 1);
         Track filterTrack = new Track(true, 2);
         Track overlayTrack = new Track(true, 3);
-        VideoItem header = null;
-        VideoItem footer = null;
+        OverlayItem header = MediaFactory.createResourceItem(resourceManager, "header", script.getHeader(), OverlayItem.class);
+        if (header != null) {
+            overlayTrack.addMediaItem(header);
+        }
+        VideoItem footer = MediaFactory.createMediaItem(resourceManager, script.getFooter());
+        if (footer != null) {
+            footer.setTimeRangeMs(totalDurationMs, totalDurationMs + script.getFooter().getDuration());
+            sourceTrack.addMediaItem(footer);
+        }
         List<VideoItem> chapters = new ArrayList<>();
         List<OverlayItem> globalOverlays = new ArrayList<>();
         if (meta.getTitle() != null) {
-            TextItem titleItem = MediaFactory.createResourceItem(resourceManager, meta.getTitle(), TextItem.class);
-            globalOverlays.add(titleItem);
+            TextItem titleItem = MediaFactory.createResourceItem(resourceManager, "title", meta.getTitle(), TextItem.class);
+            if (titleItem != null) {
+                globalOverlays.add(titleItem);
+            }
         }
         FilterItem globalFilter = MediaFactory.createMediaItem(resourceManager, meta.getFilter());
         if (globalFilter != null) {
             globalFilter.setTimeRangeMs(0, totalDurationMs);
             filterTrack.addMediaItem(globalFilter);
-        }
-        if (meta.getOverlay() != null) {
-            for (Overlay overlay : meta.getOverlay()) {
-                OverlayItem overlayItem = MediaFactory.createMediaItem(resourceManager, overlay, OverlayItem.class);
-                globalOverlays.add(overlayItem);
-                overlayTrack.addMediaItem(overlayItem);
-            }
         }
         AudioItem globalAudio = !TextUtils.isEmpty(meta.getMusic()) ? new AudioItem(getResourcePath(meta.getMusic())) : null;
         timeline.setAudioItem(globalAudio);
@@ -90,18 +91,8 @@ public class PatternAll extends BasePattern {
             if (config.getPlaySpeed() != null) {
                 playSpeed = config.getPlaySpeed();
             }
-            header = MediaFactory.createMediaItem(resourceManager, chapterSet.getHeader());
-            footer = MediaFactory.createMediaItem(resourceManager, chapterSet.getFooter());
-            if (header != null) {
-                sourceDurationMs -= chapterSet.getHeader().getDuration();
-                header.setTimeRangeMs(0, chapterSet.getHeader().getDuration());
-                sourceTrack.addMediaItem(header);
-            }
-            if (footer != null) {
-                sourceDurationMs -= chapterSet.getFooter().getDuration();
-                footer.setTimeRangeMs(totalDurationMs - chapterSet.getFooter().getDuration(), totalDurationMs);
-                sourceTrack.addMediaItem(footer);
-            }
+
+
         }
         long durationMs = sourceDurationMs / videoSources.size();
         for (int i = 0; i < videoSources.size(); i++) {

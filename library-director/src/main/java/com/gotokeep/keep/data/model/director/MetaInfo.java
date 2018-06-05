@@ -1,7 +1,5 @@
 package com.gotokeep.keep.data.model.director;
 
-import java.util.List;
-
 /**
  * @author xana/cuixianming
  * @version 1.0
@@ -13,7 +11,6 @@ public final class MetaInfo {
     private int minFragment;
     private int maxFragment;
     private Filter filter;
-    private List<Overlay> overlay;
     private Resource title;
     private String music;
 
@@ -57,14 +54,6 @@ public final class MetaInfo {
         this.filter = filter;
     }
 
-    public List<Overlay> getOverlay() {
-        return overlay;
-    }
-
-    public void setOverlay(List<Overlay> overlay) {
-        this.overlay = overlay;
-    }
-
     public String getMusic() {
         return music;
     }
@@ -89,7 +78,6 @@ public final class MetaInfo {
                 ", minFragment=" + minFragment +
                 ", maxFragment=" + maxFragment +
                 ", filter=" + filter +
-                ", overlay=" + overlay +
                 ", music=" + music +
                 '}';
     }

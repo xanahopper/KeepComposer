@@ -19,7 +19,7 @@ public final class Chapter implements MediaData {
     private float playSpeed = 1f;
     private Filter filter;
     private Transition transition;
-    private List<Overlay> overlay;
+//    private List<Overlay> overlay;
     private List<String> tag;
     private List<Effect> effect;
     private String music;
@@ -72,13 +72,13 @@ public final class Chapter implements MediaData {
         this.transition = transition;
     }
 
-    public List<Overlay> getOverlay() {
-        return overlay;
-    }
-
-    public void setOverlay(List<Overlay> overlay) {
-        this.overlay = overlay;
-    }
+//    public List<Overlay> getOverlay() {
+//        return overlay;
+//    }
+//
+//    public void setOverlay(List<Overlay> overlay) {
+//        this.overlay = overlay;
+//    }
 
     public List<String> getTag() {
         return tag;
@@ -113,7 +113,7 @@ public final class Chapter implements MediaData {
                 ", playSpeed=" + playSpeed +
                 ", filter=" + filter +
                 ", transition=" + transition +
-                ", overlay=" + overlay +
+//                ", overlay=" + overlay +
                 ", tag=" + tag +
                 ", effect=" + effect +
                 ", music=" + music +

@@ -14,6 +14,8 @@ public class DirectorScript{
     private String label;
     private String cover;
     private MetaInfo meta;
+    private Resource header;
+    private Chapter footer;
     private ChapterSet chapter;
 
     public String getType() {
@@ -78,6 +80,22 @@ public class DirectorScript{
 
     public void setChapter(ChapterSet chapter) {
         this.chapter = chapter;
+    }
+
+    public Resource getHeader() {
+        return header;
+    }
+
+    public void setHeader(Resource header) {
+        this.header = header;
+    }
+
+    public Chapter getFooter() {
+        return footer;
+    }
+
+    public void setFooter(Chapter footer) {
+        this.footer = footer;
     }
 
     @Override

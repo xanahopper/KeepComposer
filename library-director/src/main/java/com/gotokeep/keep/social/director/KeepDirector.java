@@ -6,12 +6,11 @@ import android.os.Looper;
 import android.text.TextUtils;
 
 import com.google.gson.Gson;
-import com.gotokeep.keep.social.composer.timeline.Timeline;
 import com.gotokeep.keep.data.model.director.Chapter;
 import com.gotokeep.keep.data.model.director.ChapterSet;
 import com.gotokeep.keep.data.model.director.DirectorScript;
 import com.gotokeep.keep.data.model.director.MetaInfo;
-import com.gotokeep.keep.data.model.director.Overlay;
+import com.gotokeep.keep.social.composer.timeline.Timeline;
 import com.gotokeep.keep.social.director.exception.UnsuitableException;
 import com.gotokeep.keep.social.director.pattern.BasePattern;
 import com.gotokeep.keep.social.director.pattern.PatternAll;
@@ -86,6 +85,7 @@ public final class KeepDirector implements ResourceManager.ResourceListener {
 
     /**
      * 验证并准备此脚本（即下载脚本中所有资源）
+     *
      * @return 是否已经准备就绪
      */
     public boolean verifyScript() {
@@ -100,20 +100,20 @@ public final class KeepDirector implements ResourceManager.ResourceListener {
         }
         MetaInfo metaInfo = script.getMeta();
         resourceList.addAll(metaInfo.getFilter().getResources());
-        for (Overlay overlay : metaInfo.getOverlay()) {
-            resourceList.addAll(overlay.getResources());
-        }
+//        for (Overlay overlay : metaInfo.getOverlay()) {
+//            resourceList.addAll(overlay.getResources());
+//        }
         if (!TextUtils.isEmpty(metaInfo.getMusic())) {
             resourceList.add(metaInfo.getMusic());
         }
         if (script.getChapter() != null) {
             ChapterSet chapterSet = script.getChapter();
-            if (chapterSet.getHeader() != null) {
-                resourceList.addAll(chapterSet.getHeader().getResources());
-            }
-            if (chapterSet.getFooter() != null) {
-                resourceList.addAll(chapterSet.getFooter().getResources());
-            }
+//            if (chapterSet.getHeader() != null) {
+//                resourceList.addAll(chapterSet.getHeader().getResources());
+//            }
+//            if (chapterSet.getFooter() != null) {
+//                resourceList.addAll(chapterSet.getFooter().getResources());
+//            }
             if (chapterSet.getData() != null) {
                 for (Chapter chapter : chapterSet.getData()) {
                     resourceList.addAll(chapter.getResources());

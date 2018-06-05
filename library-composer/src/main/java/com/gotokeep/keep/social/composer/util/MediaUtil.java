@@ -75,7 +75,7 @@ public class MediaUtil {
 
     public static long getDuration(String filepath) {
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
-        if (!TextUtils.isEmpty(filepath) || !new File(filepath).exists()) {
+        if (TextUtils.isEmpty(filepath) || !new File(filepath).exists()) {
             return 0;
         }
         try {
