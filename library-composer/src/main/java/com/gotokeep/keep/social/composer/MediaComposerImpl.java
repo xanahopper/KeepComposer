@@ -672,6 +672,14 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         }
 
         @Override
+        public void onReady(MediaComposer composer) {
+            if (playEventListener != null) {
+                handler.post(() -> playEventListener.onReady(composer));
+            }
+
+        }
+
+        @Override
         public void onExportStart(MediaComposer composer) {
             if (exportEventListener != null) {
                 handler.post(() -> exportEventListener.onExportStart(composer));

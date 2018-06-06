@@ -13,6 +13,7 @@ import com.gotokeep.keep.social.composer.ComposerEngine;
 import com.gotokeep.keep.social.composer.RenderNode;
 import com.gotokeep.keep.social.composer.RenderTarget;
 import com.gotokeep.keep.social.composer.gles.ProgramObject;
+import com.gotokeep.keep.social.composer.gles.RenderTexture;
 import com.gotokeep.keep.social.composer.source.AudioSource;
 
 import java.nio.ByteBuffer;
@@ -56,7 +57,7 @@ public class PreviewRenderTarget extends RenderTarget implements SurfaceTexture.
         GLES20.glVertexAttribPointer(1, 2, GLES20.GL_SHORT, false, 0, texCoordBuffer);
         GLES20.glEnableVertexAttribArray(1);
 
-        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
+        RenderTexture.resetRenderTarget();
         renderNode.getOutputTexture().bind(0);
         GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
                 1, false, renderNode.getTransformMatrix(), 0);

@@ -172,6 +172,11 @@ public class SimpleTransitionActivity extends SampleActivity implements Handler.
     }
 
     @Override
+    public void onReady(MediaComposer composer) {
+
+    }
+
+    @Override
     public void onPlay(MediaComposer composer) {
 
     }

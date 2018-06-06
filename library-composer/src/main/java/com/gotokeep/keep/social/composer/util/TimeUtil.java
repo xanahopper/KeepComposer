@@ -2,6 +2,8 @@ package com.gotokeep.keep.social.composer.util;
 
 import android.annotation.SuppressLint;
 
+import java.util.List;
+
 /**
  * @author xana/cuixianming
  * @version 1.0
@@ -42,5 +44,25 @@ public final class TimeUtil {
 
     public static long usToNs(long timeUs) {
         return timeUs * 1000;
+    }
+
+    public static long findClosestKeyFrame(List<Long> keyFrames, long positionUs) {
+        int start = 0;
+        int end = keyFrames.size() - 1;
+        while (start <= end) {
+            int mid = (start + end) / 2;
+            long value = keyFrames.get(mid);
+            if (positionUs == value) {
+                return value;
+            } else if (positionUs < value) {
+                end = mid - 1;
+            } else {
+                start = mid + 1;
+            }
+        }
+        int index = Math.min(start, end);
+        if (index < 0) index = 0;
+        else if (index > keyFrames.size() - 1) index = keyFrames.size() - 1;
+        return keyFrames.get(index);
     }
 }

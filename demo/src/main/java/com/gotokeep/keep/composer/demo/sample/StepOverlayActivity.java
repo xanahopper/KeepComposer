@@ -153,6 +153,11 @@ public class StepOverlayActivity extends SampleActivity implements Handler.Callb
     }
 
     @Override
+    public void onReady(MediaComposer composer) {
+
+    }
+
+    @Override
     public void onPlay(MediaComposer composer) {
 
     }

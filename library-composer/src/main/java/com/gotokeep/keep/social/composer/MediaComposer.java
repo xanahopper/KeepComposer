@@ -55,6 +55,8 @@ public interface MediaComposer {
     interface PlayEventListener {
         void onPreparing(MediaComposer composer);
 
+        void onReady(MediaComposer composer);
+
         void onPlay(MediaComposer composer);
 
         void onPause(MediaComposer composer);

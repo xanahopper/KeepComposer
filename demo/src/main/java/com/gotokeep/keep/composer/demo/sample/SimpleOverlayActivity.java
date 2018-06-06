@@ -128,6 +128,11 @@ public class SimpleOverlayActivity extends SampleActivity implements Handler.Cal
     }
 
     @Override
+    public void onReady(MediaComposer composer) {
+
+    }
+
+    @Override
     public void onPlay(MediaComposer composer) {
 
     }

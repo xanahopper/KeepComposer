@@ -121,6 +121,11 @@ public class ImageOverlayActivity extends SampleActivity implements Handler.Call
     }
 
     @Override
+    public void onReady(MediaComposer composer) {
+
+    }
+
+    @Override
     public void onPlay(MediaComposer composer) {
 
     }

@@ -145,6 +145,11 @@ public class ExportPatternAllScriptActivity extends SampleActivity implements Ha
     }
 
     @Override
+    public void onReady(MediaComposer composer) {
+
+    }
+
+    @Override
     public void onExportStart(MediaComposer composer) {
 
     }

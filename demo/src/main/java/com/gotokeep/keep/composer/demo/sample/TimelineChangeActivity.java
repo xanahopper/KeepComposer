@@ -203,6 +203,11 @@ public class TimelineChangeActivity extends SampleActivity implements Handler.Ca
     }
 
     @Override
+    public void onReady(MediaComposer composer) {
+
+    }
+
+    @Override
     public void onPlay(MediaComposer composer) {
 
     }
