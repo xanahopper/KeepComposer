@@ -1,7 +1,9 @@
 package com.gotokeep.keep.social.composer;
 
+import android.annotation.TargetApi;
 import android.graphics.SurfaceTexture;
 import android.media.MediaCodec;
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
@@ -31,6 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @version 1.0
  * @since 2018-05-14 14:20
  */
+@TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.SurfaceTextureListener {
     private static final int MSG_SETUP = 0;
     private static final int MSG_SET_TIMELINE = 1;
@@ -52,19 +55,6 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     private static final int MSG_DO_AUDIO_WORK = 17;
     private static final int MSG_RESET = 18;
 
-    private static final int EVENT_PLAY_PREPARE = 0;
-    private static final int EVENT_PLAY_PLAY = 1;
-    private static final int EVENT_PLAY_PAUSE = 2;
-    private static final int EVENT_PLAY_POSITION_CHANGE = 3;
-    private static final int EVENT_PLAY_STOP = 4;
-    private static final int EVENT_PLAY_SEEKING = 5;
-    private static final int EVENT_PLAY_ERROR = 6;
-
-    private static final int EVENT_EXPORT_PREPARE = 0;
-    private static final int EVENT_EXPORT_START = 1;
-    private static final int EVENT_EXPORT_PROGRESS = 2;
-    private static final int EVENT_EXPORT_COMPLETE = 3;
-    private static final int EVENT_EXPORT_ERROR = 4;
     private static final String TAG = MediaComposer.class.getSimpleName();
 
     private HandlerThread videoThread;
@@ -271,16 +261,11 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     }
 
     private void releaseInternal() {
+        audioHandler.removeMessages(MSG_DO_AUDIO_WORK);
         videoHandler.removeMessages(MSG_DO_SOME_WORK);
+        audioThread.quitSafely();
         videoThread.quitSafely();
-        for (MediaItem item : renderNodeMap.keySet()) {
-            Log.d(TAG, "releaseInternal: " + item.toString());
-            RenderNode node = renderNodeMap.get(item);
-            if (node != null) {
-                node.release();
-            }
-        }
-        renderNodeMap.clear();
+        releaseRenderNodeCache();
         if (renderTarget != null) {
             renderTarget.release();
             renderTarget = null;
@@ -291,13 +276,24 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         }
     }
 
-    private void setTimelineInternal(Timeline timeline) {
-        if (this.timeline != timeline) {
-            if (playing.get()) {
-                throw new IllegalStateException("MediaComposer must be stopped when set timeline");
+    private void releaseRenderNodeCache() {
+        for (MediaItem item : renderNodeMap.keySet()) {
+            Log.d(TAG, "releaseInternal: " + item.toString());
+            RenderNode node = renderNodeMap.get(item);
+            if (node != null) {
+                node.release();
             }
-            this.timeline = timeline;
         }
+        renderFactory.releaseRenderNodeCache();
+        renderNodeMap.clear();
+    }
+
+    private void setTimelineInternal(Timeline timeline) {
+        if (playing.get()) {
+            throw new IllegalStateException("MediaComposer must be stopped when set timeline");
+        }
+        releaseRenderNodeCache();
+        this.timeline = timeline;
     }
 
     private void setPreviewInternal(TextureView previewView) {
@@ -328,7 +324,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
 
     private void prepareInternal() {
         Log.d(TAG, "prepareInternal");
-        if (renderTarget == null) {
+        if (renderTarget == null || timeline == null) {
             return;
         }
         renderTarget.prepareVideo();
@@ -439,7 +435,9 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         }
         MediaCodec.BufferInfo info = audioSource.getAudioInfo();
         if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-            return;
+//            return;
+            audioTimeUs = 0;
+            audioSource.seekTo(0);
         }
         if (playing.get()) {
             audioHandler.sendEmptyMessage(MSG_DO_AUDIO_WORK);
@@ -447,6 +445,9 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     }
 
     private void doRenderWork() {
+        if (!playing.get() && !debugMode) {
+            return;
+        }
         long operationStartMs = SystemClock.elapsedRealtime();
         videoTimeUs = debugMode ? debugPositionUs : getCurrentTimeUs();
         if (renderRoot == null) {
@@ -471,10 +472,8 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         renderRoot.setViewport(canvasWidth, canvasHeight);
         long renderTimeUs = renderRoot.acquireFrame(videoTimeUs);
 
-//        Log.d(TAG, "doRenderWork: " + renderTimeUs + " " + videoTimeUs);
         if (renderTarget != null) {
             if (renderTimeUs >= videoTimeUs) {
-//                Log.d(TAG, "doRenderWork: has frame and render to target");
                 // render result to RenderTarget
                 videoTimeUs = renderTimeUs;
                 if (export) {
@@ -497,7 +496,6 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
                 }
             }
         }
-//        cleanupInvalidRenderNode(videoTimeUs);
         renderRoot = generateRenderTree(export ? exportTimeUs : videoTimeUs);
         if (renderRoot != null) {
             scheduleNextWork(operationStartMs, 10);
@@ -518,7 +516,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
 
     private void scheduleNextWork(long operationTimeMs, long intervalTimeMs) {
         videoHandler.removeMessages(MSG_DO_SOME_WORK);
-        if (debugMode) {
+        if (debugMode || !playing.get()) {
             return;
         }
         long nextOperationStartTime = operationTimeMs + intervalTimeMs;

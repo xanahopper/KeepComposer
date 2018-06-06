@@ -40,6 +40,7 @@ public abstract class RenderNode {
     protected int originHeight;
     protected boolean frameAvailable = false;
     protected boolean debugMode = false;
+    protected boolean released = false;
 
     protected static final float[] DEFAULT_VERTEX_DATA = {
             -1f, -1f, 0,
@@ -151,6 +152,7 @@ public abstract class RenderNode {
             programObject = null;
         }
         prepared = false;
+        released = true;
         Log.d(TAG, "release: " + getName());
     }
 
@@ -198,6 +200,10 @@ public abstract class RenderNode {
 
     public boolean isPrepared() {
         return prepared;
+    }
+
+    public boolean isReleased() {
+        return released;
     }
 
     public long getStartTimeMs() {

@@ -5,8 +5,8 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.gotokeep.keep.social.composer.RenderNode;
-import com.gotokeep.keep.social.composer.filter.MediaFilter;
 import com.gotokeep.keep.social.composer.filter.FilterFactory;
+import com.gotokeep.keep.social.composer.filter.MediaFilter;
 import com.gotokeep.keep.social.composer.overlay.LayerOverlay;
 import com.gotokeep.keep.social.composer.overlay.MediaOverlay;
 import com.gotokeep.keep.social.composer.overlay.OverlayProvider;
@@ -48,10 +48,6 @@ public class RenderFactory {
     public RenderFactory(Context context, OverlayProvider overlayProvider) {
         this.context = context;
         this.overlayProvider = overlayProvider;
-        registerDefaultRenderTypes(context);
-    }
-
-    private void registerDefaultRenderTypes(Context context) {
         registerRenderType(VideoItem.class, item -> {
             VideoMediaSource source = new VideoMediaSource(item.getFilePath());
             source.setPlaySpeed(item.getPlaySpeed());
@@ -65,8 +61,12 @@ public class RenderFactory {
         });
         registerRenderType(TransitionItem.class, item -> MediaTransitionFactory.getTransition(item.getName(), item.getDurationMs()));
         registerRenderType(LayerItem.class, item -> {
-            String filePath = (TextUtils.isEmpty(item.getUrl()) && overlayProvider != null) ? overlayProvider.getLayerImagePath(item.getName()) : item.getUrl();
-            MediaOverlay overlay = new LayerOverlay(filePath);
+            MediaOverlay overlay;
+            if (TextUtils.isEmpty(item.getUrl()) && overlayProvider != null)  {
+                overlay = overlayProvider.createOverlay(item.getName());
+            } else {
+                overlay = new LayerOverlay(item.getUrl());
+            }
             overlay.initWithMediaItem(item);
             return overlay;
         });
@@ -103,7 +103,7 @@ public class RenderFactory {
     }
 
     <T extends MediaItem, R extends RenderNode> void
-        registerRenderType(Class<T> itemType, RenderCreator<T, R> creator) {
+    registerRenderType(Class<T> itemType, RenderCreator<T, R> creator) {
         renderCreatorMap.put(itemType, creator);
     }
 
@@ -129,5 +129,14 @@ public class RenderFactory {
         }
 
         return node;
+    }
+
+    public void releaseRenderNodeCache() {
+        for (RenderNode node : renderNodeCache.values()) {
+            if (node != null && !node.isReleased()) {
+                node.release();
+            }
+        }
+        renderNodeCache.clear();
     }
 }

@@ -14,6 +14,8 @@ import com.gotokeep.keep.composer.demo.R;
 import com.gotokeep.keep.composer.demo.SampleActivity;
 import com.gotokeep.keep.composer.demo.source.SourceProvider;
 import com.gotokeep.keep.social.composer.filter.FilterFactory;
+import com.gotokeep.keep.social.composer.overlay.LayerOverlay;
+import com.gotokeep.keep.social.composer.overlay.MediaOverlay;
 import com.gotokeep.keep.social.composer.overlay.OverlayProvider;
 import com.gotokeep.keep.social.composer.timeline.Timeline;
 import com.gotokeep.keep.social.composer.util.TimeUtil;
@@ -72,8 +74,8 @@ public class PatternAllScriptActivity extends SampleActivity implements Handler.
     }
 
     @Override
-    public String getLayerImagePath(String name) {
-        return SourceProvider.IMAGE_SRC[1];
+    public MediaOverlay createOverlay(String name) {
+        return new LayerOverlay(SourceProvider.IMAGE_SRC[1]);
     }
 
     @Override

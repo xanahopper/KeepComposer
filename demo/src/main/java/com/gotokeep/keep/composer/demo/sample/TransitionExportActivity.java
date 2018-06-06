@@ -14,6 +14,8 @@ import com.gotokeep.keep.social.composer.MediaComposerFactory;
 import com.gotokeep.keep.composer.demo.SampleActivity;
 import com.gotokeep.keep.composer.demo.source.SourceProvider;
 import com.gotokeep.keep.social.composer.filter.FilterFactory;
+import com.gotokeep.keep.social.composer.overlay.LayerOverlay;
+import com.gotokeep.keep.social.composer.overlay.MediaOverlay;
 import com.gotokeep.keep.social.composer.overlay.OverlayProvider;
 import com.gotokeep.keep.social.composer.timeline.ClippingTimeline;
 import com.gotokeep.keep.social.composer.timeline.SourceTimeline;
@@ -139,9 +141,10 @@ public class TransitionExportActivity extends SampleActivity implements Handler.
         return false;
     }
 
+
     @Override
-    public String getLayerImagePath(String name) {
-        return SourceProvider.IMAGE_SRC[1];
+    public MediaOverlay createOverlay(String name) {
+        return new LayerOverlay(SourceProvider.IMAGE_SRC[1]);
     }
 
     @Override

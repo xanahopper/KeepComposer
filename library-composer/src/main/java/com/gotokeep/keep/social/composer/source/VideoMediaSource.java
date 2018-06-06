@@ -37,6 +37,7 @@ public class VideoMediaSource extends MediaSource {
             "void main() { \n" +
             "    gl_FragColor = texture2D(uTexture, vTexCoords);\n" +
             "}\n";
+    private static final String TAG = VideoMediaSource.class.getSimpleName();
 
     private String filePath;
     private MediaExtractor extractor;
@@ -69,6 +70,7 @@ public class VideoMediaSource extends MediaSource {
         try {
             prepareExtractorAndInfo();
         } catch (IOException e) {
+            Log.e(TAG, "onPreload: ", e);
             throw new RuntimeException("VideoMediaSource preload failed.", e);
         }
     }

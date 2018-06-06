@@ -80,6 +80,9 @@ public class Track {
             RenderNode node = renderFactory.createRenderNode(item);
             if (node != null) {
                 node.preload();
+                if (!node.isPrepared()) {
+                    node.prepare();
+                }
             }
         }
     }

@@ -25,6 +25,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.gotokeep.keep.social.director.ResourceManager;
+import com.liulishuo.filedownloader.FileDownloader;
 import com.seu.magicfilter.utils.MagicParams;
 
 import java.util.ArrayList;
@@ -38,6 +39,7 @@ public class LaunchActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_launch);
 
+        FileDownloader.setup(this);
         ResourceManager.getInstance(getApplicationContext()).init("/sdcard/DCIM/Composer/");
 
         recyclerView = findViewById(R.id.recycler_view);

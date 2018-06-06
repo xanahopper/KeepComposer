@@ -36,7 +36,6 @@ public final class ResourceManager extends FileDownloadSampleListener {
 
     private ResourceManager(Context context) {
         this.context = context;
-        FileDownloader.setup(context);
     }
 
     private static final class InstanceHolder {

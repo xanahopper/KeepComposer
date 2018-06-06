@@ -10,6 +10,8 @@ import com.gotokeep.keep.social.composer.MediaComposer;
 import com.gotokeep.keep.social.composer.MediaComposerFactory;
 import com.gotokeep.keep.composer.demo.SampleActivity;
 import com.gotokeep.keep.composer.demo.source.SourceProvider;
+import com.gotokeep.keep.social.composer.overlay.LayerOverlay;
+import com.gotokeep.keep.social.composer.overlay.MediaOverlay;
 import com.gotokeep.keep.social.composer.overlay.OverlayProvider;
 import com.gotokeep.keep.social.composer.timeline.SourceTimeline;
 import com.gotokeep.keep.social.composer.timeline.item.AudioItem;
@@ -43,9 +45,10 @@ public class ImageActivity extends SampleActivity implements Handler.Callback, O
         return false;
     }
 
+
     @Override
-    public String getLayerImagePath(String name) {
-        return null;
+    public MediaOverlay createOverlay(String name) {
+        return new LayerOverlay(SourceProvider.IMAGE_SRC[1]);
     }
 
     @Override
