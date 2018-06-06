@@ -127,7 +127,7 @@ public class MuxerRenderTarget extends RenderTarget {
 
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
         renderNode.getOutputTexture().bind(0);
-        GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
+        GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TEXCOORD_MATRIX),
                 1, false, renderNode.getTransformMatrix(), 0);
         GLES20.glUniform1i(programObject.getUniformLocation(ProgramObject.UNIFORM_TEXTURE), 0);
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);

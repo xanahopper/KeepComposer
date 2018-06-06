@@ -95,7 +95,8 @@ public class ImageMediaSource extends MediaSource {
 
     @Override
     protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs) {
-
+        GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
+                1, false, scaleMatrix, 0);
     }
 
     private void prepareInternal(String filePath) {

@@ -26,7 +26,7 @@ public abstract class MediaItem implements Comparable<MediaItem> {
     protected SparseArray<MediaItem> baseItem = new SparseArray<>();
     protected int type;
     protected int layer;
-    protected ScaleType scaleType = ScaleType.CENTER_INSIDE;
+    protected ScaleType scaleType = ScaleType.FIT_CENTER;
 
     public MediaItem(int type, int layer, MediaItem baseItem) {
         this.type = type;

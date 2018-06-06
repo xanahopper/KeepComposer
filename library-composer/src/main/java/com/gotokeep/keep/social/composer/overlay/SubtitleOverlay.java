@@ -85,7 +85,7 @@ public class SubtitleOverlay extends MediaOverlay {
         overlayProgramObject.use();
         subtitleTexture.bind(0);
         updateLayerMatrix();
-        GLES20.glUniformMatrix4fv(overlayProgramObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
+        GLES20.glUniformMatrix4fv(overlayProgramObject.getUniformLocation(ProgramObject.UNIFORM_TEXCOORD_MATRIX),
                 1, false, ProgramObject.DEFAULT_MATRIX, 0);
         GLES20.glUniform1i(overlayProgramObject.getUniformLocation(ProgramObject.UNIFORM_TEXTURE), 0);
 

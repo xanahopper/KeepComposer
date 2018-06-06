@@ -1,6 +1,7 @@
 package com.gotokeep.keep.social.composer;
 
 import android.opengl.GLES20;
+import android.opengl.Matrix;
 import android.util.Log;
 
 import com.gotokeep.keep.social.composer.gles.ProgramObject;
@@ -41,6 +42,8 @@ public abstract class RenderNode {
     protected boolean frameAvailable = false;
     protected boolean debugMode = false;
     protected boolean released = false;
+    protected float scaleMatrix[] = new float[16];
+    protected float transformMatrix[] = new float[16];
 
     protected static final float[] DEFAULT_VERTEX_DATA = {
             -1f, -1f, 0,
@@ -51,6 +54,10 @@ public abstract class RenderNode {
 
     protected FloatBuffer vertexBuffer;
     protected ShortBuffer texCoordBuffer;
+
+    public RenderNode() {
+        Matrix.setIdentityM(scaleMatrix, 0);
+    }
 
     public void addInputNode(RenderNode inputNode) {
         inputNodes.add(inputNode);
@@ -288,5 +295,9 @@ public abstract class RenderNode {
 
     public int getCanvasHeight() {
         return canvasHeight;
+    }
+
+    public float[] getScaleMatrix() {
+        return scaleMatrix;
     }
 }

@@ -62,24 +62,6 @@ public final class MediaFactory {
 
         registerCreator(Transition.class, (manager, item) -> new TransitionItem(null, null, item.getDuration(), 0));
 
-//        registerCreator(Overlay.class, new MediaItemCreator<Overlay, OverlayItem>() {
-//            @Override
-//            public OverlayItem createMediaItem(ResourceManager manager, Overlay item) {
-//                if (item.getLayer() != null) {
-//                    LayerItem layerItem = new LayerItem(manager.getCacheFilePath(item.getLayer().getUrl()));
-//                    layerItem.setTimeRangeMs(item.getStartTime(), item.getEndTime());
-//                    layerItem.setScale(item.getScale());
-//                    layerItem.setOffsetX(item.getOffsetX());
-//                    layerItem.setOffsetY(item.getOffsetY());
-//                    layerItem.setRotation(item.getRotation());
-//                    layerItem.setPosition(item.getPosition());
-//                    return layerItem;
-//                } else {
-//                    return new WatermarkItem(0);
-//                }
-//            }
-//        });
-
         registerCreator("title", (resourceManager, resource, mediaType) -> {
             if (TextUtils.isEmpty(resource.getType()) || "title".equals(resource.getType())) {
                 TextItem textItem = new TextItem(0, resource.getValue());

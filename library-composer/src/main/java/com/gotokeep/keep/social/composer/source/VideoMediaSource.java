@@ -5,7 +5,6 @@ import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.net.Uri;
 import android.opengl.GLES20;
-import android.opengl.Matrix;
 import android.os.Build;
 import android.util.Log;
 import android.view.Surface;
@@ -14,7 +13,6 @@ import com.gotokeep.keep.social.composer.exception.UnsupportedFormatException;
 import com.gotokeep.keep.social.composer.gles.ProgramObject;
 import com.gotokeep.keep.social.composer.gles.RenderTexture;
 import com.gotokeep.keep.social.composer.util.MediaUtil;
-import com.gotokeep.keep.social.composer.util.ScaleUtil;
 import com.gotokeep.keep.social.composer.util.TimeUtil;
 
 import java.io.IOException;
@@ -206,8 +204,9 @@ public class VideoMediaSource extends MediaSource {
     @Override
     protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs) {
         float matrix[] = decodeTexture.getTransitionMatrix();
-        Matrix.multiplyMM(transformMatrix, 0, matrix, 0, scaleMatrix, 0);
         GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
+                1, false, scaleMatrix, 0);
+        GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TEXCOORD_MATRIX),
                 1, false, matrix, 0);
         //checkGlError("updateDecodeTextureTransformMatrix");
         GLES20.glUniform1i(programObject.getUniformLocation(ProgramObject.UNIFORM_TEXTURE), 0);

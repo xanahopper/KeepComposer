@@ -35,6 +35,11 @@ public final class KeepDirector implements ResourceManager.ResourceListener {
     public static final String PATTERN_SEQUENCE = "sequence";
     public static final String PATTERN_LOOP = "loop";
 
+    public static final int LAYER_SOURCE = 0;
+    public static final int LAYER_TRANSITION = 1;
+    public static final int LAYER_FILTER = 2;
+    public static final int LAYER_OVERLAY = 3;
+
     private ResourceManager resourceManager;
     private DirectorScript script;
     private Gson gson;
@@ -100,20 +105,14 @@ public final class KeepDirector implements ResourceManager.ResourceListener {
         }
         MetaInfo metaInfo = script.getMeta();
         resourceList.addAll(metaInfo.getFilter().getResources());
-//        for (Overlay overlay : metaInfo.getOverlay()) {
-//            resourceList.addAll(overlay.getResources());
-//        }
         if (!TextUtils.isEmpty(metaInfo.getMusic())) {
             resourceList.add(metaInfo.getMusic());
         }
+        if (script.getFooter() != null) {
+            resourceList.addAll(script.getFooter().getResources());
+        }
         if (script.getChapter() != null) {
             ChapterSet chapterSet = script.getChapter();
-//            if (chapterSet.getHeader() != null) {
-//                resourceList.addAll(chapterSet.getHeader().getResources());
-//            }
-//            if (chapterSet.getFooter() != null) {
-//                resourceList.addAll(chapterSet.getFooter().getResources());
-//            }
             if (chapterSet.getData() != null) {
                 for (Chapter chapter : chapterSet.getData()) {
                     resourceList.addAll(chapter.getResources());

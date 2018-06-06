@@ -1,5 +1,7 @@
 package com.gotokeep.keep.social.composer.filter.basic;
 
+import android.opengl.GLES20;
+
 import com.gotokeep.keep.social.composer.RenderNode;
 import com.gotokeep.keep.social.composer.filter.ExternalFilter;
 import com.gotokeep.keep.social.composer.filter.MediaFilter;
@@ -58,8 +60,20 @@ public class KeepExternalFilter extends MediaFilter {
     @Override
     protected void prepareProgramInternal(ProgramObject programObject) {
         externalFilter.init();
-        RenderNode inputNode = inputNodes.get(0);
-        externalFilter.onInputSizeChanged(inputNode.getCanvasWidth(), inputNode.getCanvasHeight());
+        if (inputNodes.size() > 0) {
+            RenderNode inputNode = inputNodes.get(0);
+            externalFilter.onInputSizeChanged(inputNode.getCanvasWidth(), inputNode.getCanvasHeight());
+        }
+    }
+
+    @Override
+    public void setOriginSize(int width, int height) {
+        externalFilter.onInputSizeChanged(width, height);
+    }
+
+    @Override
+    public void setCanvasSize(int width, int height) {
+        externalFilter.onInputSizeChanged(width, height);
     }
 
     @Override

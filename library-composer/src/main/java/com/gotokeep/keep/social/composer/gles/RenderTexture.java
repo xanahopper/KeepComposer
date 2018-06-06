@@ -285,14 +285,6 @@ public final class RenderTexture implements SurfaceTexture.OnFrameAvailableListe
         return null;
     }
 
-    public void checkGlError(String op) {
-//        int error;
-//        while ((error = GLES20.glGetError()) != GLES20.GL_NO_ERROR) {
-//            Log.e(TAG, op + ": glError " + error);
-////            throw new RuntimeException(op + ": glError " + error);
-//        }
-    }
-
     private String getTargetName(int textureTarget) {
         if (textureTarget == GLES20.GL_TEXTURE_2D) {
             return "TEXTURE_2D";

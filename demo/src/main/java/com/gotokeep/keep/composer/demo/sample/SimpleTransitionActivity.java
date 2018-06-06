@@ -13,6 +13,7 @@ import com.gotokeep.keep.social.composer.MediaComposer;
 import com.gotokeep.keep.social.composer.MediaComposerFactory;
 import com.gotokeep.keep.composer.demo.SampleActivity;
 import com.gotokeep.keep.composer.demo.source.SourceProvider;
+import com.gotokeep.keep.social.composer.ScaleType;
 import com.gotokeep.keep.social.composer.filter.FilterFactory;
 import com.gotokeep.keep.social.composer.overlay.LayerOverlay;
 import com.gotokeep.keep.social.composer.overlay.MediaOverlay;
@@ -42,7 +43,7 @@ public class SimpleTransitionActivity extends SampleActivity implements Handler.
     private Timeline timeline;
     private boolean gotoNext = false;
     private static final int EXPORT_WIDTH = 960;
-    private static final int EXPORT_HEIGHT = 540;
+    private static final int EXPORT_HEIGHT = 960;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,13 +95,16 @@ public class SimpleTransitionActivity extends SampleActivity implements Handler.
         timeline = new SourceTimeline();
         if (!gotoNext) {
             ImageItem item1 = new ImageItem(SourceProvider.IMAGE_SRC[0]);
+            item1.setScaleType(ScaleType.FIT_CENTER);
             item1.setStartTimeMs(TimeUtil.secToMs(0));
             item1.setEndTimeMs(TimeUtil.secToMs(3));
             VideoItem item2 = new VideoItem(SourceProvider.VIDEO_SRC[1]);
+            item2.setScaleType(ScaleType.FIT_CENTER);
             item2.setStartTimeMs(TimeUtil.secToMs(3));
             item2.setEndTimeMs(TimeUtil.secToMs(6));
             item2.setPlaySpeed(5f);
             VideoItem item3 = new VideoItem(SourceProvider.VIDEO_SRC[0]);
+            item3.setScaleType(ScaleType.FIT_CENTER);
             item3.setStartTimeMs(TimeUtil.secToMs(6));
             item3.setEndTimeMs(TimeUtil.secToMs(9));
             Track videoTrack = new Track(true, 0);

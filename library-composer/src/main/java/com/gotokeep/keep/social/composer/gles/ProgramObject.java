@@ -15,10 +15,12 @@ import java.util.TreeMap;
 public final class ProgramObject {
     public static final String ATTRIBUTE_POSITION = "aPosition";
     public static final String ATTRIBUTE_TEX_COORDS = "aTexCoords";
+    public static final String UNIFORM_TEXCOORD_MATRIX = "uTexCoords";
     public static final String UNIFORM_TRANSFORM_MATRIX = "uTransformMatrix";
     public static final String UNIFORM_TEXTURE = "uTexture";
     public static final String DEFAULT_UNIFORM_NAMES[] = {
             UNIFORM_TRANSFORM_MATRIX,
+            UNIFORM_TEXCOORD_MATRIX,
             UNIFORM_TEXTURE
     };
     private static final String TAG = ProgramObject.class.getSimpleName();
@@ -31,11 +33,12 @@ public final class ProgramObject {
             "attribute vec4 aPosition;    \n" +
             "attribute vec2 aTexCoords; \n" +
             "varying vec2 vTexCoords; \n" +
+            "uniform mat4 uTexCoords;\n" +
             "uniform mat4 uTransformMatrix;\n" +
             "void main()                  \n" +
             "{                            \n" +
-            "    gl_Position = aPosition;  \n" +
-            "    vTexCoords = (uTransformMatrix * vec4(aTexCoords, 0.0, 1.0)).st; \n" +
+            "    gl_Position = uTransformMatrix * aPosition;  \n" +
+            "    vTexCoords = (uTexCoords * vec4(aTexCoords, 0.0, 1.0)).st; \n" +
             "}                            \n";
 
     public static final String DEFAULT_FRAGMENT_SHADER = "" +
@@ -118,10 +121,13 @@ public final class ProgramObject {
 
     private void initDefaultTransform() {
         use();
-        int loc = getUniformLocation(UNIFORM_TRANSFORM_MATRIX);
+        int loc = getUniformLocation(UNIFORM_TEXCOORD_MATRIX);
         float st[] = new float[16];
         Matrix.setIdentityM(st, 0);
         GLES20.glUniformMatrix4fv(loc, 1, false, st, 0);
+        loc = getUniformLocation(UNIFORM_TRANSFORM_MATRIX);
+        GLES20.glUniformMatrix4fv(loc, 1, false, st, 0);
+
       //checkGlError("uniformMatrix4fv: " + loc);
     }
 

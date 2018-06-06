@@ -100,4 +100,19 @@ public class MediaUtil {
     public static String getMime(String source) {
         return MimeTypeMap.getSingleton().getMimeTypeFromExtension(MimeTypeMap.getFileExtensionFromUrl(source));
     }
+
+    public static String matrixToString(float[] m) {
+        if (m == null || m.length != 16) {
+            return "";
+        } else {
+            return String.format("[%2.2f, %2.2f, %2.2f, %2.2f,\n" +
+                    " %2.2f, %2.2f, %2.2f, %2.2f,\n" +
+                    " %2.2f, %2.2f, %2.2f, %2.2f,\n" +
+                    " %2.2f, %2.2f, %2.2f, %2.2f]",
+                    m[0], m[4], m[8], m[12],
+                    m[1], m[5], m[9], m[13],
+                    m[2], m[6], m[10], m[14],
+                    m[3], m[7], m[11], m[15]);
+        }
+    }
 }

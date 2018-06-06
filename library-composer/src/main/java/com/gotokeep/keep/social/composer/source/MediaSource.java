@@ -1,7 +1,10 @@
 package com.gotokeep.keep.social.composer.source;
 
+import android.util.Log;
+
 import com.gotokeep.keep.social.composer.RenderNode;
 import com.gotokeep.keep.social.composer.ScaleType;
+import com.gotokeep.keep.social.composer.util.MediaUtil;
 import com.gotokeep.keep.social.composer.util.ScaleUtil;
 
 /**
@@ -23,9 +26,7 @@ public abstract class MediaSource extends RenderNode {
     long durationMs;
     float playSpeed = 1f;
     boolean ended = false;
-    ScaleType scaleType = ScaleType.CENTER_INSIDE;
-    float scaleMatrix[] = new float[16];
-    float transformMatrix[] = new float[16];
+    ScaleType scaleType = ScaleType.FIT_CENTER;
 
     protected MediaSource(int mediaType) {
         this.mediaType = mediaType;
@@ -83,7 +84,17 @@ public abstract class MediaSource extends RenderNode {
         updateScaleMatrix();
     }
 
+    @Override
+    public void setOriginSize(int width, int height) {
+        super.setOriginSize(width, height);
+        updateScaleMatrix();
+    }
+
     protected void updateScaleMatrix() {
         ScaleUtil.getScaleMatrix(scaleType, scaleMatrix, originWidth, originHeight, width, height);
+        Log.d("MediaSourceMatrix", "canvasSize: " + canvasWidth + ", " + canvasHeight);
+        Log.d("MediaSourceMatrix", "originSize: " + originWidth + ", " + originHeight);
+        Log.d("MediaSourceMatrix", "size: " + width + ", " + height);
+        Log.d("MediaSourceMatrix", "updateScaleMatrix: \n" + MediaUtil.matrixToString(scaleMatrix));
     }
 }

@@ -12,7 +12,8 @@ import static com.gotokeep.keep.social.composer.ScaleType.*;
  * @since 2018-06-04 16:56
  */
 public final class ScaleUtil {
-    public static float[] getScaleMatrix(ScaleType scaleType, float[] matrix, int viewWidth, int viewHeight, int sourceWidth, int sourceHeight) {
+    public static float[] getScaleMatrix(ScaleType scaleType, float[] matrix, int viewWidth, int viewHeight,
+                                         int sourceWidth, int sourceHeight) {
         if (matrix == null || matrix.length != 16) {
             return matrix;
         }
@@ -63,8 +64,9 @@ public final class ScaleUtil {
                 dy = (float) ty / (float) viewHeight;
                 break;
         }
-        Matrix.translateM(matrix, 0, dx, dy, 0);
+//        Matrix.translateM(matrix, 0, dx, dy, 0);
         Matrix.scaleM(matrix, 0, scaleX * scale, scaleY * scale, 1f);
+//        Matrix.scaleM(matrix, 0, scaleX, scaleY, 1f);
         return matrix;
     }
 }

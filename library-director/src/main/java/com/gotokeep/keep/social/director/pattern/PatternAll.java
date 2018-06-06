@@ -18,6 +18,7 @@ import com.gotokeep.keep.social.composer.timeline.item.TextItem;
 import com.gotokeep.keep.social.composer.timeline.item.TransitionItem;
 import com.gotokeep.keep.social.composer.timeline.item.VideoItem;
 import com.gotokeep.keep.social.composer.util.MediaUtil;
+import com.gotokeep.keep.social.director.KeepDirector;
 import com.gotokeep.keep.social.director.MediaFactory;
 import com.gotokeep.keep.social.director.ResourceManager;
 import com.gotokeep.keep.social.director.VideoFragment;
@@ -52,10 +53,10 @@ public class PatternAll extends BasePattern {
         long totalDurationMs = sourceDurationMs;
 
         Timeline timeline = new SourceTimeline();
-        Track sourceTrack = new Track(true, 0);
-        Track transitionTrack = new Track(true, 1);
-        Track filterTrack = new Track(true, 2);
-        Track overlayTrack = new Track(true, 3);
+        Track sourceTrack = new Track(true, KeepDirector.LAYER_SOURCE);
+        Track transitionTrack = new Track(true, KeepDirector.LAYER_TRANSITION);
+        Track filterTrack = new Track(true, KeepDirector.LAYER_FILTER);
+        Track overlayTrack = new Track(true, KeepDirector.LAYER_OVERLAY);
         OverlayItem header = MediaFactory.createResourceItem(resourceManager, "header", script.getHeader(), OverlayItem.class);
         if (header != null) {
             overlayTrack.addMediaItem(header);
