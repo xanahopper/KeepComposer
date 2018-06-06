@@ -8,6 +8,7 @@ import android.opengl.GLES20;
 import android.opengl.GLUtils;
 
 import com.gotokeep.keep.social.composer.gles.ProgramObject;
+import com.gotokeep.keep.social.composer.gles.RenderTexture;
 import com.gotokeep.keep.social.composer.util.MediaUtil;
 import com.gotokeep.keep.social.composer.util.TimeUtil;
 
@@ -25,7 +26,7 @@ public class ImageMediaSource extends MediaSource {
 
     private final String filePath;
     private final long intervalUs;
-
+    private final RenderTexture sourceTexture;
 
     public ImageMediaSource(String filePath) {
         this(filePath, DEFAULT_FRAME_RATE);
@@ -36,6 +37,7 @@ public class ImageMediaSource extends MediaSource {
         this.filePath = filePath;
         this.presentationTimeUs = 0;
         this.intervalUs = TimeUtil.BILLION_US / frameRate;
+        this.sourceTexture = new RenderTexture(RenderTexture.TEXTURE_NATIVE, "Image");
     }
 
     @Override
@@ -60,9 +62,7 @@ public class ImageMediaSource extends MediaSource {
 
     @Override
     public long acquireFrame(long positionUs) {
-//        Log.d(TAG, "acquireFrame: " + positionUs + ", return " + (positionUs + intervalUs));
-        presentationTimeUs = positionUs - TimeUtil.msToUs(startTimeMs);
-        renderTimeUs = positionUs + intervalUs;
+        renderTimeUs = render(positionUs);
         return renderTimeUs;
     }
 
@@ -111,9 +111,9 @@ public class ImageMediaSource extends MediaSource {
             // 通用性和性能（图片只需要初始化一次即可），在这里对图片进行 Y 轴翻转
             Bitmap finalImage = MediaUtil.flipBitmap(imageBitmap, true);
 
-            renderTexture.bind();
+            sourceTexture.bind();
             int format = GLUtils.getInternalFormat(finalImage);
-            GLUtils.texImage2D(renderTexture.getTextureTarget(), 0, format, finalImage, GLES20.GL_UNSIGNED_BYTE, 0);
+            GLUtils.texImage2D(sourceTexture.getTextureTarget(), 0, format, finalImage, GLES20.GL_UNSIGNED_BYTE, 0);
             finalImage.recycle();
         } catch (IOException e) {
             throw new IllegalArgumentException("ImageMediaSource prepareVideo failed.", e);

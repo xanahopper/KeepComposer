@@ -48,12 +48,14 @@ public final class MediaFactory {
             }
             String mime = MediaUtil.getMime(item.getSource());
             MediaItem chapterItem = null;
-            if (mime.startsWith("image/")) {
-                chapterItem = new ImageItem(manager.getCacheFilePath(item.getSource()));
-                item.setDuration(TimeUtil.secToMs(2));
-            } else if (mime.startsWith("video/")) {
-                chapterItem = new VideoItem(manager.getCacheFilePath(item.getSource()));
-                item.setDuration(MediaUtil.getDuration(manager.getCacheFilePath(item.getSource())));
+            if (mime != null) {
+                if (mime.startsWith("image/")) {
+                    chapterItem = new ImageItem(manager.getCacheFilePath(item.getSource()));
+                    item.setDuration(TimeUtil.secToMs(2));
+                } else if (mime.startsWith("video/")) {
+                    chapterItem = new VideoItem(manager.getCacheFilePath(item.getSource()));
+                    item.setDuration(MediaUtil.getDuration(manager.getCacheFilePath(item.getSource())));
+                }
             }
             return chapterItem;
         });
