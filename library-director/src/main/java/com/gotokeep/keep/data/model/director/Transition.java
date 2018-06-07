@@ -1,5 +1,7 @@
 package com.gotokeep.keep.data.model.director;
 
+import android.text.TextUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +13,7 @@ import java.util.List;
 public final class Transition implements MediaData {
     private String name;
     private long duration;
+    public static final int DEFAULT_DURATION = 400;
 
     public Transition(String name, long duration) {
         this.name = name;
@@ -44,5 +47,9 @@ public final class Transition implements MediaData {
     @Override
     public List<String> getResources() {
         return new ArrayList<>();
+    }
+
+    public static boolean isAvailable(Transition transition) {
+        return transition != null && !TextUtils.isEmpty(transition.getName());
     }
 }

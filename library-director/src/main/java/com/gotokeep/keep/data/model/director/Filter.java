@@ -1,5 +1,7 @@
 package com.gotokeep.keep.data.model.director;
 
+import android.text.TextUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -40,5 +42,9 @@ public final class Filter implements MediaData {
     @Override
     public List<String> getResources() {
         return new ArrayList<>();
+    }
+
+    public static boolean isAvailable(Filter filter) {
+        return filter != null && !TextUtils.isEmpty(filter.name);
     }
 }

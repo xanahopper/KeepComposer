@@ -11,10 +11,10 @@
       "version": "5.15.4",
       "type": "title"
     },
-    "pattern": "all",
+    "pattern": "random",
     "duration": 20000,
     "filter": {
-      "name": "sunset"
+      "name": "blackcat"
     },
     "overlay": [
       {
@@ -40,7 +40,7 @@
         "default": 4
       },
       "transition": {
-        "name": "fade",
+        "name": null,
         "duration": null
       }
     },

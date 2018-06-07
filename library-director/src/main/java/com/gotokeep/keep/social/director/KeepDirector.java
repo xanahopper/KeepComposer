@@ -16,6 +16,9 @@ import com.gotokeep.keep.social.composer.timeline.Track;
 import com.gotokeep.keep.social.director.exception.UnsuitableException;
 import com.gotokeep.keep.social.director.pattern.BasePattern;
 import com.gotokeep.keep.social.director.pattern.PatternAll;
+import com.gotokeep.keep.social.director.pattern.PatternLoop;
+import com.gotokeep.keep.social.director.pattern.PatternRandom;
+import com.gotokeep.keep.social.director.pattern.PatternSequence;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,6 +44,8 @@ public final class KeepDirector implements ResourceManager.ResourceListener {
     public static final int LAYER_TRANSITION = 1;
     public static final int LAYER_FILTER = 2;
     public static final int LAYER_OVERLAY = 3;
+
+    public static final int DEFAULT_TRACK_COUNT = 4;
 
     private ResourceManager resourceManager;
     private DirectorScript script;
@@ -76,6 +81,7 @@ public final class KeepDirector implements ResourceManager.ResourceListener {
 
     public void release() {
         resourceManager.removeResourceListener(this);
+        SelectPatternFactory.release();
     }
 
     public void setScriptText(String scriptText) {
@@ -204,6 +210,10 @@ public final class KeepDirector implements ResourceManager.ResourceListener {
             SelectPatternFactory.context = context;
         }
 
+        static void release() {
+            SelectPatternFactory.context = null;
+        }
+
         static BasePattern getPattern(String name) {
             if (selectPatternMap.containsKey(name)) {
                 return selectPatternMap.get(name);
@@ -212,6 +222,15 @@ public final class KeepDirector implements ResourceManager.ResourceListener {
             switch (name) {
                 case PATTERN_ALL:
                     pattern = new PatternAll(ResourceManager.getInstance(context));
+                    break;
+                case PATTERN_RANOM:
+                    pattern = new PatternRandom(ResourceManager.getInstance(context));
+                    break;
+                case PATTERN_LOOP:
+                    pattern = new PatternLoop(ResourceManager.getInstance(context));
+                    break;
+                case PATTERN_SEQUENCE:
+                    pattern = new PatternSequence(ResourceManager.getInstance(context));
                     break;
                 default:
                     pattern = null;

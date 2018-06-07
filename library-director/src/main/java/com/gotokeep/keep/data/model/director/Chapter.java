@@ -1,5 +1,7 @@
 package com.gotokeep.keep.data.model.director;
 
+import android.text.TextUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -120,8 +122,13 @@ public final class Chapter implements MediaData {
                 '}';
     }
 
+
     @Override
     public List<String> getResources() {
-        return new ArrayList<>();
+        List<String> res = new ArrayList<>();
+        if (Chapter.TYPE_FOOTAGE.equals(getType()) && !TextUtils.isEmpty(getSource())) {
+            res.add(getSource());
+        }
+        return res;
     }
 }

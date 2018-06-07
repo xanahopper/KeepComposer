@@ -106,6 +106,15 @@
                 <category android:name="android.intent.category.SAMPLE_CODE" />
             </intent-filter>
         </activity>
+        <activity android:name=".sample.PatternRandomScriptActivity"
+            android:icon="@drawable/ic_movie_filter"
+            android:label="Director Pattern Random">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
         <activity android:name=".sample.ExportPatternAllScriptActivity"
                   android:icon="@drawable/ic_export"
                   android:label="Director Pattern All Export">
