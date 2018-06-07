@@ -172,7 +172,6 @@ public abstract class RenderNode {
         texCoordBuffer = ByteBuffer.allocateDirect(DEFAULT_TEX_COORDS_DATA.length * 2)
                 .order(ByteOrder.nativeOrder()).asShortBuffer();
         texCoordBuffer.put(DEFAULT_TEX_COORDS_DATA).position(0);
-
         programObject = createProgramObject();
         if (programObject != null) {
             programObject.use();
