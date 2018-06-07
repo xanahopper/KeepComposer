@@ -134,6 +134,14 @@ public final class KeepDirector implements ResourceManager.ResourceListener {
         return verified;
     }
 
+    public boolean isScriptSuitable(List<VideoFragment> videoSources) {
+        if (script == null) {
+            return false;
+        }
+        MetaInfo metaInfo = script.getMeta();
+        return videoSources.size() >= metaInfo.getMinFragment() && videoSources.size() <= metaInfo.getMaxFragment();
+    }
+
     public Timeline buildTimeline(List<VideoFragment> videoSources) throws UnsuitableException {
         if (script == null) {
             return null;

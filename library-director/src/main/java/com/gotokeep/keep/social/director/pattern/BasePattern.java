@@ -40,4 +40,7 @@ public abstract class BasePattern {
     }
 
     public abstract Timeline selectVideos(@NonNull List<VideoFragment> videoSources, DirectorScript script, Timeline timeline) throws UnsuitableException;
+
+    protected abstract long getTotalDuration(@NonNull List<VideoFragment> videoSources, DirectorScript script);
+
 }

@@ -90,4 +90,12 @@ public class Track {
     public List<MediaItem> getItems() {
         return items;
     }
+
+    public int getMediaItemCount() {
+        return items.size();
+    }
+
+    public void clear() {
+        items.clear();
+    }
 }

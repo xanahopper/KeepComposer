@@ -49,7 +49,7 @@ public class PatternAll extends BasePattern {
             return null;
         }
         if (videoSources.size() < meta.getMinFragment() || videoSources.size() > meta.getMaxFragment()) {
-            throw new UnsuitableException("video source is not suitable for this script.");
+            throw new UnsuitableException("video source is not suitable for this script.", meta.getMinFragment(), meta.getMaxFragment());
         }
 
         long totalDurationMs = meta.getDuration();
@@ -157,6 +157,11 @@ public class PatternAll extends BasePattern {
             timeline.setAudioItem(globalAudio);
         }
         return timeline;
+    }
+
+    @Override
+    protected long getTotalDuration(@NonNull List<VideoFragment> videoSources, DirectorScript script) {
+        return 0;
     }
 
     private float getPlaySpeed(VideoFragment video, Map<String, Float> playSpeed, long durationMs) {

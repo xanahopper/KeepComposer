@@ -6,7 +6,19 @@ package com.gotokeep.keep.social.director.exception;
  * @since 2018-05-18 14:55
  */
 public class UnsuitableException extends Exception {
-    public UnsuitableException(String message) {
+    private int minFragment;
+    private int maxFragment;
+    public UnsuitableException(String message, int minFragment, int maxFragment) {
         super(message);
+        this.minFragment = minFragment;
+        this.maxFragment = maxFragment;
+    }
+
+    public int getMinFragment() {
+        return minFragment;
+    }
+
+    public int getMaxFragment() {
+        return maxFragment;
     }
 }
