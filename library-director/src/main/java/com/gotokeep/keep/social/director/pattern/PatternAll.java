@@ -2,17 +2,19 @@ package com.gotokeep.keep.social.director.pattern;
 
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.gotokeep.keep.data.model.director.ChapterSet;
 import com.gotokeep.keep.data.model.director.DefaultConfig;
 import com.gotokeep.keep.data.model.director.DirectorScript;
 import com.gotokeep.keep.data.model.director.MetaInfo;
 import com.gotokeep.keep.data.model.director.Transition;
-import com.gotokeep.keep.social.composer.timeline.SourceTimeline;
+import com.gotokeep.keep.social.composer.timeline.MediaItem;
 import com.gotokeep.keep.social.composer.timeline.Timeline;
 import com.gotokeep.keep.social.composer.timeline.Track;
 import com.gotokeep.keep.social.composer.timeline.item.AudioItem;
 import com.gotokeep.keep.social.composer.timeline.item.FilterItem;
+import com.gotokeep.keep.social.composer.timeline.item.ImageItem;
 import com.gotokeep.keep.social.composer.timeline.item.OverlayItem;
 import com.gotokeep.keep.social.composer.timeline.item.TextItem;
 import com.gotokeep.keep.social.composer.timeline.item.TransitionItem;
@@ -35,12 +37,13 @@ import java.util.Map;
  * @since 2018-05-18 14:20
  */
 public class PatternAll extends BasePattern {
+
     public PatternAll(ResourceManager resourceManager) {
         super(resourceManager);
     }
 
     @Override
-    public Timeline selectVideos(@NonNull List<VideoFragment> videoSources, DirectorScript script) throws UnsuitableException {
+    public Timeline selectVideos(@NonNull List<VideoFragment> videoSources, DirectorScript script, Timeline timeline) throws UnsuitableException {
         MetaInfo meta = script.getMeta();
         if (meta == null) {
             return null;
@@ -49,10 +52,20 @@ public class PatternAll extends BasePattern {
             throw new UnsuitableException("video source is not suitable for this script.");
         }
 
-        long sourceDurationMs = meta.getDuration();
-        long totalDurationMs = sourceDurationMs;
+        long totalDurationMs = meta.getDuration();
 
-        Timeline timeline = new SourceTimeline();
+        long sourceDurationMs = 0;
+        for (VideoFragment fragment : videoSources) {
+            fragment.setDurationMs(MediaUtil.getDuration(fragment.getFile()));
+            sourceDurationMs += fragment.getDurationMs();
+        }
+        long durationMs = 0;
+        if (sourceDurationMs > totalDurationMs) {
+            durationMs = totalDurationMs / videoSources.size();
+        } else {
+            totalDurationMs = sourceDurationMs;
+        }
+
         Track sourceTrack = new Track(true, KeepDirector.LAYER_SOURCE);
         Track transitionTrack = new Track(true, KeepDirector.LAYER_TRANSITION);
         Track filterTrack = new Track(true, KeepDirector.LAYER_FILTER);
@@ -61,17 +74,13 @@ public class PatternAll extends BasePattern {
         if (header != null) {
             overlayTrack.addMediaItem(header);
         }
-        VideoItem footer = MediaFactory.createMediaItem(resourceManager, script.getFooter());
-        if (footer != null) {
-            footer.setTimeRangeMs(totalDurationMs, totalDurationMs + script.getFooter().getDuration());
-            sourceTrack.addMediaItem(footer);
-        }
-        List<VideoItem> chapters = new ArrayList<>();
+        List<MediaItem> chapters = new ArrayList<>();
         List<OverlayItem> globalOverlays = new ArrayList<>();
         if (meta.getTitle() != null) {
             TextItem titleItem = MediaFactory.createResourceItem(resourceManager, "title", meta.getTitle(), TextItem.class);
             if (titleItem != null) {
                 globalOverlays.add(titleItem);
+                overlayTrack.addMediaItem(titleItem);
             }
         }
         FilterItem globalFilter = MediaFactory.createMediaItem(resourceManager, meta.getFilter());
@@ -92,15 +101,28 @@ public class PatternAll extends BasePattern {
             if (config.getPlaySpeed() != null) {
                 playSpeed = config.getPlaySpeed();
             }
-
-
         }
-        long durationMs = sourceDurationMs / videoSources.size();
+
+        long lastEndTimeMs = 0;
         for (int i = 0; i < videoSources.size(); i++) {
             VideoFragment video = videoSources.get(i);
-            VideoItem chapter = new VideoItem(resourceManager.getCacheFilePath(video.getFile()));
-            long startTimeMs = i * durationMs;
-            long endTimeMs = (i + 1) * durationMs;
+            String mime = MediaUtil.getMime(video.getFile());
+
+            MediaItem chapter = null;
+            if (mime != null) {
+                if (mime.startsWith(MediaUtil.VIDEO_MIME_START)) {
+                    chapter = new VideoItem(resourceManager.getCacheFilePath(video.getFile()));
+                } else if (mime.startsWith(MediaUtil.IMAGE_MIME_START)) {
+                    chapter = new ImageItem(resourceManager.getCacheFilePath(video.getFile()));
+                }
+            }
+            if (chapter == null) {
+                Log.w(TAG, "unsupported VideoFragment ");
+                continue;
+            }
+            long startTimeMs = durationMs > 0 ? i * durationMs : lastEndTimeMs;
+            long endTimeMs = durationMs > 0 ? (i + 1) * durationMs : lastEndTimeMs + video.getDurationMs();
+            lastEndTimeMs = endTimeMs;
             if (globalTransition != null) {
                 if (i > 0) {
                     startTimeMs -= globalTransition.getDuration() / 2;
@@ -119,6 +141,12 @@ public class PatternAll extends BasePattern {
                 transition.setName(globalTransition.getName());
                 transitionTrack.addMediaItem(transition);
             }
+        }
+
+        VideoItem footer = MediaFactory.createMediaItem(resourceManager, script.getFooter());
+        if (footer != null) {
+            footer.setTimeRangeMs(lastEndTimeMs, lastEndTimeMs + script.getFooter().getDuration());
+            sourceTrack.addMediaItem(footer);
         }
 
         timeline.addMediaTrack(sourceTrack);

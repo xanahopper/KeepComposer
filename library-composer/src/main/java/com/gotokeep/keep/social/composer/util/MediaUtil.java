@@ -10,6 +10,7 @@ import android.text.TextUtils;
 import android.webkit.MimeTypeMap;
 
 import java.io.File;
+import java.net.URLConnection;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
@@ -19,6 +20,9 @@ import java.util.UUID;
  * @since 2018/5/13 14:40
  */
 public class MediaUtil {
+    public static final String VIDEO_MIME_START = "video/";
+    public static final String IMAGE_MIME_START = "image/";
+
     public static int getRotation(String filePath) {
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         retriever.setDataSource(filePath);
@@ -94,11 +98,21 @@ public class MediaUtil {
         String width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);
         String height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT);
         retriever.release();
-        return new int[] {Integer.valueOf(width), Integer.valueOf(height)};
+        return new int[]{Integer.valueOf(width), Integer.valueOf(height)};
     }
 
     public static String getMime(String source) {
         return MimeTypeMap.getSingleton().getMimeTypeFromExtension(MimeTypeMap.getFileExtensionFromUrl(source));
+    }
+
+    public static boolean isImageFile(String path) {
+        String mimeType = URLConnection.guessContentTypeFromName(path);
+        return mimeType != null && mimeType.startsWith("image");
+    }
+
+    public static boolean isVideoFile(String path) {
+        String mimeType = URLConnection.guessContentTypeFromName(path);
+        return mimeType != null && mimeType.startsWith("video");
     }
 
     public static String matrixToString(float[] m) {
@@ -106,9 +120,9 @@ public class MediaUtil {
             return "";
         } else {
             return String.format("[%2.2f, %2.2f, %2.2f, %2.2f,\n" +
-                    " %2.2f, %2.2f, %2.2f, %2.2f,\n" +
-                    " %2.2f, %2.2f, %2.2f, %2.2f,\n" +
-                    " %2.2f, %2.2f, %2.2f, %2.2f]",
+                            " %2.2f, %2.2f, %2.2f, %2.2f,\n" +
+                            " %2.2f, %2.2f, %2.2f, %2.2f,\n" +
+                            " %2.2f, %2.2f, %2.2f, %2.2f]",
                     m[0], m[4], m[8], m[12],
                     m[1], m[5], m[9], m[13],
                     m[2], m[6], m[10], m[14],

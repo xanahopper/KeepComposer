@@ -2,10 +2,10 @@ package com.gotokeep.keep.social.director.pattern;
 
 import android.support.annotation.NonNull;
 
+import com.gotokeep.keep.data.model.director.DirectorScript;
 import com.gotokeep.keep.social.composer.timeline.Timeline;
 import com.gotokeep.keep.social.director.ResourceManager;
 import com.gotokeep.keep.social.director.VideoFragment;
-import com.gotokeep.keep.data.model.director.DirectorScript;
 import com.gotokeep.keep.social.director.exception.UnsuitableException;
 
 import java.util.List;
@@ -16,6 +16,7 @@ import java.util.List;
  * @since 2018-05-28 11:10
  */
 public abstract class BasePattern {
+    static final String TAG = BasePattern.class.getSimpleName();
     protected ResourceManager resourceManager;
 
     public BasePattern(ResourceManager resourceManager) {
@@ -38,5 +39,5 @@ public abstract class BasePattern {
         }
     }
 
-    public abstract Timeline selectVideos(@NonNull List<VideoFragment> videoSources, DirectorScript script) throws UnsuitableException;
+    public abstract Timeline selectVideos(@NonNull List<VideoFragment> videoSources, DirectorScript script, Timeline timeline) throws UnsuitableException;
 }

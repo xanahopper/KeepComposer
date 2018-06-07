@@ -10,7 +10,9 @@ import com.gotokeep.keep.data.model.director.Chapter;
 import com.gotokeep.keep.data.model.director.ChapterSet;
 import com.gotokeep.keep.data.model.director.DirectorScript;
 import com.gotokeep.keep.data.model.director.MetaInfo;
+import com.gotokeep.keep.social.composer.timeline.SourceTimeline;
 import com.gotokeep.keep.social.composer.timeline.Timeline;
+import com.gotokeep.keep.social.composer.timeline.Track;
 import com.gotokeep.keep.social.director.exception.UnsuitableException;
 import com.gotokeep.keep.social.director.pattern.BasePattern;
 import com.gotokeep.keep.social.director.pattern.PatternAll;
@@ -142,8 +144,17 @@ public final class KeepDirector implements ResourceManager.ResourceListener {
         if (pattern == null) {
             return null;
         }
+        Timeline timeline = obtainFullTimeline();
+        return pattern.selectVideos(videoSources, script, timeline);
+    }
 
-        return pattern.selectVideos(videoSources, script);
+    private Timeline obtainFullTimeline() {
+        Timeline timeline = new SourceTimeline();
+        timeline.addMediaTrack(new Track(true, LAYER_SOURCE));
+        timeline.addMediaTrack(new Track(true, LAYER_TRANSITION));
+        timeline.addMediaTrack(new Track(true, LAYER_FILTER));
+        timeline.addMediaTrack(new Track(true, LAYER_OVERLAY));
+        return timeline;
     }
 
     @Override
