@@ -7,7 +7,7 @@ package com.gotokeep.keep.social.composer.transition;
  */
 public final class MediaTransitionFactory {
     public static MediaTransition getTransition(String name, long durationMs) {
-        MediaTransition transition = new FadeTransition();
+        MediaTransition transition = new BlackTransition();
         transition.durationMs = durationMs;
         return transition;
     }

@@ -1,34 +1,39 @@
 package com.gotokeep.keep.social.composer.transition;
 
 import android.opengl.GLES20;
+import android.support.v4.math.MathUtils;
 
 import com.gotokeep.keep.social.composer.gles.ProgramObject;
-import com.gotokeep.keep.social.composer.util.MediaUtil;
 import com.gotokeep.keep.social.composer.util.TimeUtil;
 
 /**
  * @author xana/cuixianming
  * @version 1.0
- * @since 2018/5/13 19:43
+ * @since 2018/6/7 18:36
  */
-public class FadeTransition extends MediaTransition {
+public class WhiteTransition extends MediaTransition {
     private static final String UNIFORM_ALPHA = "uAlpha";
-    private static final String FADE_SHADER = "" +
+    private static final String UNIFORM_CHOOSE = "uChoose";
+    private static final String BLACK_SHADER = "" +
             "precision mediump float;\n" +
             "uniform sampler2D uStartTexture; \n" +
             "uniform sampler2D uEndTexture; \n" +
             "uniform float uAlpha;\n" +
+            "uniform float uChoose;\n" +
             "varying vec2 vStartTexCoords; \n" +
             "varying vec2 vEndTexCoords; \n" +
             "void main()                                  \n" +
             "{                                            \n" +
             "  vec4 startColor = texture2D(uStartTexture, vStartTexCoords);\n" +
             "  vec4 endColor = texture2D(uEndTexture, vEndTexCoords);\n" +
-            "  gl_FragColor = mix(startColor, endColor, uAlpha);\n" +
+            "  vec4 white = vec4(1.0f, 1.0f, 1.0f, 1.0f);\n" +
+            "  gl_FragColor = mix(mix(startColor, endColor, uChoose), " +
+            "                     white, uAlpha);\n" +
             "}                                            \n";
 
     private static final String UNIFORM_NAMES[] = {
             UNIFORM_ALPHA,
+            UNIFORM_CHOOSE,
             UNIFORM_START_TEXTURE,
             UNIFORM_END_TEXTURE,
             UNIFORM_START_TRANSFORM,
@@ -37,7 +42,7 @@ public class FadeTransition extends MediaTransition {
 
     @Override
     protected ProgramObject createProgramObject() {
-        return new ProgramObject(DEFAULT_VERTEX_SHADER, FADE_SHADER, UNIFORM_NAMES);
+        return new ProgramObject(DEFAULT_VERTEX_SHADER, BLACK_SHADER, UNIFORM_NAMES);
     }
 
     @Override
@@ -51,9 +56,11 @@ public class FadeTransition extends MediaTransition {
         startNode = getStartNode();
         endNode = getEndNode();
 
-        long positionUs = TimeUtil.usToMs(presentationTimeUs);
-        float alpha = (float) (positionUs - startTimeMs) / durationMs;
-        alpha = MediaUtil.clamp(alpha, 0.0f, 1.0f);
+        long positionMs = TimeUtil.usToMs(presentationTimeUs);
+        long position = (long) MathUtils.clamp(positionMs - startTimeMs, 0, durationMs);
+        float choose = position < durationMs / 2 ? 0f : 1f;
+        float alpha = 1f - Math.abs(position - durationMs *0.5f) / (durationMs * 0.5f);
+        GLES20.glUniform1f(programObject.getUniformLocation(UNIFORM_CHOOSE), choose);
         GLES20.glUniform1f(programObject.getUniformLocation(UNIFORM_ALPHA), alpha);
 
         if (startNode != null) {
