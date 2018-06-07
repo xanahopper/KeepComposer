@@ -91,10 +91,10 @@ public abstract class MediaSource extends RenderNode {
     }
 
     protected void updateScaleMatrix() {
-        ScaleUtil.getScaleMatrix(scaleType, scaleMatrix, originWidth, originHeight, width, height);
+        ScaleUtil.getScaleMatrix(scaleType, transformMatrix, originWidth, originHeight, width, height);
         Log.d("MediaSourceMatrix", "canvasSize: " + canvasWidth + ", " + canvasHeight);
         Log.d("MediaSourceMatrix", "originSize: " + originWidth + ", " + originHeight);
         Log.d("MediaSourceMatrix", "size: " + width + ", " + height);
-        Log.d("MediaSourceMatrix", "updateScaleMatrix: \n" + MediaUtil.matrixToString(scaleMatrix));
+        Log.d("MediaSourceMatrix", "updateScaleMatrix: \n" + MediaUtil.matrixToString(transformMatrix));
     }
 }

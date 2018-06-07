@@ -59,11 +59,11 @@ public class FadeTransition extends MediaTransition {
 
         if (startNode != null) {
             GLES20.glUniformMatrix4fv(programObject.getUniformLocation(UNIFORM_START_TRANSFORM), 1, false,
-                    startNode.getTransformMatrix(), 0);
+                    startNode.getTexCoordMatrix(), 0);
         }
         if (endNode != null) {
             GLES20.glUniformMatrix4fv(programObject.getUniformLocation(uNIFORM_END_TRANSFORM), 1, false,
-                    endNode.getTransformMatrix(), 0);
+                    endNode.getTexCoordMatrix(), 0);
         }
     }
 

@@ -120,7 +120,7 @@ public abstract class MediaOverlay extends RenderNode {
         if (inputNodes.size() > 0) {
             RenderNode node = inputNodes.get(0);
             GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
-                    1, false, node.getTransformMatrix(), 0);
+                    1, false, node.getTexCoordMatrix(), 0);
         }
         GLES20.glUniform1i(programObject.getUniformLocation(ProgramObject.UNIFORM_TEXTURE), 0);
     }

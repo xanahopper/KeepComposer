@@ -42,8 +42,8 @@ public abstract class RenderNode {
     protected boolean frameAvailable = false;
     protected boolean debugMode = false;
     protected boolean released = false;
-    protected float scaleMatrix[] = new float[16];
     protected float transformMatrix[] = new float[16];
+    protected float texCoordMatrix[] = new float[16];
 
     protected static final float[] DEFAULT_VERTEX_DATA = {
             -1f, -1f, 0,
@@ -56,7 +56,7 @@ public abstract class RenderNode {
     protected ShortBuffer texCoordBuffer;
 
     public RenderNode() {
-        Matrix.setIdentityM(scaleMatrix, 0);
+        Matrix.setIdentityM(transformMatrix, 0);
     }
 
     public void addInputNode(RenderNode inputNode) {
@@ -225,7 +225,7 @@ public abstract class RenderNode {
         return presentationTimeUs;
     }
 
-    public float[] getTransformMatrix() {
+    public float[] getTexCoordMatrix() {
         return getOutputTexture().getTransitionMatrix();
     }
 
@@ -281,14 +281,6 @@ public abstract class RenderNode {
         return renderTimeUs;
     }
 
-    public void checkGlError(String op) {
-//        int error;
-//        while ((error = GLES20.glGetError()) != GLES20.GL_NO_ERROR) {
-//            Log.e(TAG, op + ": glError " + error);
-//            throw new RuntimeException(op + ": glError " + error);
-//        }
-    }
-
     public int getCanvasWidth() {
         return canvasWidth;
     }
@@ -297,7 +289,7 @@ public abstract class RenderNode {
         return canvasHeight;
     }
 
-    public float[] getScaleMatrix() {
-        return scaleMatrix;
+    public float[] getTransformMatrix() {
+        return transformMatrix;
     }
 }

@@ -60,7 +60,7 @@ public class PreviewRenderTarget extends RenderTarget implements SurfaceTexture.
         RenderTexture.resetRenderTarget();
         renderNode.getOutputTexture().bind(0);
         GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TEXCOORD_MATRIX),
-                1, false, renderNode.getTransformMatrix(), 0);
+                1, false, renderNode.getTexCoordMatrix(), 0);
 //        GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
 //                1, false, renderNode.getScaleMatrix(), 0);
         GLES20.glUniform1i(programObject.getUniformLocation(ProgramObject.UNIFORM_TEXTURE), 0);

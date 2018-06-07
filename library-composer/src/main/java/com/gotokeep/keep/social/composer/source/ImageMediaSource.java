@@ -6,6 +6,8 @@ import android.media.ExifInterface;
 import android.net.Uri;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
+import android.opengl.Matrix;
+import android.support.v4.math.MathUtils;
 
 import com.gotokeep.keep.social.composer.gles.ProgramObject;
 import com.gotokeep.keep.social.composer.gles.RenderTexture;
@@ -23,10 +25,13 @@ import java.io.IOException;
 public class ImageMediaSource extends MediaSource {
     private static final int DEFAULT_FRAME_RATE = 25;
     private static final String TAG = ImageMediaSource.class.getSimpleName();
+    private static final long ANIMATION_DURATION_MS = 10_000L;
 
     private final String filePath;
     private final long intervalUs;
     private RenderTexture sourceTexture;
+    private float scaleMatrix[] = new float[16];
+    private float animationMAtrix[] = new float[16];
 
     public ImageMediaSource(String filePath) {
         this(filePath, DEFAULT_FRAME_RATE);
@@ -61,7 +66,6 @@ public class ImageMediaSource extends MediaSource {
             sourceTexture.release();
             sourceTexture = null;
         }
-        // renterTexture#release will release the loaded image and the texture resource. so here do nothing.
     }
 
     @Override
@@ -94,8 +98,12 @@ public class ImageMediaSource extends MediaSource {
 
     @Override
     protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs) {
+        Matrix.setIdentityM(scaleMatrix, 0);
+        float scale = MathUtils.clamp((float) (TimeUtil.usToMs(presentationTimeUs) - startTimeMs) / (float) ANIMATION_DURATION_MS + 1f, 1f, 2f);
+        Matrix.scaleM(scaleMatrix, 0, scale, scale, 1f);
+        Matrix.multiplyMM(animationMAtrix, 0, transformMatrix, 0, scaleMatrix, 0);
         GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
-                1, false, scaleMatrix, 0);
+                1, false, animationMAtrix, 0);
         GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TEXCOORD_MATRIX),
                 1, false, sourceTexture.getTransitionMatrix(), 0);
         GLES20.glUniform1i(programObject.getUniformLocation(ProgramObject.UNIFORM_TEXTURE), 0);

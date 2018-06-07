@@ -205,7 +205,7 @@ public class VideoMediaSource extends MediaSource {
     protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs) {
         float matrix[] = decodeTexture.getTransitionMatrix();
         GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
-                1, false, scaleMatrix, 0);
+                1, false, transformMatrix, 0);
         GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TEXCOORD_MATRIX),
                 1, false, matrix, 0);
         //checkGlError("updateDecodeTextureTransformMatrix");
