@@ -35,24 +35,9 @@ public class ImageActivity extends SampleActivity implements Handler.Callback, O
         super.onCreate(savedInstanceState);
 
         handler = new Handler(getMainLooper(), this);
-        previewView.setSurfaceTextureListener(this);
 
         previewView.setVideoSize(640, 360, 0);
-    }
 
-    @Override
-    public boolean handleMessage(Message msg) {
-        return false;
-    }
-
-
-    @Override
-    public MediaOverlay createOverlay(String name) {
-        return new LayerOverlay(SourceProvider.IMAGE_SRC[1]);
-    }
-
-    @Override
-    public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         composer = MediaComposerFactory.createMediaComposer(this, this);
         composer.setPreview(previewView);
         composer.setVideoSize(640, 360);
@@ -69,6 +54,30 @@ public class ImageActivity extends SampleActivity implements Handler.Callback, O
         composer.setTimeline(timeline);
         composer.prepare();
         composer.play();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (composer != null) {
+            composer.release();
+            composer = null;
+        }
+        super.onDestroy();
+    }
+
+    @Override
+    public boolean handleMessage(Message msg) {
+        return false;
+    }
+
+
+    @Override
+    public MediaOverlay createOverlay(String name) {
+        return new LayerOverlay(SourceProvider.IMAGE_SRC[1]);
+    }
+
+    @Override
+    public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
     }
 
     @Override

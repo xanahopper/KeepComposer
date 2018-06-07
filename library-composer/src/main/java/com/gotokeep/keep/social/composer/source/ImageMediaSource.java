@@ -26,7 +26,7 @@ public class ImageMediaSource extends MediaSource {
 
     private final String filePath;
     private final long intervalUs;
-    private final RenderTexture sourceTexture;
+    private RenderTexture sourceTexture;
 
     public ImageMediaSource(String filePath) {
         this(filePath, DEFAULT_FRAME_RATE);
@@ -42,7 +42,7 @@ public class ImageMediaSource extends MediaSource {
 
     @Override
     protected ProgramObject createProgramObject() {
-        return null;
+        return new ProgramObject();
     }
 
     @Override
@@ -57,6 +57,10 @@ public class ImageMediaSource extends MediaSource {
 
     @Override
     protected void onRelease() {
+        if (sourceTexture != null && !sourceTexture.isReleased()) {
+            sourceTexture.release();
+            sourceTexture = null;
+        }
         // renterTexture#release will release the loaded image and the texture resource. so here do nothing.
     }
 
@@ -68,14 +72,9 @@ public class ImageMediaSource extends MediaSource {
 
     @Override
     protected long doRender(ProgramObject programObject, long positionUs) {
-//        Log.d(TAG, "doRender: " + positionUs + ", return " + (positionUs + intervalUs));
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
         presentationTimeUs = positionUs - TimeUtil.msToUs(startTimeMs);
         return positionUs + intervalUs;
-    }
-
-    @Override
-    protected boolean needRenderSelf() {
-        return false;
     }
 
     @Override
@@ -85,18 +84,21 @@ public class ImageMediaSource extends MediaSource {
 
     @Override
     protected void bindRenderTextures() {
-
+        sourceTexture.bind(0);
     }
 
     @Override
     protected void unbindRenderTextures() {
-
+        sourceTexture.unbind(0);
     }
 
     @Override
     protected void updateRenderUniform(ProgramObject programObject, long presentationTimeUs) {
         GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
                 1, false, scaleMatrix, 0);
+        GLES20.glUniformMatrix4fv(programObject.getUniformLocation(ProgramObject.UNIFORM_TEXCOORD_MATRIX),
+                1, false, sourceTexture.getTransitionMatrix(), 0);
+        GLES20.glUniform1i(programObject.getUniformLocation(ProgramObject.UNIFORM_TEXTURE), 0);
     }
 
     private void prepareInternal(String filePath) {

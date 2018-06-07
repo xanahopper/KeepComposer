@@ -50,7 +50,6 @@ public class SimpleTransitionActivity extends SampleActivity implements Handler.
         super.onCreate(savedInstanceState);
 
         handler = new Handler(getMainLooper(), this);
-        previewView.setSurfaceTextureListener(this);
 
         previewView.setVideoSize(EXPORT_WIDTH, EXPORT_HEIGHT, 0);
         FilterFactory.registerExternalFilterFactory(DemoFilterFactory.getInstance());
@@ -58,6 +57,8 @@ public class SimpleTransitionActivity extends SampleActivity implements Handler.
             Log.d("Composer", "onCreate: " + getIntent().getStringExtra("gotoNext"));
             gotoNext = true;
         }
+        startComposition();
+
     }
 
     @Override
@@ -87,6 +88,9 @@ public class SimpleTransitionActivity extends SampleActivity implements Handler.
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+    }
+
+    private void startComposition() {
         composer = MediaComposerFactory.createMediaComposer(this, this);
         composer.setPreview(previewView);
         composer.setVideoSize(EXPORT_WIDTH, EXPORT_HEIGHT);
@@ -102,7 +106,7 @@ public class SimpleTransitionActivity extends SampleActivity implements Handler.
             item2.setScaleType(ScaleType.FIT_CENTER);
             item2.setStartTimeMs(TimeUtil.secToMs(3));
             item2.setEndTimeMs(TimeUtil.secToMs(6));
-            item2.setPlaySpeed(5f);
+            item2.setPlaySpeed(2f);
             VideoItem item3 = new VideoItem(SourceProvider.VIDEO_SRC[0]);
             item3.setScaleType(ScaleType.FIT_CENTER);
             item3.setStartTimeMs(TimeUtil.secToMs(6));
@@ -147,7 +151,7 @@ public class SimpleTransitionActivity extends SampleActivity implements Handler.
             timeline.setAudioItem(new AudioItem(SourceProvider.AUDIO_SRC[0]));
         }
 
-        timeline = new ClippingTimeline(timeline, 2000, timeline.getEndTimeMs());
+//        timeline = new ClippingTimeline(timeline, 2000, timeline.getEndTimeMs());
         composer.setTimeline(timeline);
         composer.setRepeatMode(MediaComposer.REPEAT_LOOP_INFINITE);
         composer.prepare();

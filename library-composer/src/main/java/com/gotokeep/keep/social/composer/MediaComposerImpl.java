@@ -618,10 +618,6 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
             return false;
         }
         stop();
-        releaseRenderTarget();
-        if (engine != null) {
-            engine.release();
-        }
         return false;
     }
 
