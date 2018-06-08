@@ -36,12 +36,11 @@ public class ExampleInstrumentedTest {
         Context appContext = InstrumentationRegistry.getTargetContext();
 
         assertEquals("com.gotokeep.keep.composer.demo", appContext.getPackageName());
-        Uri localUri = Uri.parse("/sdcard/DCIM/x.mp4");
-
+        Uri localUri = Uri.parse("//assets/filter/amaro_mask1.jpg");
         String filePath = getRawUri(appContext, R.raw.pattern_all);
-        File patternFile = new File(filePath);
+        File patternFile = new File("//assets/filter/amaro_mask1.jpg");
         try {
-            InputStream is = appContext.getContentResolver().openInputStream(Uri.parse(filePath));
+            InputStream is = appContext.getContentResolver().openInputStream(localUri);
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
             String line = null;
             while ((line = reader.readLine()) != null) {

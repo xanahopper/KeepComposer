@@ -38,6 +38,8 @@ public class LayerOverlay extends MediaOverlay {
     protected void prepareResource() {
         if (layerTexture == null) {
             layerTexture = new RenderTexture(RenderTexture.TEXTURE_NATIVE, "LayerOverlay " + Uri.parse(layerImagePath).getLastPathSegment());
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inPreferredConfig = Bitmap.Config.ARGB_4444;
             Bitmap layerBitmap = MediaUtil.flipBitmap(BitmapFactory.decodeFile(layerImagePath), true);
             width = layerBitmap.getWidth();
             height = layerBitmap.getHeight();
@@ -65,7 +67,7 @@ public class LayerOverlay extends MediaOverlay {
 //        activeAttribData();
         layerTexture.bind(0);
         updateLayerMatrix();
-        GLES20.glUniformMatrix4fv(overlayProgramObject.getUniformLocation(ProgramObject.UNIFORM_TEXCOORD_MATRIX),
+        GLES20.glUniformMatrix4fv(overlayProgramObject.getUniformLocation(ProgramObject.UNIFORM_TRANSFORM_MATRIX),
                 1, false, ProgramObject.DEFAULT_MATRIX, 0);
         GLES20.glUniform1i(overlayProgramObject.getUniformLocation(ProgramObject.UNIFORM_TEXTURE), 0);
 
