@@ -13,7 +13,7 @@ import com.gotokeep.keep.social.composer.ExportConfiguration;
 import com.gotokeep.keep.social.composer.RenderNode;
 import com.gotokeep.keep.social.composer.RenderTarget;
 import com.gotokeep.keep.social.composer.gles.ProgramObject;
-import com.gotokeep.keep.social.composer.source.AudioSource;
+import com.gotokeep.keep.social.composer.source.AudioSourceCompat;
 import com.gotokeep.keep.social.composer.util.MediaUtil;
 
 import java.io.IOException;
@@ -98,7 +98,7 @@ public class MuxerRenderTarget extends RenderTarget {
     }
 
     @Override
-    public void updateAudioChunk(AudioSource audioSource) {
+    public void updateAudioChunk(AudioSourceCompat audioSource) {
         while (audioTrackIndex >= 0 && !muxing) {
             // wait for mux begin
         }
@@ -220,7 +220,7 @@ public class MuxerRenderTarget extends RenderTarget {
         }
     }
 
-    private void drainAudioEncoder(AudioSource audioSource) {
+    private void drainAudioEncoder(AudioSourceCompat audioSource) {
         if (videoOutputFormat == null || muxing) {
             // feed input buffer
             if (audioSource.getRenderOutputStatus() < 0) {

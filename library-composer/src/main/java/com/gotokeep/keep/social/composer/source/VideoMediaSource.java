@@ -23,7 +23,7 @@ import java.nio.ByteBuffer;
  * @version 1.0
  * @since 2018/5/13 14:08
  */
-public class VideoMediaSource extends MediaSource {
+public class VideoMediaSource extends MediaSourceCompat {
     private static final String VIDEO_MIME_START = "video/";
     private static final int TIMEOUT_US = 1000;
 

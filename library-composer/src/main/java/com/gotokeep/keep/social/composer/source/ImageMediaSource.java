@@ -22,7 +22,7 @@ import java.io.IOException;
  * @version 1.0
  * @since 2018/5/13 14:10
  */
-public class ImageMediaSource extends MediaSource {
+public class ImageMediaSource extends MediaSourceCompat {
     private static final int DEFAULT_FRAME_RATE = 25;
     private static final String TAG = ImageMediaSource.class.getSimpleName();
     private static final long ANIMATION_DURATION_MS = 10_000L;

@@ -12,7 +12,7 @@ import android.util.Log;
 import android.util.SparseArray;
 import android.view.TextureView;
 
-import com.gotokeep.keep.social.composer.source.AudioSource;
+import com.gotokeep.keep.social.composer.source.AudioSourceCompat;
 import com.gotokeep.keep.social.composer.target.MuxerRenderTarget;
 import com.gotokeep.keep.social.composer.target.PreviewRenderTarget;
 import com.gotokeep.keep.social.composer.timeline.MediaItem;
@@ -68,7 +68,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
     private ExportEventListener exportEventListener;
     private RenderTarget renderTarget;
     private RenderNode renderRoot;
-    private AudioSource audioSource;
+    private AudioSourceCompat audioSource;
     private RenderFactory renderFactory;
     private Map<MediaItem, RenderNode> renderNodeMap;
     private ComposerEngine engine;
@@ -337,7 +337,7 @@ class MediaComposerImpl implements MediaComposer, Handler.Callback, TextureView.
         audioTimeUs = videoTimeUs = timeUs;
         if (timeline.getAudioItem() != null) {
             AudioItem audioItem = timeline.getAudioItem();
-            audioSource = new AudioSource(audioItem.getFilePath());
+            audioSource = new AudioSourceCompat(audioItem.getFilePath());
             audioSource.setTimeRange(0, Math.min(audioItem.getEndTimeMs(), timeline.getDurationMs()));
             audioSource.prepare();
             renderTarget.prepareAudio(audioSource.getSampleRate(), audioSource.getChannelCount());

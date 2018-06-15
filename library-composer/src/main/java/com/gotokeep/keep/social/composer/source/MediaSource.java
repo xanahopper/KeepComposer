@@ -1,100 +1,115 @@
 package com.gotokeep.keep.social.composer.source;
 
-import android.util.Log;
+import android.media.MediaExtractor;
+import android.media.MediaFormat;
+import android.support.annotation.NonNull;
 
-import com.gotokeep.keep.social.composer.RenderNode;
-import com.gotokeep.keep.social.composer.ScaleType;
-import com.gotokeep.keep.social.composer.util.MediaUtil;
-import com.gotokeep.keep.social.composer.util.ScaleUtil;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 /**
  * @author xana/cuixianming
  * @version 1.0
- * @since 2018/5/13 13:30
+ * @since 2018-06-15 20:37
  */
-public abstract class MediaSource extends RenderNode {
-    public static final int TYPE_VIDEO = 0;
-    public static final int TYPE_IMAGE = 1;
-    public static final int TYPE_GENERATE = 2;
+public abstract class MediaSource implements Source {
+    protected MediaExtractor extractor;
+    protected MediaFormat format;
+    protected int trackIndex = -1;
+    protected String mimeType = null;
+    protected boolean available = false;
 
-    public static final int DURATION_INFINITE = -1;
+    protected boolean ended = false;
+    protected boolean loop = false;
 
-    private int mediaType;
-    int width;
-    int height;
-    int rotation;
-    long durationMs;
-    float playSpeed = 1f;
-    boolean ended = false;
-    ScaleType scaleType = ScaleType.FIT_CENTER;
-
-    protected MediaSource(int mediaType) {
-        this.mediaType = mediaType;
+    public MediaSource() {
+        extractor = new MediaExtractor();
     }
 
     @Override
-    public void addInputNode(RenderNode inputNode) {
+    public void setDataSource(String filePath, @NonNull String mimeStartWith) {
+        try {
+            extractor.setDataSource(filePath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
+        reset();
+        prepareExtractor(mimeStartWith);
     }
 
+    @Override
+    public boolean isAvailable() {
+        return available;
+    }
+
+    @Override
     public boolean isEnded() {
         return ended;
     }
 
-    public float getPlaySpeed() {
-        return playSpeed;
+    private void reset() {
+        format = null;
+        trackIndex = -1;
+        mimeType = null;
+        available = false;
+        loop = false;
+        ended = false;
     }
 
-    public void setPlaySpeed(float playSpeed) {
-        this.playSpeed = playSpeed;
-    }
-
-    public int getMediaType() {
-        return mediaType;
-    }
-
-    public int getWidth() {
-        return width;
-    }
-
-    public int getHeight() {
-        return height;
-    }
-
-    public int getRotation() {
-        return rotation;
-    }
-
-    public long getDurationMs() {
-        return durationMs;
-    }
-
-    public ScaleType getScaleType() {
-        return scaleType;
-    }
-
-    public void setScaleType(ScaleType scaleType) {
-        this.scaleType = scaleType;
-        updateScaleMatrix();
+    private void prepareExtractor(String mimeStartWith) {
+        for (int i = 0; i < extractor.getTrackCount(); i++) {
+            MediaFormat trackFormat = extractor.getTrackFormat(i);
+            String mime = trackFormat.getString(MediaFormat.KEY_MIME);
+            if (mime != null && mime.startsWith(mimeStartWith)) {
+                trackIndex = i;
+                format = trackFormat;
+                mimeType = mime;
+                break;
+            }
+        }
+        if (trackIndex > 0) {
+            available = true;
+            extractor.selectTrack(trackIndex);
+        } else {
+            available = false;
+        }
     }
 
     @Override
-    public void setViewport(int width, int height) {
-        super.setViewport(width, height);
-        updateScaleMatrix();
+    public void setLoop(boolean loop) {
+        this.loop = loop;
     }
 
     @Override
-    public void setOriginSize(int width, int height) {
-        super.setOriginSize(width, height);
-        updateScaleMatrix();
+    public long seekTo(long timeUs) {
+        extractor.seekTo(timeUs, MediaExtractor.SEEK_TO_PREVIOUS_SYNC);
+        return extractor.getSampleTime();
     }
 
-    protected void updateScaleMatrix() {
-        ScaleUtil.getScaleMatrix(scaleType, transformMatrix, originWidth, originHeight, width, height);
-        Log.d("MediaSourceMatrix", "canvasSize: " + canvasWidth + ", " + canvasHeight);
-        Log.d("MediaSourceMatrix", "originSize: " + originWidth + ", " + originHeight);
-        Log.d("MediaSourceMatrix", "size: " + width + ", " + height);
-        Log.d("MediaSourceMatrix", "updateScaleMatrix: \n" + MediaUtil.matrixToString(transformMatrix));
+    @Override
+    public SampleDataInfo readSampleData(ByteBuffer buffer) {
+        SampleDataInfo info = SampleDataInfo.obtain();
+        if (!ended) {
+            info.bufferSize = extractor.readSampleData(buffer, 0);
+            info.flags = extractor.getSampleFlags();
+            info.presentationTimeUs = extractor.getSampleTime();
+            ended = !extractor.advance();
+            if (ended && loop) {
+                seekTo(0);
+                ended = false;
+            }
+        }
+        info.ended = ended;
+        return info;
+    }
+
+    @Override
+    public void release() {
+        if (extractor != null) {
+            reset();
+            extractor.release();
+            extractor = null;
+        }
     }
 }

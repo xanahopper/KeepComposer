@@ -14,7 +14,7 @@ import com.gotokeep.keep.social.composer.RenderNode;
 import com.gotokeep.keep.social.composer.RenderTarget;
 import com.gotokeep.keep.social.composer.gles.ProgramObject;
 import com.gotokeep.keep.social.composer.gles.RenderTexture;
-import com.gotokeep.keep.social.composer.source.AudioSource;
+import com.gotokeep.keep.social.composer.source.AudioSourceCompat;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -69,7 +69,7 @@ public class PreviewRenderTarget extends RenderTarget implements SurfaceTexture.
     }
 
     @Override
-    public void updateAudioChunk(AudioSource audioSource) {
+    public void updateAudioChunk(AudioSourceCompat audioSource) {
         if (audioTrack != null) {
             if (audioSource.getRenderOutputStatus() == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
                 audioTrack.setPlaybackRate(audioSource.getSampleRate());

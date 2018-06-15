@@ -3,7 +3,7 @@ package com.gotokeep.keep.social.composer;
 
 import android.view.Surface;
 
-import com.gotokeep.keep.social.composer.source.AudioSource;
+import com.gotokeep.keep.social.composer.source.AudioSourceCompat;
 
 /**
  * @author xana/cuixianming
@@ -16,7 +16,7 @@ public abstract class RenderTarget {
 
     public abstract void updateFrame(RenderNode renderNode, long presentationTimeUs, ComposerEngine engine);
 
-    public abstract void updateAudioChunk(AudioSource audioSource);
+    public abstract void updateAudioChunk(AudioSourceCompat audioSource);
 
     public abstract void prepareVideo();
 
