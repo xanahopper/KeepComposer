@@ -38,7 +38,7 @@ public final class ComposerEngine {
         if (outputSurface != null) {
             eglSurface = eglCore.createWindowSurface(outputSurface);
         } else {
-            eglSurface = eglCore.createOffscreenSurface(0, 0);
+            eglSurface = eglCore.createOffscreenSurface(1, 1);
         }
         eglCore.makeCurrent(eglSurface);
 

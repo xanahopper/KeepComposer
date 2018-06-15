@@ -29,7 +29,7 @@ public final class ProgramObject {
     private String vertexShader;
     private String fragmentShader;
 
-    private static final String DEFAULT_VERTEX_SHADER = "" +
+    public static final String DEFAULT_VERTEX_SHADER = "" +
             "attribute vec4 aPosition;    \n" +
             "attribute vec2 aTexCoords; \n" +
             "varying vec2 vTexCoords; \n" +

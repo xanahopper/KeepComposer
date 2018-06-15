@@ -14,8 +14,10 @@ public class SourceProvider {
             "/sdcard/DCIM/KeepStory/Demo/170023_1.mp4",
     };
     public static final String[] IMAGE_SRC = new String[] {
-            "/sdcard/Pictures/CoolMarket/fde57442657cf3c37c737a6f0d832da7.jpg",
             "/sdcard/DCIM/KeepStory/Demo/icon.png",
+            "/sdcard/DCIM/KeepStory/Demo/icon.png",
+            "/sdcard/DCIM/KeepStory/Demo/icon.png",
+            "/sdcard/Pictures/CoolMarket/fde57442657cf3c37c737a6f0d832da7.jpg",
             "/sdcard/Pictures/Icons/ic_settings_147456.png",
             "/sdcard/ADM/qrcode.php.png",
     };

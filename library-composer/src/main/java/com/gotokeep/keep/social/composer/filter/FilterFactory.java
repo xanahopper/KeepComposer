@@ -1,6 +1,7 @@
 package com.gotokeep.keep.social.composer.filter;
 
 import com.gotokeep.keep.social.composer.filter.basic.KeepExternalFilter;
+import com.gotokeep.keep.social.composer.filter.effects.TriColorEffect;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -18,7 +19,7 @@ public final class FilterFactory {
     }
 
     public static MediaFilter getFilter(String name) {
-        return null;
+        return new TriColorEffect();
     }
 
     public static KeepExternalFilter getExternalFilter(String externalName) {

@@ -67,7 +67,7 @@ public class ImageFilterActivity extends SampleActivity implements Handler.Callb
         startItem.setEndTimeMs(TimeUtil.secToMs(10));
         Track videoTrack = new Track(true, 0);
         videoTrack.addMediaItem(startItem);
-        FilterItem filterItem = new FilterItem("blackcat", null);
+        FilterItem filterItem = new FilterItem("tricolor", null);
         filterItem.setTimeRangeMs(0, TimeUtil.secToMs(10));
         Track filterTrack = new Track(true, 1);
         filterTrack.addMediaItem(filterItem);

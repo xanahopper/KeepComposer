@@ -92,6 +92,9 @@ public class RenderFactory {
 
         registerRenderType(FilterItem.class, item -> {
             MediaFilter filter = FilterFactory.getExternalFilter(item.getName());
+            if (filter == null) {
+                filter = FilterFactory.getFilter(item.getName());
+            }
             if (filter != null) {
                 filter.setFilterParameters(item.getParams());
                 filter.setStartTimeMs(item.getStartTimeMs());
